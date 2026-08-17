@@ -1,0 +1,85 @@
+// GM tool: view/edit any registered character's stored attributes,
+// whether they are currently online or not. Offline loading/saving is
+// delegated to GMD (/adm/daemons/gmd.lpc), which runs with root euid --
+// required because obj/login.lpc's set() is a nomask security gate.
+
+inherit F_CLEAN_UP;
+
+#define GMD "/adm/daemons/gmd"
+
+int help(object me);
+
+nosave int sort_keys(string one, string two) {
+  return strcmp(one, two);
+}
+
+int main(object me, string arg) {
+  string id, prop, val;
+  object body;
+  int ret;
+
+  if (!wizardp(me)) return notify_fail("只有巫师能使用这个指令。\n");
+  if (!arg) return help(me), 1;
+
+  if (sscanf(arg, "%s %s %s", id, prop, val) != 3) {
+    val = 0;
+    if (sscanf(arg, "%s %s", id, prop) != 2) {
+      prop = 0;
+      id = arg;
+    }
+  }
+
+  body = GMD->gm_load(id);
+  if (!body) return notify_fail("没有这个玩家：" + id + "。\n");
+
+  if (val == "DELETE") {
+    body->delete(prop);
+    write(sprintf("已删除 %s 的 %s%s\n", id, prop,
+      GMD->gm_is_offline(body) ? "（离线角色，已存档）" : "（在线角色，立即生效）"));
+  } else if (val) {
+    // numeric if it parses cleanly, else treat as string.
+    if (sscanf(val, "%d", ret) == 1 && ret + "" == val)
+      body->set(prop, ret);
+    else
+      body->set(prop, val);
+    write(sprintf("已设定 %s 的 %s = %O%s\n", id, prop, body->query(prop),
+      GMD->gm_is_offline(body) ? "（离线角色，已存档）" : "（在线角色，立即生效）"));
+  } else if (prop) {
+    write(sprintf("%s 的 %s = %O\n", id, prop, body->query(prop)));
+  } else {
+    mapping dbase;
+    mixed *keys;
+    string text;
+    int i;
+
+    dbase = (mapping)body->query_entire_dbase();
+    keys = sort_array(keys(dbase), "sort_keys", this_object());
+    text = sprintf("Object : %s (%s)\n", id,
+      GMD->gm_is_offline(body) ? "offline" : "online");
+    for (i = 0; i < sizeof(keys); i++)
+      text += sprintf("%-16s: %O\n", keys[i], dbase[keys[i]]);
+    me->start_more(text);
+  }
+
+  GMD->gm_unload(body);
+  return 1;
+}
+
+int help(object me) {
+  write(@HELP
+指令格式 : gmedit <id>                  查看角色全部资料（在线/离线皆可）
+           gmedit <id> <属性>           查看单一属性
+           gmedit <id> <属性> <值>      设定属性并存档
+           gmedit <id> <属性> DELETE    删除该属性（整个 key 移除，不只是设成 0）
+
+范例：
+  gmedit polar
+  gmedit polar age
+  gmedit polar str 200
+  gmedit polar family DELETE
+
+离线角色会自动从存档读入、修改、存档、卸载，不需要该玩家在线。
+HELP
+  );
+  return 1;
+}

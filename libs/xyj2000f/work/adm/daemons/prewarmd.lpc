@@ -1,0 +1,75 @@
+// Boot-time content pre-warm.
+//
+// Some content zones spawn a dense cluster of NPCs + equipment
+// synchronously on their very first compile (a room's create() ->
+// setup() -> reset() -> NPC spawn chain). That first compile is
+// legitimately deep -- not an infinite loop -- and can trip the
+// driver's fixed call-depth limit once, caught by the driver's own
+// top-level handler but still visible to whichever player happens to
+// walk in first (see d/lingtai's "Too deep recursion" incident).
+//
+// This walks every .lpc file under /d/ once, batched across call_outs
+// so no single tick does too much work, paying that one-time compile
+// cost during boot -- before any real player ever connects -- instead
+// of during someone's first visit.
+
+void walk_dir(string dir);
+
+void create() {
+  seteuid(getuid());
+  call_out("start_sweep", 2);
+}
+
+nosave string *queue;
+nosave int touched, failed;
+
+void start_sweep() {
+  queue = ({});
+  walk_dir("/d/");
+  log_file("PREWARM", sprintf("%s: found %d files to prewarm.\n",
+    ctime(time()), sizeof(queue)));
+  call_out("prewarm_batch", 0);
+}
+
+void walk_dir(string dir) {
+  string *entries;
+  int i;
+  string full;
+
+  entries = get_dir(dir + "*");
+  if (!entries) return;
+
+  for (i = 0; i < sizeof(entries); i++) {
+    if (entries[i] == "." || entries[i] == "..") continue;
+    full = dir + entries[i];
+    if (file_size(full) == -2) {
+      walk_dir(full + "/");
+    } else if (sizeof(entries[i]) > 4 && entries[i][<4..] == ".lpc") {
+      queue += ({ full[0..<5] });  // drop the ".lpc" extension
+    }
+  }
+}
+
+void prewarm_batch() {
+  int i, n;
+
+  if (!sizeof(queue)) {
+    log_file("PREWARM", sprintf("%s: prewarm done. touched=%d failed=%d\n",
+      ctime(time()), touched, failed));
+    return;
+  }
+
+  n = sizeof(queue) < 5 ? sizeof(queue) : 5;
+  for (i = 0; i < n; i++) {
+    if (catch(call_other(queue[i], "???")))
+      failed++;
+    else
+      touched++;
+  }
+  queue = queue[n..<1];
+  call_out("prewarm_batch", 0);
+}
+
+int query_prewarm_status() {
+  return sizeof(queue);
+}

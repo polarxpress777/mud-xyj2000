@@ -1,0 +1,1545 @@
+{
+  "counts": {
+    "limited": 1,
+    "playable": 191
+  },
+  "generated_from": "libs/*/meta.json",
+  "libs": {
+    "aoxiangtianji": {
+      "archive": "翱翔天际utf8.7z",
+      "archive_num": "063",
+      "description": "一个脱胎于经典《西游记》题材 MUD 的中文武侠/仙侠 MUD，登录横幅另称\"翱翔天际之擎日挽月\"。",
+      "name": "翱翔天际",
+      "port": "40101",
+      "status": "playable"
+    },
+    "bixiecanyang": {
+      "archive": "碧血残阳之豪侠晚歌.rar",
+      "archive_num": "047",
+      "description": "属于\"夕阳再现\"引擎家族（与 xyzxfk、xyzxfy2、wmkj、jhfy 同宗，核心工具文件字节级相同），作者自述基于\"夕阳再现－江湖风云 2－风云再起\"开发而成。这一支和另一轮处理过的`xyzx`（夕阳再现）/`jhfy3`（江湖风云3）/`xajh4gkb`（笑傲江湖4公开版）/`xyzxyl201412`（夕阳再现-炎龙20141231）是同一个真正的\"夕阳再现\"血统（`d/city/sj.lpc` 逐字节相同）——注意本项目里还有另一批同样打着\"夕阳再现\"招牌、但地图其实是完全不同的\"天涯\"家族的档案（`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3`/`tianxiawuxue`/`yxcs`），品牌名称不能作为判断血统的依据。",
+      "name": "碧血残阳 之「豪侠晚歌」",
+      "port": "40065",
+      "status": "playable"
+    },
+    "bmxkx2001": {
+      "archive": "北美侠客行2001.rar",
+      "archive_num": "017-1",
+      "description": "属于 ES II/\"侠客行\"引擎家族（与 xkx2001、xuanjianlu 等同宗，`chinese.c`/`master.c` 字节级相同），1996-1999 年 XiaKeXing Gaming Group 制作、于北美地区运营的一个版本。`d/taihu/gumu/houtang.lpc` 等场景文件头带着\"Cracked by Roath\"署名，和另一轮处理过的 `jym`（金庸梦）、`xkm`（侠客梦）是同一批\"Cracked by Roath\"流通版本（`xkx2000zxb` 则是\"Cracked byKafei\"的另一份流通版本），此前没有互相记录过这层关系。",
+      "name": "侠客行 (The Quest of Oriental Chivalry) — 北美 2001 版",
+      "port": "40039",
+      "status": "playable"
+    },
+    "bxsj": {
+      "archive": "bxsj.rar",
+      "archive_num": "004",
+      "description": "重庆电信 ShuJian MUD Wizard Group 自 1997 年起开发维护的经典武侠 MUD，与 bxsj1《书剑·经典》同源，共享大部分核心引擎代码。",
+      "name": "书剑天下 (ShuJian MUD)",
+      "port": "40004",
+      "status": "playable"
+    },
+    "bxsj1": {
+      "archive": "bxsj1.rar",
+      "archive_num": "004-1",
+      "description": "与 bxsj《书剑天下》同一底层引擎代码，是\"书剑\"系列更完整、更晚近的一个存档快照（随包附带多平台生产驱动二进制文件，可见曾真实运营过）。",
+      "name": "书剑·经典 (ShuJian Classic)",
+      "port": "40005",
+      "status": "playable"
+    },
+    "cctx": {
+      "archive": "驰骋天下.rar",
+      "archive_num": "067",
+      "description": "一个 ES2/XKX 血统的传统中文 MUD，含嘉峪关（西北边塞）相关地图区域。`niaoren`（鳥人世界）是从同一套源码分支出来、重新包装成金庸题材的独立版本——两者注册流程的天赋选择提示文字逐字相同，`niaoren` 的`logind.lpc` 里还留着一行读取 `/adm/etc/cctxinfo` 的残留代码，是这批档案里\"标题和实际代码血统对不上\"的又一个例子，详见`niaoren/README.md`。",
+      "name": "驰骋天下",
+      "port": "40161",
+      "status": "playable"
+    },
+    "chidi": {
+      "archive": "chidi.rar",
+      "archive_num": "005",
+      "description": "一款体量庞大的经典武侠 MUD，传统 MudOS 谱系，与\"书剑\"系列（bxsj/bxsj1）代码源流不同。",
+      "name": "江湖 I (Jianghu I)",
+      "port": "40006",
+      "status": "playable"
+    },
+    "dfgs2": {
+      "archive": "东方故事二 (1).rar",
+      "archive_num": "022",
+      "description": "属于\"东方故事\"/ES 系列引擎（与 es1_win、esI 同属一支，但内容与代码规模都独立、较小巧），早期（1995-1996 年建立）的经典 MUD。",
+      "name": "东方故事Ⅱ之天朝帝国 (Eastern Story II: The Celestial Empire)",
+      "port": "40027",
+      "status": "playable"
+    },
+    "dfgsiiv13b": {
+      "archive": "东方故事IIv1.3b.tar.gz",
+      "archive_num": "068",
+      "description": "一個 1994-2000 年間由 Annihilator 開發的台灣 ES2 血統 MUD（正體中文），登入橫幅另稱「天朝帝國 / Celestial Empire」。",
+      "name": "東方故事II v1.3b",
+      "port": "40144",
+      "status": "playable"
+    },
+    "dtsl": {
+      "archive": "DTSL.7z",
+      "archive_num": "007",
+      "description": "属于\"大唐双龙\"世界观的一支，与 dtsl2、dtslmud 共享部分基础引擎代码，但各自剧情内容独立开发。取材自黄易同名武侠小说，以大唐初年江湖为背景。",
+      "name": "大唐双龙传 (Twin Dragons of the Tang Dynasty)",
+      "port": "40008",
+      "status": "playable"
+    },
+    "dtsl2": {
+      "archive": "大唐双龙.rar",
+      "archive_num": "007-2",
+      "description": "与 dtsl（大唐双龙传）、dtslmud 同属\"大唐双龙\"世界观分支，但代码实现各自独立（共享部分基础道具内容与中文姓名校验逻辑）。取材自黄易的武侠小说，以大唐初年天下大乱的江湖为背景。",
+      "name": "大唐双龙 (DaTangShuangLong)",
+      "port": "40043",
+      "status": "playable"
+    },
+    "dtslmud": {
+      "archive": "LLMUD(大唐双龙)v_0.11版.rar",
+      "archive_num": "007-1",
+      "description": "LLMUD v0.11 版，改编自黄易同名武侠小说《大唐双龙传》。与本项目中的\"dtsl\"（大唐双龙传）为同一血脉的姊妹版本，共享同一套底层架构。",
+      "name": "大唐双龙传（LLMUD）",
+      "port": "40015",
+      "status": "playable"
+    },
+    "dtxywzxzb": {
+      "archive": "大唐西游完整修正版.rar",
+      "archive_num": "070",
+      "description": "一个西游记血统的 MUD（大唐西游 / Journey of the East），共享`convertd.lpc`/`feature/encoding.lpc` 这套典型 ES II 家族的 GB/BIG5编码切换机制。和 `xyj2006n`（西游记2006年，AKAI Studio 的 Tomud 品牌版）地图逐字节相同（`d/gao/gate.lpc` 等场景内容完全一致），核心系统档案是同一套的两个不同发行版本，此前两份档案都没有互相记录这层关系。",
+      "name": "大唐西游完整修正版",
+      "port": "40150",
+      "status": "playable"
+    },
+    "es1_win": {
+      "archive": "es1_win.rar",
+      "archive_num": "008",
+      "description": "\"东方故事\"（ES）系列 MUD 的一个早期基础版本，属于 **ES / TMI 引擎家族**——尽管名字听起来像武侠题材，实际内容是一个西式奇幻/DND 风格的冒险世界。与本批次的 `esI`（屠龙之战）同源，共享同一套核心引擎代码。",
+      "name": "东方故事（蓝天） — es1_win",
+      "port": "40009",
+      "status": "playable"
+    },
+    "esI": {
+      "archive": "esI.rar",
+      "archive_num": "008-1",
+      "description": "**东方故事**，站内活动主题为\"屠龙之战\"（Dragon Slaying War）。与本批次的 `es1_win`（东方故事·蓝天版）同属 **ES / TMI 引擎家族**，两者核心代码几乎一致，仅站点内容与分支细节不同。",
+      "name": "东方故事 — esI（\"屠龙之战\"）",
+      "port": "40010",
+      "status": "playable"
+    },
+    "fengyun434": {
+      "archive": "fengyun4-3-4.rar",
+      "archive_num": "009",
+      "description": "**风云四**（风云Ⅳ，Sumxin 风云工作室出品）。属于本批次的**\"风云\"（Fengyun）武侠引擎家族**，与 `fy2`、`fy2005`、`fy2qh`、`fy3xd`、`fy3dz` 等同属一个核心引擎，各自是不同站点/年代的内容分支。",
+      "name": "风云Ⅳ — fengyun434",
+      "port": "40011",
+      "status": "playable"
+    },
+    "ffxymud": {
+      "archive": "非凡夕阳MUD.rar",
+      "archive_num": "071",
+      "description": "一个\"时空游侠录\"（Roaming Swordsman）血统的 MUD，登入横幅另称\"非凡公子·新月传奇录II\"。虽然登入横幅和标题都不一样，但地图和\"世界之巅\"跳崖场景（`d/city/sj.lpc`）和 `tybxjh`/`xhcii`/`zxty`/`jhfy2`/`xysylmhb`/`xyzxiiylzymh` 内容逐字节一致，应属同一个\"天涯\"家族（`wlhd` 也是这个家族，但同一个房间的具体写法已被独立改写过），此前没有任何一份档案互相记录过这层关系。",
+      "name": "非凡夕阳MUD",
+      "port": "40142",
+      "status": "playable"
+    },
+    "fqyy2": {
+      "archive": "风起云涌2修正版.rar",
+      "archive_num": "151",
+      "description": "同一套\"海洋/hy\"代码线家族（`SECURITY_D` 同样指向`adm/daemons/securd.lpc`，和 `hy2000`/`hy2002`/`hy3`/`hy5` 等档案共享这套硬编码后门管理员机制），从一个 rar 套 rar 的嵌套压缩包中提取（内层 `风起云涌.rar` 目录名为 `xkx2`）。",
+      "name": "风起云涌2",
+      "port": "40197",
+      "status": "playable"
+    },
+    "fy2": {
+      "archive": "fy2.rar",
+      "archive_num": "011",
+      "description": "河海大学计算机及信息工程学院开发。属于本批次的**\"风云\"（Fengyun）武侠引擎家族**，与 `fy2005`、`fengyun434`、`fy2qh`、`fy3xd`、`fy3dz` 同源——其中 `fy2qh`（\"清华仿写版\"）经核实其实就是本档案的另一个转发副本，源码完全一致。",
+      "name": "风云再起Ⅱ — fy2",
+      "port": "40014",
+      "status": "playable"
+    },
+    "fy2005": {
+      "archive": "fy2005.rar",
+      "archive_num": "009-1",
+      "description": "配置内自报名为\"风云Ⅳ\"，站内横幅写作\"国内经典版\"。与 `fengyun434` 是同一套\"风云Ⅳ\"引擎的不同年份/站点快照，同属本批次的**\"风云\"（Fengyun）武侠引擎家族**。",
+      "name": "风云Ⅳ（2005 国内经典版）— fy2005",
+      "port": "40013",
+      "status": "playable"
+    },
+    "fy2mg": {
+      "archive": "风云II(美国版本）.rar",
+      "archive_num": "152",
+      "description": "以古龙小说世界观为背景的武侠 MUD（`jinyongqunxiazhuan`/XKX 框架家族成员，与 jyqxc/jyqxc2/jyqxc2013fwq/xkx2017 共享同一份`adm/obj/master.lpc`，但游戏内容不同，故单独编号）。",
+      "name": "风云II（美国版本）",
+      "port": "40198",
+      "status": "playable"
+    },
+    "fy2qh": {
+      "archive": "风云II (清华仿写版） (1).ZIP",
+      "archive_num": "011-1",
+      "description": "经逐文件核实，本档案与本批次的 `fy2` **实际上是同一份源码的另一个流传副本**（只是打包驱动、玩家存档快照不同），\"清华仿写版\"更像是当年某个下载站/镜像站给这份拷贝起的名字，而非独立重写的版本。内容与 `fy2`完全一致（详见该库介绍）：以古龙武侠为背景，\"金钱帮\"新手门派、风云广场留言版与探花诗台、完整表情系统等均可体验。",
+      "name": "风云再起Ⅱ（清华仿写版）— fy2qh",
+      "port": "40091",
+      "status": "playable"
+    },
+    "fy330": {
+      "archive": "风云III(3.0).rar",
+      "archive_num": "153",
+      "description": "与 151/fy2mg 同为 `jinyongqunxiazhuan`/XKX 框架家族成员（登录流程、`check_legal_name`、密码复杂度要求、民族选择等均字节级相同），但游戏内容和标题不同，与本合集里其它\"风云\"系 lib（fy2/fys/fysjmb/jhfy2/jhfy3/fyzfqyy/fy2qh/fy3dz/fy3xd/jhfy/zzfy/zzfy3/fengyun434/fy2005）也无 master-hash 匹配。",
+      "name": "风云III (3.0)",
+      "port": "40199",
+      "status": "playable"
+    },
+    "fy3dz": {
+      "archive": "风云III典藏版 (1).rar",
+      "archive_num": "020-2",
+      "description": "**风云 3.8.0**，\"风云工作室\"内部整理的一份\"收藏版\"合集，在\"风云3.7.4\"基础上补充了此前未发布/散佚的原创内容。属于本批次的**\"风云3\"（Fengyun III）引擎分支**，核心引擎代码与 `fy3xd`（星星修订版）几乎完全一致，是这条分支里内容最完整的打包版本之一。",
+      "name": "风云典藏版 — fy3dz",
+      "port": "40090",
+      "status": "playable"
+    },
+    "fy3xd": {
+      "archive": "风云III修订版  (1).rar",
+      "archive_num": "020-1",
+      "description": "压缩包内附带的说明文档称之为\"星星修订的风云3\"（社区爱好者\"星星\"整理修订的一个内容较丰富的版本）。属于本批次的**\"风云3\"（Fengyun III）引擎分支**，与 `fy3dz`（风云典藏版）核心代码高度一致，属于同一引擎的不同内容打包。",
+      "name": "风云三（星星修订版）— fy3xd",
+      "port": "40089",
+      "status": "playable"
+    },
+    "fys": {
+      "archive": "风云三.rar",
+      "archive_num": "072",
+      "description": "档案名叫\"风云三\"，但实际登入横幅是\"铁血江湖\"——内容与档案名无关，只是命名不一致。",
+      "name": "风云三",
+      "port": "40164",
+      "status": "playable"
+    },
+    "fysjmb": {
+      "archive": "风云四解密版.rar",
+      "archive_num": "073",
+      "description": "一个以古龙小说为背景的\"风云Ⅳ\"MUD（Sumxin 风云），和本合集里的`xsfyssjb`（心声风云四升级版）是同一套代码库——`d/dreamland/`等场景文件逐字节相同，此前两份档案都没有互相记录这层关系。",
+      "name": "风云四解密版",
+      "port": "40165",
+      "status": "playable"
+    },
+    "fyzfqyy": {
+      "archive": "风云之风起云涌.rar",
+      "archive_num": "074",
+      "description": "一个以古龙小说为背景的\"风云\"MUD。",
+      "name": "风云之风起云涌",
+      "port": "40133",
+      "status": "playable"
+    },
+    "gjzddmudda": {
+      "archive": "国家制度的MUD DA.rar",
+      "archive_num": "075",
+      "description": "一个 ES2 血统的 MUD（作者自己在横幅中致谢 Annihilator/ES2），游戏内标题为\"葫芦Ⅱ / Demon Angel\"（泥潭中国简化版本）。",
+      "name": "国家制度的MUD DA",
+      "port": "40122",
+      "status": "playable"
+    },
+    "haiyang2": {
+      "archive": "海洋II 2010 正式无错完整版下载 (1).rar",
+      "archive_num": "043",
+      "description": "本游戏自称 **海洋II**，游戏内还有一个更常用的招牌名字——**星月传奇**。属于经典的 \"ES II\" 引擎家族（与本项目中的 es1_win、xkx2001、rzrmud、xo、武汉站、炎黄武魂等同宗），是当年一批中文武侠 MUD 中流传较广的一支。`hymud`（海洋V·星月传奇）是它的独立演化续作。",
+      "name": "海洋II",
+      "port": "40057",
+      "status": "playable"
+    },
+    "hc": {
+      "archive": "红尘.rar",
+      "archive_num": "066",
+      "description": "源自 2026-07-29 批量归档 `mudlib.rar` 中的 `红尘.rar`（游戏内全名\"红尘录\"）。ES II 引擎家族的一支独立作品。",
+      "name": "红尘",
+      "port": "40107",
+      "status": "playable"
+    },
+    "hell": {
+      "archive": "hell.7z",
+      "archive_num": "076",
+      "description": "游戏内标题为 \"REVIVE OF ULTRA HELL(BLOOD & MAGIC) FROM 1999.11.13\"（作者自称\"doing\"），是一个 Doing 血统的大型金庸题材 mudlib（超过 7000 个LPC 文件）。",
+      "name": "终极地狱之地狱无门 (hell)",
+      "port": "40114",
+      "status": "playable"
+    },
+    "hhsj": {
+      "archive": "洪荒世界.rar",
+      "archive_num": "014-1",
+      "description": "源自 2026-07-29 批量归档 `mudlib.rar` 中的 `洪荒世界(自连数据库)`。与`nitan170911`（仙剑奇侠传）、`nitan6`（笑傲江湖）同源的 NT/nitan/Lonely引擎家族成员，这次以《封神演义》/盘古开天为背景重新设计。",
+      "name": "洪荒世界",
+      "port": "40106",
+      "status": "playable"
+    },
+    "huoying": {
+      "archive": "Naruto.rar",
+      "archive_num": "044",
+      "description": "本游戏自称 **火影**（英文 Naruto），底层引擎注释自称 `Neolith 0.0.2`，是 \"ES2\" 引擎家族的一员（与本项目中的武汉站、雪影奇缘等同宗）。以日本动漫《火影忍者》为题材，玩家扮演忍者角色，登录界面带有相当精美的ANSI 彩色 ASCII 艺术 Logo。",
+      "name": "火影",
+      "port": "40059",
+      "status": "playable"
+    },
+    "hxxtjqb": {
+      "archive": "幻想西天加强版.rar",
+      "archive_num": "077",
+      "description": "游戏内标题为\"西行战记\"（MudOS v22pre11 MudLib Build 3310），一个西游记题材的传统 GB/BIG5 双编码 ES 血统 mudlib。",
+      "name": "幻想西天加强版",
+      "port": "40177",
+      "status": "playable"
+    },
+    "hy": {
+      "archive": "海洋（由千堆雪上传）.rar",
+      "archive_num": "146",
+      "description": "以\"金庸小说背景\"为世界观的武侠 MUD（请勿使用小说中人名），社区名\"情义盟\"。",
+      "name": "海洋（基础版）",
+      "port": "40182",
+      "status": "playable"
+    },
+    "hy2000": {
+      "archive": "海洋2000.rar",
+      "archive_num": "079",
+      "description": "游戏内标题为\"海洋II\"（Ocean II），ES2/金庸题材血统的 mudlib。和`fqyy2`（风起云涌2）同属\"海洋/hy\"代码线家族（`SECURITY_D` 都指向`adm/daemons/securd.lpc`）。",
+      "name": "海洋2000 (hy2000)",
+      "port": "40174",
+      "status": "playable"
+    },
+    "hy2002": {
+      "archive": "海洋2002.rar",
+      "archive_num": "080",
+      "description": "游戏内标题为\"海洋II\"（Ocean II），是 [hy2000](../hy2000/) 的后续/演进版本——两者 10630/10632 个文件按路径完全重合，hy2002 在此基础上新增了约 3000 个文件（新地图、新门派内容等）。",
+      "name": "海洋2002 (hy2002)",
+      "port": "40116",
+      "status": "playable"
+    },
+    "hy3": {
+      "archive": "火云.rar",
+      "archive_num": "081",
+      "description": "游戏内标题为\"火云录2000\"（Huo Yun Lu 2000），ES/金庸题材血统的mudlib。",
+      "name": "火云 (hy3)",
+      "port": "40162",
+      "status": "playable"
+    },
+    "hy5": {
+      "archive": "海洋5.7z",
+      "archive_num": "146-1",
+      "description": "\"海洋\"系列的另一支代码线（与 146/hy 同源但代码内容已大幅分叉，行数差异很大，不能假设两者的具体修复位置/行号一致）。世界观为武侠向，社区自称\"海洋V\"。",
+      "name": "海洋5",
+      "port": "40183",
+      "status": "playable"
+    },
+    "hyiishzdscbb": {
+      "archive": "海洋II上海站第三次版本.rar",
+      "archive_num": "082",
+      "description": "游戏内标题为\"海洋II\"（Ocean II），是 [hy2000](../hy2000/)/[hy2002](../hy2002/) 的另一个兄弟版本（约 9600/10253 个文件按路径与两者分别重合）——同一套 ES2/金庸题材代码血统的上海站第三次版本快照。",
+      "name": "海洋II上海站第三次版本 (hyiishzdscbb)",
+      "port": "40147",
+      "status": "playable"
+    },
+    "hymud": {
+      "archive": "hymud-main.zip",
+      "archive_num": "043-1",
+      "description": "本游戏自称 **海洋V**，游戏内招牌名字为 **星月传奇**（登录后横幅显示〖海洋V-星月传奇〗）。属于经典的 \"ES II\" 引擎家族的 **海洋II** 一支的后续版本（与本项目中的 haiyang2/海洋II 同源，是它的独立演化版本）。本项目迄今处理过的最大一个压缩包（工作目录内约 5.7 万个源码文件）。",
+      "name": "海洋V·星月传奇",
+      "port": "40103",
+      "status": "playable"
+    },
+    "jh2006": {
+      "archive": "江湖2006.rar",
+      "archive_num": "083",
+      "description": "游戏内标题为\"江湖2005\"（Annihilator/书剑 ES2 血统），金庸题材mudlib。",
+      "name": "江湖2006 (jh2006)",
+      "port": "40128",
+      "status": "playable"
+    },
+    "jhfy": {
+      "archive": "江湖风云 (1).rar",
+      "archive_num": "032-2",
+      "description": "本游戏自称 **江湖风云单机**。经过与本项目内另外两个同源作品（夕阳再现·疯狂江湖、未明空间）的核心文件比对，确认三者同出一脉，都源自\"夕阳再现之江湖风云\"这一支中文武侠 MUD 血脉——本作在三者中与共同祖先最接近，可以看作这一系列的核心版本。这一支和另一轮处理过的 `xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412` 是同一个真正的\"夕阳再现\"血统——注意本项目里还有另一批同样打着\"夕阳再现\"招牌、地图却是完全不同的\"天涯\"家族的档案（`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3` 等），品牌名称不能作为判断血统的依据。",
+      "name": "江湖风云",
+      "port": "40053",
+      "status": "playable"
+    },
+    "jhfy2": {
+      "archive": "江湖风云2.rar",
+      "archive_num": "084",
+      "description": "游戏内标题为\"江湖风云II 之 辽宁风云再起\"，金庸题材 mudlib。地图目录结构和\"天涯\"家族（`tybxjh`/`xhcii`/`zxty`/`ffxymud`）几乎一致，`d/city/sj.lpc`（\"世界之巅\"跳崖场景）内容也相同（本档案这份文件被排版格式化工具误加空格，但核心内容确认逐字对应），是这批档案里第六个确认的成员，此前没有任何一份档案互相记录过这层关系。",
+      "name": "江湖风云2 (jhfy2)",
+      "port": "40137",
+      "status": "playable"
+    },
+    "jhfy3": {
+      "archive": "江湖风云3.rar",
+      "archive_num": "085",
+      "description": "游戏内标题为\"夕阳再现 之「风云再起Ⅱ」\"，是 [jhfy2](../jhfy2/) 的后续/扩展版本（7977/9332 个 jhfy2 文件按路径重合，jhfy3 在此基础上大幅扩充了内容），金庸题材 mudlib。虽然文件路径和 `jhfy2` 高度重合，但这份档案的 `d/city/sj.lpc`（\"世界之巅\"跳崖场景）实际上和 `jhfy2`所属的\"天涯\"家族版本不同，而是和 `xajh4gkb`（笑傲江湖4公开版，同样打着\"夕阳再现\"旗号）、`xyzx`（夕阳再现，同一品牌的源头版本之一）逐字节相同——说明\"夕阳再现\"是独立于\"天涯\"的另一个代码血统，这份档案是站在 `jhfy2` 的地图基础上、换用了\"夕阳再现\"这一支的核心系统文件。",
+      "name": "江湖风云3 (jhfy3)",
+      "port": "40143",
+      "status": "playable"
+    },
+    "jinyongwenzi": {
+      "archive": "金庸文字版 (1).exe",
+      "archive_num": "004-2",
+      "description": "源文件包名为\"金庸文字版\"。经比对确认，这与本项目中的\"bxsj\"（书剑天下）、\"bxsj1\" 是**同一套代码库**的不同历史快照，属于同一支血脉的武侠 MUD。取名自金庸小说《书剑恩仇录》。",
+      "name": "书剑2002",
+      "port": "40083",
+      "status": "playable"
+    },
+    "jqxz2008": {
+      "archive": "金庸群侠传2008加强版.rar",
+      "archive_num": "031",
+      "description": "本游戏自称 **金庸群侠传**，本压缩包对应\"2008加强版\"这一内容版本。属于\"ES II\"引擎家族的一个独立分支（源自作者 Phoebus.suny 1998 年的 ES2\"天曹地国\"版本），本项目中还收录了同一引擎核心的另外两个内容版本（标准版、超豪华版、2015版），可以理解为\"同一套服务端程序，不同的关卡/内容配置\"。",
+      "name": "金庸群侠传（2008 加强版）",
+      "port": "40082",
+      "status": "playable"
+    },
+    "jqxz2008dlx": {
+      "archive": "金庸群侠传2008超豪华版.rar",
+      "archive_num": "031-2",
+      "description": "本压缩包对应\"2008超豪华版\"这一内容版本，与本项目中的\"2008加强版\"\"2008标准版\"是完全相同的服务端引擎核心，但在门派 NPC、战斗数值配置、部分地图场景上有独立的内容调整，文件规模也是三者中最大的一个。",
+      "name": "金庸群侠传（2008 超豪华版）",
+      "port": "40085",
+      "status": "playable"
+    },
+    "jqxz2008std": {
+      "archive": "金庸群侠传2008版.rar",
+      "archive_num": "031-1",
+      "description": "本压缩包对应\"2008版\"（标准版），与本项目中的\"金庸群侠传2008加强版\"是完全相同的服务端引擎核心（master、登录、安全模块等关键文件逐字节一致），仅任务数量和个别场景描写比加强版更精简。",
+      "name": "金庸群侠传（2008 标准版）",
+      "port": "40084",
+      "status": "playable"
+    },
+    "jqxz2015": {
+      "archive": "金庸群侠传2015版.rar",
+      "archive_num": "031-3",
+      "description": "2015 年整理发布的版本，属于 ES II 引擎系列——与本项目中的\"金庸群侠传2008加强版\"等同门作品共享同一套底层引擎/守护进程代码，七年间引擎本身几乎没有变化，变化的主要是游戏内容，本版比 2008 版新增了不少区域和剧情。",
+      "name": "金庸群侠传（2015版）",
+      "port": "40086",
+      "status": "playable"
+    },
+    "jym": {
+      "archive": "金庸梦.rar",
+      "archive_num": "147",
+      "description": "以金庸小说世界观为背景的武侠 MUD。地图目录结构和 111`xkx2000zxb`（侠客行2000最新版，MudOS v22b25 世系）高度重合——`d/taihu/gumu/houtang.lpc` 等场景内容相同，只是文件头的\"破解\"署名不同（`xkx2000zxb` 是\"Cracked by Kafei\"，这份档案是\"Cracked byRoath\"），应是同一款\"侠客行I\"底层代码库的不同流通版本，此前两份档案都没有互相记录这层关系。`xkm`（侠客梦）和 `bmxkx2001`（侠客行北美2001版）也是同一批\"Cracked by Roath\"流通版本的手足档案。",
+      "name": "金庸梦",
+      "port": "40184",
+      "status": "playable"
+    },
+    "jyqxc": {
+      "archive": "金庸群侠传 (1).rar",
+      "archive_num": "086",
+      "description": "游戏内标题为 \"The Story of Hero\"，金庸题材 mudlib。",
+      "name": "金庸群侠传 (jyqxc)",
+      "port": "40129",
+      "status": "playable"
+    },
+    "jyqxc2": {
+      "archive": "金庸群侠传.rar",
+      "archive_num": "087",
+      "description": "[jyqxc](../jyqxc/) 的姊妹版本，同一套架构衍生的另一份存档（编号086/087），大部分文件内容不同，但整体结构和 bug 面几乎一致。",
+      "name": "金庸群侠传 (jyqxc2)",
+      "port": "40172",
+      "status": "playable"
+    },
+    "jyqxc2013fwq": {
+      "archive": "金庸群侠传2013_服务器版.rar",
+      "archive_num": "088",
+      "description": "[jyqxc](../jyqxc/)/[jyqxc2](../jyqxc2/) 同一架构家族的另一份存档（2013 年服务器版），文件内容大部分不同，但整体结构和已知 bug 面基本一致。",
+      "name": "金庸群侠传2013_服务器版 (jyqxc2013fwq)",
+      "port": "40108",
+      "status": "playable"
+    },
+    "kxkj": {
+      "archive": "新狂想空间II.rar",
+      "archive_num": "036",
+      "description": "游戏配置和进游戏后的横幅上写的都是《狂想空间》，压缩包文件名里的\"新狂想空间II\"其实是收藏站点自己加的标题，并非游戏本名。这是一套1995 年起源自\"ES II\"（Eastern Stories II）架构的老牌 Mud 引擎，2002 年由台湾巫师 wade 发布，与本项目里的 es1_win、esI、xkx2001、辽宁热线站等多个库同属 ES II 大家族。",
+      "name": "狂想空间",
+      "port": "40047",
+      "status": "playable"
+    },
+    "kxkj1": {
+      "archive": "狂想空间 (1).rar",
+      "archive_num": "036-1",
+      "description": "1995 年 9 月 22 日创建的老牌台湾 MUD（创始团队 wade、shorst、jcder等），属于 ES II 引擎系列（与本项目中的 es1_win、esI、xkx2001、rzrmud、侠客行系列等同宗）。本项目中还有另一个档案\"新狂想空间II\"（增加了邮箱注册等更新内容），两者虽然都自称\"狂想空间\"，但经比对是两个不同时期、独立流传的版本。本档案是相对更早的一个存档快照。",
+      "name": "狂想空间",
+      "port": "40063",
+      "status": "playable"
+    },
+    "kxkjii2": {
+      "archive": "狂想空间II.rar",
+      "archive_num": "089",
+      "description": "ES II/Annihilator 系架构衍生的 mudlib，和 jyqxc 系列不是同一血统（存档用驱动原生的明文格式，不是那一系的旧式二进制格式）。",
+      "name": "狂想空间II (kxkjii2)",
+      "port": "40160",
+      "status": "playable"
+    },
+    "ldtx": {
+      "archive": "鹿鼎天下.rar",
+      "archive_num": "065",
+      "description": "源自 2026-07-29 批量归档 `mudlib.rar` 中的 `鹿鼎天下.rar`。\"世纪(Century) / adm-single\" 引擎家族的一支（与 `shiji`、`shujian2008`、`xjcq2000`、`xkxz2`、`xiakexing100` 同源），ES II 血统。",
+      "name": "鹿鼎天下（游戏内实际品牌：雄霸天下『西安站』）",
+      "port": "40105",
+      "status": "playable"
+    },
+    "ldtxii": {
+      "archive": "鹿鼎天下II.rar",
+      "archive_num": "090",
+      "description": "[ldtx](../ldtx/) 的姊妹版本（同一个 Century/adm-single 架构家族，但绝大多数内容不同，不是文件级重复）。",
+      "name": "鹿鼎天下II (ldtxii)",
+      "port": "40176",
+      "status": "playable"
+    },
+    "longyunmeng": {
+      "archive": "龙云梦-炎龙封印源码版.rar",
+      "archive_num": "033-2",
+      "description": "作者 Wenwu，属于\"夕阳再现/炎龙封印\"（XYZX/YLFY）引擎家族的一个独立分支——与本项目中的 `ylfyxa3`（炎龙封印·笑傲江湖阿飞站）同宗但各自独立演化，并非同一份内容的翻版；也和另一轮处理过的`xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412` 是同一个真正的\"夕阳再现\"血统（`d/city/sj.lpc` 逐字节相同）——注意本项目里还有另一批同样打着\"夕阳再现\"招牌、地图却是完全不同的\"天涯\"家族的档案（`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3` 等），品牌名称不能作为判断血统的依据。",
+      "name": "龙云梦·炎龙封印（源码版）",
+      "port": "40094",
+      "status": "playable"
+    },
+    "mhxy": {
+      "archive": "mhxy.rar",
+      "archive_num": "012",
+      "description": "青岛站，自 2002 年 1 月 15 日起运行，隶属于经典的\"西游记\"引擎家族（与本项目转换的 xyj2000f 等同源），底层引擎标注为MudOS V22Pre11。",
+      "name": "梦幻西游 (mhxy)",
+      "port": "40016",
+      "status": "playable"
+    },
+    "mhxyqd": {
+      "archive": "梦幻西游2002版.rar",
+      "archive_num": "012-1",
+      "description": "2002 年版本，\"青岛站\"分线。与本项目中的 \"mhxy\" 是同一套 2002 年代码库（仅站点名称品牌不同），属于西游记题材、ES II 引擎家族的一支（与xyj2000f 等同宗）。",
+      "name": "梦幻西游（青岛站）",
+      "port": "40050",
+      "status": "playable"
+    },
+    "mnhf": {
+      "archive": "模拟华附.rar",
+      "archive_num": "091",
+      "description": "以广州市华南师范大学附属中学为背景设定的校园题材 mudlib。",
+      "name": "模拟华附 (mnhf)",
+      "port": "40156",
+      "status": "playable"
+    },
+    "mohuanshiji": {
+      "archive": "魔幻世纪.rar",
+      "archive_num": "058",
+      "description": "青岛站，作者\"小宝(suannai)/西瓜太郎(gslxz)/桃心太郎\"，由\"星月传奇\"发布。属于\"神话西游\"(SJXY) 一脉，是 ES II 引擎的一个西游记（Journeyto the West）改版分支，与本项目转换的 mhxy/rzrmud 等同为\"西游记\"神话世界观，但代码血统各自独立，并非彼此的换皮版本。",
+      "name": "魔幻世纪 (mohuanshiji)",
+      "port": "40092",
+      "status": "playable"
+    },
+    "niaoren": {
+      "archive": "最新鳥人世界.zip",
+      "archive_num": "062",
+      "description": "登录横幅标注底层为 `MudOS v22c2` / `MudOs V22pre11`。深度功能测试确认了它的血统：和 `cctx`（驰骋天下）是同一套源码的独立分支——注册流程的天赋选择提示文字逐字相同（\"俠馳騁江湖中的人物大多具有...\"），`adm/daemons/logind.lpc` 里至今还留着一行`read_file(\"/adm/etc/cctxinfo\")`，\"cctxinfo\" 这个档案名本身就是`cctx` 的残留痕迹，从未在改名/重新包装成\"鳥人世界\"品牌的过程中被清理掉。之前被标记为\"未分类\"，diff 确认过和 `xkx2001`/`xuanjianlu`（XKX 家族）不是同一血统，只是当时没找对真正的手足档案。",
+      "name": "鳥人世界 (The Bird-Man World)",
+      "port": "40100",
+      "status": "playable"
+    },
+    "nitan170911": {
+      "archive": "nitan170911.7z",
+      "archive_num": "014",
+      "description": "底层标注\"NTLIB V7.1x\"，是本项目转换的\"泥潭/nitan/Lonely\"系列引擎中体量最大的一个（约 5.4 万个文件），取材于同名经典仙侠游戏/电视剧的世界观。与体量稍小的 nitan6（笑傲江湖）同源，共享同一套 F_DBASE 属性存取架构。",
+      "name": "仙剑奇侠传 (nitan170911)",
+      "port": "40018",
+      "status": "playable"
+    },
+    "nitan6": {
+      "archive": "nitan6.zip",
+      "archive_num": "015",
+      "description": "底层标注\"NT.XAJH Library 5.1g\" / \"NTOS V2.4\"，属于本项目中体量最大的两个\"泥潭/nitan/Lonely\"系列引擎库之一（与 nitan170911 同源，后者需要外部 MySQL 支持，本库不需要）。取材于金庸同名武侠小说的江湖世界。",
+      "name": "笑傲江湖 (nitan6)",
+      "port": "40019",
+      "status": "playable"
+    },
+    "nitan_ceshi": {
+      "archive": "泥潭III测试版.rar",
+      "archive_num": "041",
+      "description": "站点内部配置自称\"泥潭三\"(nitan.3)，但连线后看到的实际招牌是《終極魔界》(\"Ultimate Demon Realm\")——一个套在\"泥潭\"引擎上的主题皮肤。属于 NT/nitan/Lonely 一脉（与本项目转换的 nitan170911、nitan6、nitan_san 同源），是这条脉络里比较早期的一个内部快照版本。",
+      "name": "泥潭III测试版 / 《終極魔界》 (nitan_ceshi)",
+      "port": "40054",
+      "status": "playable"
+    },
+    "nitan_san": {
+      "archive": "泥潭三.rar",
+      "archive_num": "041-1",
+      "description": "站点内部自称\"泥潭\"(nitan)，是 NT/nitan/Lonely 系列真正的\"三代\"正宗版本（登陆横幅本身就打出\"一入泥潭深似海\"字样，驱动版本标注\"MudOS v22.2b14 NT-Build\"）。实际连线看到的招牌是《終極魔界》，与它的近亲 nitan_ceshi 一样是套在\"泥潭\"引擎上的一层皮肤。",
+      "name": "泥潭三 / 《終極魔界》 (nitan_san)",
+      "port": "40055",
+      "status": "playable"
+    },
+    "njhhdxdes2hx": {
+      "archive": "南京河海大学的es2和xkx《校内_1.01版》.tar.gz",
+      "archive_num": "144",
+      "description": "ES2/侠客行系混血引擎，南京河海大学计算机学院测试版，注册流程简单直接（无需 `new` 关键字，任意未使用的英文 id 都会触发新角色确认）。",
+      "name": "东方故事II ＋ 侠客行 (南京河海大学校内版1.01)",
+      "port": "40194",
+      "status": "playable"
+    },
+    "nt1": {
+      "archive": "泥潭1.gz",
+      "archive_num": "148",
+      "description": "NT/nitan 系代码线（与 nitan170911/nitan6/hhsj 无精确 master-hash 匹配，独立代码线）。",
+      "name": "泥潭1",
+      "port": "40185",
+      "status": "playable"
+    },
+    "nt6": {
+      "archive": "泥潭6.zip",
+      "archive_num": "142",
+      "description": "NT/nitan 血统 mudlib（与 nitan170911/nitan6 同源但非字节级相同），一个以创世神话（盘古开天、太极两仪）为背景的大型武侠 mudlib，共23000+ 个 `.lpc` 文件。",
+      "name": "泥潭6 (nt6)",
+      "port": "40186",
+      "status": "playable"
+    },
+    "nt6nitan6win": {
+      "archive": "泥潭6nitan6-win_nodb.rar",
+      "archive_num": "142-1",
+      "description": "[nt6](../nt6/) 的同源版本（同一个 lineage/master hash，本次修复涉及的每一个档案都和 nt6 修复前逐字节相同），无数据库（win_nodb）变体。",
+      "name": "泥潭6 win_nodb版 (nt6nitan6win)",
+      "port": "40187",
+      "status": "playable"
+    },
+    "nte": {
+      "archive": "泥潭二.rar",
+      "archive_num": "092",
+      "description": "ES2/Annihilator 系架构衍生的武侠 mudlib（\"泥潭\"系列的一支，和nt6/nitan 血统的 dbase 架构 bug 无关——这份档案自己的`feature/dbase.lpc` 本来就有完整的 `set`/`query`/`delete` 实现）。共 13000+ 个 `.lpc` 文件。",
+      "name": "泥潭二 (nte)",
+      "port": "40115",
+      "status": "playable"
+    },
+    "ntii": {
+      "archive": "泥潭II.rar",
+      "archive_num": "093",
+      "description": "[nte](../nte/) 的同架构家族版本（ES2/Annihilator 系），本次修复涉及的档案（`logind.lpc`、`named.lpc`、`versiond.lpc`、`dns_master.lpc`、`clone/user/user.lpc`）和 nte 修复前逐字节相同——不是整个 lib 的重复（全库 10731/14000+ 个档案不同，主要是游戏内容），但这几个基础设施档案是共用的。",
+      "name": "泥潭II (ntii)",
+      "port": "40151",
+      "status": "playable"
+    },
+    "qhxajh": {
+      "archive": "清华笑傲江湖）.tgz",
+      "archive_num": "019-4",
+      "description": "和 019（xo，迷你版）、019-1（xo_final，最终版）同属 TMI-2/ES2/Falcon 系引擎家族，是清华大学版本的《笑傲江湖》，门派/剧情内容与前两者不同。",
+      "name": "清华笑傲江湖 (qhxajh)",
+      "port": "40195",
+      "status": "playable"
+    },
+    "rzrmud": {
+      "archive": "rzrmud.20130220.tar.gz",
+      "archive_num": "016",
+      "description": "站点自称\"YWX人造人\"（原开发者的昵称/团队名），北美总站，自 2006 年2 月 3 日运行至今（存档信息显示已有五百多个注册玩家）。与本项目转换的\"梦幻西游\"(mhxy) 同属西游记神话世界观的一支，但引擎实现是独立的一支（不使用 nitan/Lonely 家族那套全局属性存取机制，而是每个对象自带属性存取方法，架构上更规范）。",
+      "name": "大唐西游 YWX人造人 (rzrmud)",
+      "port": "40020",
+      "status": "playable"
+    },
+    "sanjieshenhua": {
+      "archive": "三界神话-春节.rar",
+      "archive_num": "060",
+      "description": "与 `sjcs`（三界传说）标题相近，但为独立开发的不同代码库（核心文件差异巨大，非同一引擎的分支）。",
+      "name": "三界神话 (San Jie Shen Hua) — 春节版",
+      "port": "40098",
+      "status": "playable"
+    },
+    "shenmo": {
+      "archive": "神魔20190924版本.rar",
+      "archive_num": "049",
+      "description": "属于\"ES II / Neolith\"引擎家族（与本项目中的神州、随缘洗剑录等同宗），是一个从 1994 年一路开发维护到 2013 年的长寿老牌 MUD，多位巫师先后参与过其代码。本项目转换过的体量最大的资料包之一（三万余个源码文件）。",
+      "name": "神魔（西游记之神魔传说）",
+      "port": "40067",
+      "status": "playable"
+    },
+    "shenzhou": {
+      "archive": "神州.rar",
+      "archive_num": "048",
+      "description": "自我介绍为**【神州】**（\"Divine Land\"），站点由\"神州开发公会\"运营，属于\"ES II\"引擎家族（与本项目中的随缘洗剑录、天下无雪等同宗），是一个经过多代维护者接力开发的老牌中文武侠 MUD。",
+      "name": "神州",
+      "port": "40066",
+      "status": "playable"
+    },
+    "shiji": {
+      "archive": "世纪.zip",
+      "archive_num": "021",
+      "description": "自称 **世纪（CENTURY）**，登录 banner 的版权信息写着\"星战英雄之乱世风沙\"，采用 `adm/single/{master,simul_efun}` 布局，与本项目中若干\"世纪家族\"（Century）系列的姊妹站点同宗同源。",
+      "name": "世纪",
+      "port": "40026",
+      "status": "playable"
+    },
+    "shujian2008": {
+      "archive": "书剑2008.rar",
+      "archive_num": "024",
+      "description": "2008 年版本，由 ShuJian MUD 开发组制作，站点归属重庆电信。与同名的`sjtx2`（小熊泥苑分站）源码几乎完全一致，属于同一游戏在不同站点的两个部署。",
+      "name": "书剑天下 2008",
+      "port": "40029",
+      "status": "playable"
+    },
+    "shujian3": {
+      "archive": "最新独立安卓客户端和书剑源码一键架站.zip",
+      "archive_num": "157",
+      "description": "从一个嵌套压缩包中提取（外层压缩包同时打包了一个 Android 客户端 apk和这份 `shujian3.zip` 源码）；和 bxsj/bxsj1 及其他任何一个已有 lib 都没有 master-hash 匹配。原生启动干净，零修复，但 WASM 下的完整注册→游戏→退出流程需要下面这些真正的修复。",
+      "name": "书剑3",
+      "port": "40200",
+      "status": "playable"
+    },
+    "shzs": {
+      "archive": "山海战神.rar",
+      "archive_num": "001",
+      "description": "源自 archives/山海战神.rar。本作是在史巴克 (Spock) 开发的英文科幻引擎\"Final Frontier v0.6e\" 基础上二次改造而成的中文版本——属于 `simple`/ES II 引擎系列（本项目转换的第一个、也是最\"标准\"的一个样板库，后续绝大多数修复经验都是从它身上总结出来的）。",
+      "name": "山海战神",
+      "port": "40001",
+      "status": "playable"
+    },
+    "sj": {
+      "archive": "世纪.rar",
+      "archive_num": "094",
+      "description": "\"战国\"（Warring States）系代码库，`adm/obj/master.lpc` 一支——虽然slug 和 `sje`/`sjecl`（书剑系列）相似，但其实是完全不同的Century/adm-single 家族，不要混淆。",
+      "name": "世纪 (sj)",
+      "port": "40127",
+      "status": "playable"
+    },
+    "sjcs": {
+      "archive": "三界传说.rar",
+      "archive_num": "059",
+      "description": "以中国古典神话\"三界\"（天界/人间/地府）为背景的江湖世界。与本项目中同样带\"三界\"招牌的 `sanjieshenhua` 只是名字相似，经逐文件比对确认并非同一份代码（`master.lpc`/`securityd.lpc`/`logind.lpc` 均差异显著）。",
+      "name": "三界传说 (San Jie Chuan Shuo)",
+      "port": "40097",
+      "status": "playable"
+    },
+    "sje": {
+      "archive": "书剑贰.rar",
+      "archive_num": "095",
+      "description": "和 096（`sjecl`，书剑恩仇录）同属 Century/adm-single 引擎家族（`adm/single/master.lpc` + `adm/daemons/securityd.lpc`），湖北电信的\"书剑贰\"泥潭，Ver2.1。",
+      "name": "书剑贰 (sje)",
+      "port": "40146",
+      "status": "playable"
+    },
+    "sjecl": {
+      "archive": "书剑恩仇录.rar",
+      "archive_num": "096",
+      "description": "Century/adm-single 引擎家族的一支（`adm/single/master.lpc` +`adm/daemons/securityd.lpc`，与 `sje`/`sjplgfjxb`/`sjplii` 等\"书剑\"系列泥潭同源），以金庸小说《书剑恩仇录》为背景的重庆电信\"书剑\"泥潭。WASM 阶段的\"注册/look/score/quit 都干净\"结论具有误导性——深度功能测试（§10.7）发现注册完成后**任何玩家指令都会返回\"什么？\"，游戏事实上完全无法操作**，详见下方\"深度功能测试\"一节。",
+      "name": "书剑恩仇录 (sjecl)",
+      "port": "40139",
+      "status": "playable"
+    },
+    "sjpl2": {
+      "archive": "书剑飘零II .zip",
+      "archive_num": "025",
+      "description": "自称 **【书剑飘零Ⅱ】**，英文名 \"Stray Book & Sword\"，由\"飞白工作室\"制作。虽然名字里同样带\"书剑\"二字，但与 `shujian2008`/`sjtx2`是完全不同、互不相关的两套代码。",
+      "name": "书剑飘零Ⅱ",
+      "port": "40031",
+      "status": "playable"
+    },
+    "sjplgfjxb": {
+      "archive": "书剑飘零官方教学版 .rar",
+      "archive_num": "097",
+      "description": "ES II 引擎家族（`adm/obj/master.lpc`，\"original from Lil, rewritten byAnnihilator\"），飞白工作室出品的《书剑飘零》官方教学版，与同门`sjplii`（书剑飘零II）同源；虽然名字里也带\"书剑\"，但和 Century/adm-single 家族的 `sjecl`/`sje` 属于完全不同的引擎谱系，纯属巧合。",
+      "name": "书剑飘零官方教学版 (sjplgfjxb)",
+      "port": "40134",
+      "status": "playable"
+    },
+    "sjplii": {
+      "archive": "书剑飘零II.rar",
+      "archive_num": "098",
+      "description": "和 097（`sjplgfjxb`，书剑飘零官方教学版）同属飞白工作室的《书剑飘零》ES II 引擎家族，这份档案用的是 `adm/daemons/securityd.lpc`（没有 097 那种 `securd`/`securityd` 双档案混淆的问题）。",
+      "name": "书剑飘零II (sjplii)",
+      "port": "40153",
+      "status": "playable"
+    },
+    "sjsh": {
+      "archive": "三界神话（宝鸡站的版本）.rar",
+      "archive_num": "099",
+      "description": "\"三界神话\"系列（San Jie Shen Hua）宝鸡站版本，五个同系档案中的第一个（另外四个：`sjshv150`/`sjshv2578bb`/`sjshwzb`/`sjshwzjqb`）。",
+      "name": "三界神话『宝鸡站』(sjsh)",
+      "port": "40141",
+      "status": "playable"
+    },
+    "sjshv150": {
+      "archive": "三界神话V1.50.rar",
+      "archive_num": "100",
+      "description": "\"三界神话\"系列第二个档案（另见 099 `sjsh`/宝鸡站），紫藤分站的内容，和宝鸡站不完全一样，但核心代码库同源。",
+      "name": "三界神话「紫藤分站」(sjshv150)",
+      "port": "40171",
+      "status": "playable"
+    },
+    "sjshv2578bb": {
+      "archive": "三界神话v2.578b版.rar",
+      "archive_num": "101",
+      "description": "\"三界神话\"系列第三个档案（另见 099 `sjsh`/宝鸡站、100 `sjshv150`/紫藤分站），测试二区的内容。这份档案的 `sited.lpc` 本来就无条件允许本地回环地址连线（没有 `sjshv150` 那种\"仅限巫师\"的限制）。",
+      "name": "三界神话「测试二区」(sjshv2578bb)",
+      "port": "40125",
+      "status": "playable"
+    },
+    "sjshwzb": {
+      "archive": "三界神话完整版.rar",
+      "archive_num": "102",
+      "description": "\"三界神话\"系列第四个档案（另见 099 `sjsh`/宝鸡站、100 `sjshv150`/紫藤分站、101 `sjshv2578bb`/测试二区），泉州师范专科学院站点的完整版内容。这份档案的核心文件（`master.lpc`/`securityd.lpc`/`logind.lpc`）和前三个档案并非完全同源：`master.lpc` 的`log_error()`/`standard_trace()` 根本没有呼叫 `CHANNEL_D`，所以§7.60 那个死锁在这里不存在；`securityd.lpc` 的 `valid_read()` 也没有覆盖 `user` 参数的问题；这份档案也没有 `sited.lpc`，不存在本地回环限制。",
+      "name": "三界神话完整版「泉州师院」(sjshwzb)",
+      "port": "40113",
+      "status": "playable"
+    },
+    "sjshwzjqb": {
+      "archive": "三界神话完整加强版.rar",
+      "archive_num": "103",
+      "description": "\"三界神话\"系列第五个、也是最后一个档案（另见 099 `sjsh`/宝鸡站、100 `sjshv150`/紫藤分站、101 `sjshv2578bb`/测试二区、102 `sjshwzb`/泉州师院完整版），和 102 `sjshwzb` 同源，核心文件（`master.lpc`/`securityd.lpc`/`logind.lpc`）与已知 bug 集合完全一致：`master.lpc` 的 `log_error()`/`standard_trace()` 没有呼叫`CHANNEL_D`（§7.60 不适用），`securityd.lpc` 的 `valid_read()` 不会覆盖 `user` 参数，也没有 `sited.lpc`（不存在本地回环限制）。",
+      "name": "三界神话完整加强版「泉州师院」(sjshwzjqb)",
+      "port": "40173",
+      "status": "playable"
+    },
+    "sjtx2": {
+      "archive": "书剑天下.rar",
+      "archive_num": "024-1",
+      "description": "同样自称**「书剑天下」**，这是\"小熊泥苑\"（http://dtxy.126.com）站点部署的一个分支——与本项目中的 `shujian2008` 源码几乎完全一致（同一款游戏，不同站点的两次独立部署）。",
+      "name": "书剑天下（小熊泥苑分站）",
+      "port": "40030",
+      "status": "playable"
+    },
+    "syxjl": {
+      "archive": "随缘洗剑录.rar",
+      "archive_num": "057",
+      "description": "自称 **【随缘洗剑录】**，是\"ES II\"引擎家族的一员（与本项目中的神州、火影、武汉站等同宗），由 Annihilator 等人在原始 ES II 基础上多次改写而成，是一款有较长运营历史的老牌武侠 MUD。",
+      "name": "随缘洗剑录",
+      "port": "40088",
+      "status": "playable"
+    },
+    "tianxia": {
+      "archive": "天下.tar.gz",
+      "archive_num": "034",
+      "description": "自称 **《天下》Beta**，作者署名\"发现号（Find@tx）\"，与本项目中的\"泥潭\"（nitan）系列师出同门（同一作者），但代码库本身是完全独立的一套。",
+      "name": "天下 Beta",
+      "port": "40044",
+      "status": "playable"
+    },
+    "tianxiawuxue": {
+      "archive": "天下无雪.rar",
+      "archive_num": "035",
+      "description": "自称 **天下无雪**（\"A World Without Snow\"），作者署名\"Dream\"，鸣谢名单包括 Poor、Sinb、Lonely、Zjb 等多位巫师，是一个运营较久、拥有独立世界观的中文武侠 MUD。地图其实和\"天涯\"家族同源——`d/city/sj.lpc`（\"世界之巅\"跳崖场景）与 `xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy` 等同样打着\"夕阳再现\"或其它品牌、实际却是\"天涯\"血统的档案逐字节相同（本档案新角色随机落在的\"北疆小镇\"\"铁枪庙\"等起点也和那几份档案完全对应），此前没有任何一份档案互相记录过这层关系；鸣谢名单里的\"Lonely\"正是NT/nitan 系的作者，说明这个更大的生态圈之间本来就存在人员/代码交流。",
+      "name": "天下无雪",
+      "port": "40045",
+      "status": "playable"
+    },
+    "tiexuejianghu": {
+      "archive": "铁血江湖.rar",
+      "archive_num": "056",
+      "description": "属于 ES II（Eastern Stories II）引擎系列武侠 mudlib，与本项目中的wuhanzhan《大话西游》、wmkj《未明空间》等同属一个大家族，但代码库本身是独立分支。",
+      "name": "铁血江湖 (Tie Xue Jiang Hu)",
+      "port": "40087",
+      "status": "playable"
+    },
+    "tybxjh": {
+      "archive": "天涯&碧血江湖.rar",
+      "archive_num": "104",
+      "description": "天涯泥潭（Tianya MUD Wizard Group）的\"碧血江湖\"档案，自 2002 年建站运行至今的老牌武侠 MUD。这份档案在 WASM 下**编译/登录流程本身无需修复**——没有编译错误，没有执行时段错误，整个登录/注册流程一次跑通；但深度功能测试（§10.7）发现了好几个真实存在的程序 bug，包括一个从建站至今就存在的严重安全问题，详见下方\"深度功能测试\"一节。同一个\"天涯\"代码家族还有 `wlhd`（武林浩荡/金庸梦II，`master.lpc`/`securityd.lpc`/`logind.lpc` 核心系统档案结构几乎一致，但地图内容各自独立修改过）、`xhcii`（笑红尘Ⅱ）、`zxty`（再现天涯）、`ffxymud`（非凡夕阳MUD/时空游侠录）、`jhfy2`（江湖风云2）、`xysylmhb`（夕阳三-炎龙美化版）、`xyzxiiylzymh`（夕阳再现II-炎龙专用美化客户端）和 `yzxiiizylfy`（夕阳再现III之炎龙封印）——后三者标题都带\"夕阳再现\"但地图其实是这个家族（真正的\"夕阳再现\"血统是`xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412` 那一支完全不同的代码）。除 `wlhd`/`yxjh` 外，这七者的 `d/city/sj.lpc`（\"世界之巅\"跳崖场景）逐字节完全相同；`wlhd`/`yxjh` 用的是 `wlhd` 独立改写过的\"jump\"版本，`ffxymud`/`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy` 连登入横幅/标题都完全不像同一批档案，如果不比对源码很难发现它们同源。",
+      "name": "天涯之碧血江湖 (tybxjh)",
+      "port": "40158",
+      "status": "playable"
+    },
+    "wdxtym": {
+      "archive": "武动仙途源码.rar",
+      "archive_num": "149",
+      "description": "这份档案对应一次原本超时中断的转档（46890 个文件的大档案）。它用的是一套**自定义客户端协议**，不是普通的逐行提示：服务器一连线就送出一行版本挑战 `ver1.0,<crypt-salt>`，客户端必须回传正确加密后的应答，或者两个内建的绕过字符串之一（测试用 `123456789abcd` 即可），否则直接显示\"客户端非法\"并断线。之后的账号注册/角色创建也是整行、用全角竖线 `║` 分隔多个字段一次送出（`账号║密码║密文║email`，角色创建则是 `性别║头像║昵称`），这是为配合专属 GUI 客户端设计的协议，不是 bug。",
+      "name": "武动仙途 (wdxtym)",
+      "port": "40188",
+      "status": "playable"
+    },
+    "wlhd": {
+      "archive": "武林浩荡.rar",
+      "archive_num": "105",
+      "description": "游戏内品牌为《金庸梦II》/《武林浩荡》。这份档案和 104 `tybxjh`（天涯之碧血江湖）明显是同源代码——`master.lpc`/`securityd.lpc`/`logind.lpc` 结构几乎一致，注册提示文字相同，`wiz_levels` 权限阶梯一样到 `(ceo)` 为止，`globals.h` 里连\"决定用哪个 `SECURITY_D`\"的注释掉的备用行都相同。同一个\"天涯\"代码家族还有 `xhcii`（笑红尘Ⅱ）、`zxty`（再现天涯）、`ffxymud`（非凡夕阳MUD，登入横幅完全不提\"天涯\"二字）、`jhfy2`（江湖风云2）、`xysylmhb`（夕阳三-炎龙美化版）和 `xyzxiiylzymh`（夕阳再现II-炎龙专用美化客户端，后两者标题都带\"夕阳再现\"却和这个家族同源）；`yxjh`（浴血江湖）的地图和这份档案（`wlhd`）本身逐字节相同，用的正是这份档案独立改写过的\"jump\"版跳崖场景，不是 `tybxjh` 的原始版本。这几份档案的\"世界之巅\"跳崖场景（`d/city/sj.lpc`）逐字节相同；这份档案（`wlhd`）自己把同一个房间的玩法独立改写过（指令改成 `jump`，加了 `valid_leave()`），但核心系统档案的同源关系不受影响。",
+      "name": "武林浩荡 (wlhd)",
+      "port": "40121",
+      "status": "playable"
+    },
+    "wmkj": {
+      "archive": "未明空间.rar",
+      "archive_num": "038",
+      "description": "原始压缩包自称\"未明空间\"，但实际连接后显示的游戏名是**\"江湖风云之夕阳再现\"**——这是\"夕阳再现\"（Sunset Reappears）引擎系列的一个分支版本，与本项目中的 xyzxfk、jhfy 等同源，但 master/登录/安全模块各自独立开发，并非简单换皮。这一支和另一轮处理过的 `xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412` 是同一个真正的\"夕阳再现\"血统——注意本项目里还有另一批同样打着\"夕阳再现\"招牌、地图却是完全不同的\"天涯\"家族的档案（`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3` 等），品牌名称不能作为判断血统的依据。",
+      "name": "未明空间 (Weiming Kongjian / \"wmkj\")",
+      "port": "40049",
+      "status": "playable"
+    },
+    "wqfy": {
+      "archive": "无情风云.rar",
+      "archive_num": "106",
+      "description": "郑州风云世纪珍藏版，游戏内横幅显示为《天下无敌》，以古龙小说为背景的武侠 MUD。这份档案在 WASM 下**完全无需修复**——没有编译错误，没有执行时段错误，整个注册流程一次跑通。和 `zzfy3`（郑州风云3，同样打着\"天下无敌\"横幅）是同一套代码库——`d/marry/hongniang-zhang.lpc` 逐字节相同，此前两份档案都没有互相记录这层关系。",
+      "name": "无情风云 (wqfy)",
+      "port": "40124",
+      "status": "playable"
+    },
+    "wuhanzhan": {
+      "archive": "武汉站.rar",
+      "archive_num": "040",
+      "description": "原始压缩包名为\"武汉站\"，但这只是收藏者标注的站点标签——游戏自身的config 与登录横幅都写明真正的名字是**\"大话西游\"**，由湖北楚天热线旗下的襄樊分站运营。属于 ES II（Eastern Stories II）引擎系列，与本项目中的 wmkj、tiexuejianghu 等同宗但各自独立开发。",
+      "name": "大话西游 (A Chinese Odyssey)",
+      "port": "40052",
+      "status": "playable"
+    },
+    "wxddym": {
+      "archive": "武学大道源码.7z",
+      "archive_num": "141",
+      "description": "一款以「世外桃源」为起点的武侠 MUD，采用非标准的移动端客户端协议（非纯文字 telnet 提示语）。",
+      "name": "武学大道",
+      "port": "40189",
+      "status": "playable"
+    },
+    "xajdxyj": {
+      "archive": "西安交大西游记.rar",
+      "archive_num": "107",
+      "description": "\"神话世界·西游记\"4.50 版，游戏内品牌为《欢乐园》(\"A Journey to theWest\"，大学生版)，西安交大兵马俑 BBS 附属的 MUD。",
+      "name": "西安交大西游记 (xajdxyj)",
+      "port": "40179",
+      "status": "playable"
+    },
+    "xajh2": {
+      "archive": "笑傲江湖II.rar",
+      "archive_num": "019-2",
+      "description": "游戏登录画面自称\"虚拟人生\"。属于\"XO mudlib\"引擎家族（源自 TMI-2 /ES2，由 Falcon 于1996年重写），与本项目另收录的《笑傲江湖迷你版》《XO最终版1.2》同源但是独立的、更晚的一个站点快照（站内公告显示自2003年4月1日开站）。",
+      "name": "笑傲江湖 II",
+      "port": "40068",
+      "status": "playable"
+    },
+    "xajh4gkb": {
+      "archive": "笑傲江湖4公开版.rar",
+      "archive_num": "108",
+      "description": "游戏内品牌为「夕阳再现」之「笑傲江湖Ⅳ」，作者阿飞在\"炎龙\"内核基础上修改的第四代版本。这份档案在 WASM 下**完全无需修复**——没有编译错误，没有执行时段错误，整个注册流程一次跑通。`jhfy3`（江湖风云3，同样打着\"夕阳再现\"旗号）和 `xyzx`（夕阳再现，同一品牌的源头版本之一）的\"世界之巅\"跳崖场景（`d/city/sj.lpc`）都和这份档案逐字节相同，是同一个\"夕阳再现\"代码血统的成员——注意打着相同\"夕阳再现\"品牌的 `xysylmhb`/`xyzxiiylzymh` 反而是完全不同的\"天涯\"家族地图，品牌名称不能作为血统依据。深度功能测试（§10.7）确认没有代码逻辑 bug，但发现普通移动就会反复触发资源限制中断，详见下方\"深度功能测试\"一节。",
+      "name": "笑傲江湖4公开版 (xajh4gkb)",
+      "port": "40154",
+      "status": "playable"
+    },
+    "xajhxo": {
+      "archive": "笑傲江湖XO .rar",
+      "archive_num": "019-3",
+      "description": "游戏取材自金庸小说《笑傲江湖》，\"XO\"是这个版本自己的代号（登录横幅上写着\"THE SMILING PROUD WANDERER\"）。它源自\"TMI-2/ES2\"引擎，由\"Falcon\"改写，本项目里另外两个库 `xo`（笑傲江湖迷你版）和 `xo_final`（XO 最终版1.2）都是同一血脉的不同快照，这一份是三者中独立演化出来的第三个版本。",
+      "name": "笑傲江湖 XO",
+      "port": "40069",
+      "status": "playable"
+    },
+    "xajhzcjh": {
+      "archive": "笑傲江湖服务端+客户端.rar",
+      "archive_num": "050",
+      "description": "作者 AKAI，脱胎自\"夕阳再现－江湖风云2－风云再起\"引擎（属于\"夕阳再现/XYZX\"系列衍生分支，与本项目收录的多部同系列作品——如《侠客风云》《西阳再现疯狂版》等——师出同门，但游戏内容各自独立开发）。archive名称中的\"服务端+客户端\"其实指的是同一套游戏支持两种连线协议（普通telnet 客户端 和 TOMUD 菜单客户端），并不是额外附带了一个独立的客户端程序。",
+      "name": "笑傲江湖之重出江湖",
+      "port": "40070",
+      "status": "playable"
+    },
+    "xbtxiii": {
+      "archive": "雄霸天下III.rar",
+      "archive_num": "154",
+      "description": "真正的 1997-2001 年代 mudlib（按其自带 readme 所述），一个\"风云\"衍生分支。原始归档以 4 个分卷 zip（XB.ZIP.1-4）形式提供，解开后内层是12 个按目录拆分的 tar.gz，而非扁平目录树。",
+      "name": "雄霸天下III",
+      "port": "40201",
+      "status": "playable"
+    },
+    "xfbhh": {
+      "archive": "修复版洪荒.rar",
+      "archive_num": "014-2",
+      "description": "NT/泥潭（nitan）血统，与 `hhsj`（洪荒世界原版）和 `nitan170911` 共享byte-identical 的 master 文件。新角色从「泥潭注册室」开始。",
+      "name": "洪荒世界（修复版）",
+      "port": "40190",
+      "status": "playable"
+    },
+    "xhcii": {
+      "archive": "笑红尘Ⅱ .rar",
+      "archive_num": "109",
+      "description": "笑红尘②，拓勘资讯组（topkan.com）开发。地图（华山、武当、峨嵋、丐帮、明教、大理、荆州等）和\"世界之巅\"跳崖场景与 104 `tybxjh`/`wlhd` 高度一致（`d/city/sj.lpc` 逐行核对确认是同一段代码的不同转码版本），应属同一批\"天涯\"系家族的又一分支（`zxty`/再现天涯、`ffxymud`/非凡夕阳MUD、`jhfy2`/江湖风云2、`xysylmhb`/夕阳三-炎龙美化版、`xyzxiiylzymh`/夕阳再现II-炎龙专用美化客户端 也是同一家族，`d/city/sj.lpc` 逐字节相同），此前的 AGENTS.md 里未记录这层关系。WASM 修复阶段曾误判\"完全无需修复\"，深度功能测试（§10.7）纠正了这个结论——真正的核心发现见下方\"深度功能测试\"一节。",
+      "name": "笑红尘Ⅱ (xhcii)",
+      "port": "40163",
+      "status": "playable"
+    },
+    "xiakexing100": {
+      "archive": "侠客行100.rar",
+      "archive_num": "030",
+      "description": "取材自金庸小说《侠客行》，作者 \"Coollizard\" 与 \"xkx100\" 团队自 2001 年起维护，属于本项目中\"Century 家族\"（`adm/single/` 目录结构）武侠mudlib 分支之一，是这批游戏中文件数量最多的一个（转换后约 1.2 万个LPC 文件）。",
+      "name": "侠客行一百 (Xia Ke Xing - Yi Bai)",
+      "port": "40037",
+      "status": "playable"
+    },
+    "xiakexing2017": {
+      "archive": "MUD侠客行2017完整版.zip",
+      "archive_num": "013",
+      "description": "取材自金庸小说《侠客行》，压缩包标注为\"2017完整版\"，与本项目中的xiakexing100、xiakexing3 属于名字相近但代码库彼此独立的不同分支（各自的核心引擎文件并不相同）。",
+      "name": "侠客行 (MUD侠客行2017完整版)",
+      "port": "40017",
+      "status": "playable"
+    },
+    "xiakexing3": {
+      "archive": "侠客行III .rar",
+      "archive_num": "031-4",
+      "description": "压缩包与内部配置文件都叫\"侠客行三\"，但实际连接进游戏后，登录横幅显示的名字是**\"金庸群侠传\"**——经比对，这份存档与本项目中的jqxz2008 系列共享同一套 master 核心代码，是同一引擎不同时期的换皮/内容版本。**WASM 阶段\"注册流程完整验证过、没有发现bug\"的结论需要更正**：§10.7 深度功能测试发现新角色食物/饮水初始化判断的对象错了（§8.9，永远初始化成 0）、`get_name()` 有一行调试用的 `printf` 会把玩家对象引用泄漏给新玩家、以及全档案 18 个留言板实例都撞上了 §7.86 那个\"多余 `replace_program()` 让 `post` 永久崩溃\"的经典致命形状，均已修复并 live 验证，详见下方\"深度功能测试\"一节与 `NOTES.md`。",
+      "name": "金庸群侠传 (原名\"侠客行三\")",
+      "port": "40038",
+      "status": "playable"
+    },
+    "xianlvqiyuan": {
+      "archive": "仙侣奇缘新版.rar",
+      "archive_num": "026",
+      "description": "又称 XLQY，2001年\"知秋站\"（www.mudfan.com）快照版本。属于\"仙侣情缘\"引擎家族，与本项目另收录的\"浙大版\"分支同源但代码更早、更接近原始版本。游戏内自称\"西游传奇之仙侣情缘\"（A Journey To The West / FairyLove Story）。",
+      "name": "仙侣情缘（知秋站 2001版）",
+      "port": "40032",
+      "status": "playable"
+    },
+    "xiaoyuxiyou": {
+      "archive": "小雨西游.zip",
+      "archive_num": "003-1",
+      "description": "游戏自身配置里写的名字是《小雨西游》，但实际登录横幅打出来的是《小雨西游Ⅱ》（v3.0，2013 年建站），两者是同一套引擎在不同年份、不同站点的快照，内容基本一致。它与本项目另一个已转换的库`xyxy2`（20150716未知lib）同属一个引擎家族（`chinese.c`文件完全一致）。",
+      "name": "小雨西游",
+      "port": "40046",
+      "status": "playable"
+    },
+    "xixingzhanji": {
+      "archive": "西行战记.gz",
+      "archive_num": "054",
+      "description": "游戏自称《西行战记》，配置文件里写着\"总站\"，但实际登录横幅打的是\"西行战记[宜昌站]\"——这是同一套源码在不同地区搭建的分站，内容是一样的，只是站点名字没改而已。它属于 ES II（Eastern Stories II）架构的一个独立分支，和本项目里其他好几个西游/ES II 系 Mud 是远房同门。",
+      "name": "西行战记",
+      "port": "40080",
+      "status": "playable"
+    },
+    "xiyouji": {
+      "archive": "西游记.rar",
+      "archive_num": "010",
+      "description": "登录画面自称 *A Journey to the West*，版本号 2.01，最早制作于1996-1998 年。本项目考证认为它极可能是\"ES II / 西游记\"这一整个引擎家族（包括 `xyj2000f`、`mhxy`、`xiyouji2003`、`xiyouji2006`、`xiyouji450`、`shenmo` 等在内的众多同题材姊妹游戏）**最早的祖先版本**——文件时间戳最早，且没有任何后续站点加上的\"破解者\"署名痕迹。",
+      "name": "西游记 (A Journey to the West)",
+      "port": "40079",
+      "status": "playable"
+    },
+    "xiyouji2003": {
+      "archive": "西游记2003.rar",
+      "archive_num": "010-2",
+      "description": "一款 2003 年前后的\"西游记\"系列文字 MUD，与本项目中的`xyj2000f`、`xiyouji`、`xiyouji2006`、`xiyouji450`、`mhxy` 等同属\"ES II / 西游记\"这一大家族——它与 `xyj2000f` 的核心引擎代码（`master.c`）几乎完全一致，是这条支线中较晚、内容更丰富的一个独立站点。",
+      "name": "西游记[光辉岁月]",
+      "port": "40075",
+      "status": "playable"
+    },
+    "xiyouji2006": {
+      "archive": "西游记2006之 最终幻想.rar",
+      "archive_num": "010-4",
+      "description": "存档里出现过三个不同的名字：压缩包标题叫\"最终幻想\"，游戏登录横幅自称\"西游记2006 之 最后的疯狂\"，游戏内公告则说已正式更名为**《大唐西游》**。属于 mhxy/梦幻西游 一支\"西游记\"引擎家族——与本项目中的 `mhxy`、`shenmo`（西游记之神魔传说）同源，但由不同站点独立开发维护多年，内容已大幅分化。",
+      "name": "西游记2006·大唐西游",
+      "port": "40077",
+      "status": "playable"
+    },
+    "xiyouji450": {
+      "archive": "西游记450.rar",
+      "archive_num": "010-3",
+      "description": "这是一份专门用于建立\"镜像站\"的发行包，内附教学说明，供其他站长在其基础上另开一个分身站点。与本项目中的 `xyj2000f`、`mhxy`、`mhxyqd` 同属一支血缘极近的\"西游记/xiyouji.org\"引擎家族——核心引擎文件（`master.c`、`chinese.c` 等）与 `mhxy` 几乎逐字一致，只有站点自定义的登录/安全层与世界内容各自不同。",
+      "name": "西游记450",
+      "port": "40078",
+      "status": "playable"
+    },
+    "xjcq2000": {
+      "archive": "仙剑传奇.rar",
+      "archive_num": "027",
+      "description": "作者叶雨飞。属于\"Century（世纪）家族\"武侠 MUD 引擎（与《书剑2008》《书剑飘零II》等同源，管理层目录结构相似），但游戏内容和安全模块均为独立开发，并非简单复制。",
+      "name": "仙剑狂侠2000（仙剑传奇）",
+      "port": "40034",
+      "status": "playable"
+    },
+    "xkm": {
+      "archive": "侠客梦.rar",
+      "archive_num": "150",
+      "description": "与 147/jym（金庸梦）同源代码线（同一套 `simul_efun` 组成），但注册流程有额外分支，不要假设两者的 `--send` 序列完全一致。",
+      "name": "侠客梦",
+      "port": "40191",
+      "status": "playable"
+    },
+    "xkx100": {
+      "archive": "侠客行一百.rar",
+      "archive_num": "110",
+      "description": "Coollizard & xkx100，2003-2004，yoyo.xm.fj.cn/xkx100。这份档案与另外单独完成的 GitHub `fluffos/xkx100` 仓库是完全不同的代码库，只是恰好同名。",
+      "name": "侠客行一百 (xkx100)",
+      "port": "40117",
+      "status": "playable"
+    },
+    "xkx2000zxb": {
+      "archive": "侠客行2000最新版.rar",
+      "archive_num": "111",
+      "description": "侠客行Ⅰ（\"The Quest of Oriental Chivalry\"），XiaKeXing GamingGroup 1996-1999，MudOS v22b25 世系，由 sdong 移植。`jym`（金庸梦）共享同一套地图骨架（`d/taihu/gumu/houtang.lpc` 等场景内容相同，只是文件头\"破解\"署名不同：这份是\"Cracked by Kafei\"，`jym`/`xkm`都是\"Cracked by Roath\"），应是同一款底层代码库的不同流通版本。",
+      "name": "侠客行2000最新版 (xkx2000zxb)",
+      "port": "40140",
+      "status": "playable"
+    },
+    "xkx2001": {
+      "archive": "xkx2001测试用老lib.zip",
+      "archive_num": "017",
+      "description": "由 \"XiaKeXing Gaming Group\" 制作，登录画面自称 1996-2003 年出品。属于早期\"ES II\"引擎家族的一支——与本项目中的 `rzrmud`（大唐西游）、`bmxkx2001`、`xuanjianlu`（玄剑录）等同属一个更古老的技术谱系，但游戏世界内容各自独立。精确到发行版本层面：`d/taihu/gumu/houtang.lpc` 等场景文件头带\"Cracked by Roath\"署名，和`bmxkx2001`/`jym`/`xkm` 是同一批流通版本；`xuanjianlu` 则是\"Cracked by Kafei\"的另一批流通版本（与 `xkx2000zxb` 同批），两批之间文件头署名不同，但核心引擎同源。",
+      "name": "侠客行 Ⅰ (The Quest of Oriental Chivalry)",
+      "port": "40021",
+      "status": "playable"
+    },
+    "xkx2017": {
+      "archive": "侠客行2017（MUD）.rar",
+      "archive_num": "112",
+      "description": "侠客行（\"The Story of Hero\"），MudOS v21 世系——和 110 `xkx100`、111 `xkx2000zxb` 是同一核心代码库家族（`combatd.lpc`/`quest.h` 的结构一眼就能看出来）。",
+      "name": "侠客行2017 (xkx2017)",
+      "port": "40145",
+      "status": "playable"
+    },
+    "xkxc98sj": {
+      "archive": "侠客新传98书剑.rar",
+      "archive_num": "113",
+      "description": "「侠客新传」v0.1b，MudOS v22pre11，Xkxz MUD Wizard Group 2000-2001，由 jjgod 维护。名字里带\"书剑\"二字，但和 `sjecl`/`sje`/`sjplgfjxb`/`sjplii` 那批真正的\"书剑\"系列泥潭完全不同源，纯属命名巧合（\"98书剑\"应该是站点当年的版本代号）。",
+      "name": "侠客新传98书剑 (xkxc98sj)",
+      "port": "40126",
+      "status": "playable"
+    },
+    "xkxlb": {
+      "archive": "侠客行老版(金庸群侠传）.rar",
+      "archive_num": "155",
+      "description": "从一个扩展名错误的 `.rar`（实际是带有 `../` 成员路径的 POSIX tar）提取。归档里还带着一份未被使用的 `adm/obj/master.lpc`，恰好和jyqxc/fy2mg/xkx2017 那套框架字节相同——但实际启动用的是`/adm/single/master`，不是这份。",
+      "name": "侠客行（老版/金庸群侠传）",
+      "port": "40202",
+      "status": "playable"
+    },
+    "xkxyb": {
+      "archive": "侠客行一百 (1).rar",
+      "archive_num": "114",
+      "description": "厦门热线一百分支，MudOS V22pre11。这份档案和 110 `xkx100` 标题相同（都叫\"侠客行一百\"），但内容是真正不同的、更小的一份快照（6456 对 14255 个 `.lpc` 文件，目录结构也不一样，有 `ftp`/`mudos.etc`/`www` 这些 `xkx100` 没有的目录），不是重复压缩包，所以没有标记 `duplicate_of`。",
+      "name": "侠客行一百 (xkxyb)",
+      "port": "40152",
+      "status": "playable"
+    },
+    "xkxz2": {
+      "archive": "侠客新传(2).rar",
+      "archive_num": "028",
+      "description": "由\"Xkxz MUD Wizard Group\"团队开发的武侠 mudlib，config 文件里残留着一个\"海洋II上海总站\"的字段，说明这份代码大概率是从\"海洋II\"的引擎基础上二次开发而来，但实际游戏内容与登录横幅都是独立的\"侠客新传\"。",
+      "name": "侠客新传 (New Legend of the Wandering Swordsman)",
+      "port": "40035",
+      "status": "playable"
+    },
+    "xkyx3b": {
+      "archive": "侠客英雄传III 可用.zip",
+      "archive_num": "029",
+      "description": "属于早期国产 MudOS 自研引擎，`adm/obj` 目录结构的小型武侠 MUD，没有明确的\"系列血统\"可归类——是一个独立开发的小型作品。",
+      "name": "侠客英雄传 III",
+      "port": "40036",
+      "status": "playable"
+    },
+    "xkyxciii": {
+      "archive": "侠客英雄传III.rar",
+      "archive_num": "115",
+      "description": "侠客英雄传 II/III「欢乐天地」，五邑无尽豪情，一个融合金庸小说、欧洲中世纪传说和漫画元素的世界观。",
+      "name": "侠客英雄传III (xkyxciii)",
+      "port": "40118",
+      "status": "playable"
+    },
+    "xlqy_early": {
+      "archive": "xlqy-解压看readme.rar",
+      "archive_num": "018-1",
+      "description": "属于 ES II 引擎家族，与同批的\"新仙侣情缘之飘渺纪元\"（xlqy_new2007）同宗同源，是同一套代码更早、更粗糙的一个开发快照。根据这份存档自带的说明文件，它原本就是作者用来测试驱动兼容性的\"半成品\"版本。",
+      "name": "仙侣情缘（早期测试版）",
+      "port": "40076",
+      "status": "playable"
+    },
+    "xlqy_new2007": {
+      "archive": "xlqy_new2007.rar",
+      "archive_num": "018",
+      "description": "属于 ES II 引擎家族，与\"仙侣情缘（早期测试版）\"（xlqy_early）系出同门，是这套仙侣情缘代码更完整、更成熟的一个版本（子标题\"乱世站\"）。",
+      "name": "新仙侣情缘之飘渺纪元",
+      "port": "40022",
+      "status": "playable"
+    },
+    "xlqyzdb": {
+      "archive": "仙侣情缘浙大版.rar",
+      "archive_num": "018-2",
+      "description": "由 bugbug 与 alading 在\"缥缈水云间\"站点基础上二次开发。属于\"仙侣情缘/XLQY\"引擎家族的一个独立分支（与本项目另收录的《仙侣情缘》知秋站2001版代码不同，虽然核心引擎同源）。",
+      "name": "仙侣情缘·浙大版",
+      "port": "40033",
+      "status": "playable"
+    },
+    "xo": {
+      "archive": "xo.zip",
+      "archive_num": "019",
+      "description": "属于 TMI-2/ES2（Falcon 系）引擎家族，是\"笑傲江湖\"系列里体积最小、内容最精简的一个版本（作者称之为\"mini xo\"），与同批的\"笑傲江湖最终版\"（xo_final）同宗，后者正是在这个迷你版基础上扩充而成。",
+      "name": "笑傲江湖（迷你版）",
+      "port": "40023",
+      "status": "playable"
+    },
+    "xo_final": {
+      "archive": "xo最终版1.2.rar",
+      "archive_num": "019-1",
+      "description": "属于 TMI-2/ES2（Falcon 系）引擎家族，是在\"笑傲江湖迷你版\"（xo）基础上大幅扩充开发而成的完整版本，作者自称\"自玩测试站\"，内容体量是迷你版的数倍。",
+      "name": "笑傲江湖（最终版）",
+      "port": "40024",
+      "status": "playable"
+    },
+    "xsfyssjb": {
+      "archive": "心声风云四升级版.rar",
+      "archive_num": "116",
+      "description": "风云Ⅳ（Sumxin 风云），以古龙小说为背景的 MUD（sumxin.com/bbs、fy.sumxin.com）。和这一轮的另一个\"风云\"手足档案`wqfy` 是同类 bug 模式，不过底层代码库并不相同；和 `fysjmb`（风云四解密版）才是真正同源代码——`d/dreamland/shanding.lpc` 等文件逐字节相同，此前两份档案都没有互相记录这层关系。",
+      "name": "心声风云四升级版 (xsfyssjb)",
+      "port": "40149",
+      "status": "playable"
+    },
+    "xuanjianlu": {
+      "archive": "玄剑录.rar",
+      "archive_num": "046",
+      "description": "属于 ES II / 侠客行（XKX）引擎家族，与\"侠客行 2001\"等游戏同源，但拥有自己独立的武林世界与剧情内容，核心舞台设定在明教、昆仑、侠客岛等门派与地点之间。文件头带\"Cracked by Kafei\"署名，和 `xkx2000zxb` 是同一批流通版本（`xkx2001` 本身则是\"Cracked by Roath\"的另一批）。",
+      "name": "玄剑录",
+      "port": "40064",
+      "status": "playable"
+    },
+    "xxcq": {
+      "archive": "小雪初晴.rar",
+      "archive_num": "117",
+      "description": "小雪初晴，游戏内品牌为\"SnowMud\"，以温瑞安小说为背景，CuteRabbitStudio（JackyBoy）为 CCTX & SDXL 开发。",
+      "name": "小雪初晴 (xxcq)",
+      "port": "40135",
+      "status": "playable"
+    },
+    "xxcqii": {
+      "archive": "小雪初晴II.rar",
+      "archive_num": "118",
+      "description": "小雪初晴II（SnowMud），以温瑞安小说为背景，117 `xxcq`（\"大侠传奇之小雪初晴\"）的姊妹档案。",
+      "name": "小雪初晴II (xxcqii)",
+      "port": "40131",
+      "status": "playable"
+    },
+    "xyj2000": {
+      "archive": "西游记2000.rar",
+      "archive_num": "120",
+      "description": "西游记（\"Journey to the West\"，又名\"西游记之新纪元\"），以吴承恩原著为背景的一套老牌 MudOS mudlib，注册流程带有\"不欢迎中小学生玩家\"的年龄声明问答，属于原始设计的一部分，不是 bug。",
+      "name": "西游记2000 (xyj2000)",
+      "port": "40155",
+      "status": "playable"
+    },
+    "xyj2000f": {
+      "archive": "fluffos(西游记2000).tar.gz",
+      "archive_num": "010-1",
+      "description": "**西游记之新纪元**（xiyouji.org，1996-2000 年代的经典老牌 MUD）。属于**东方故事(ES) / 西游记引擎家族**，与本项目其他\"西游记\"系列同源。",
+      "name": "西游记 2000 — xyj2000f",
+      "port": "40012",
+      "status": "playable"
+    },
+    "xyj20032": {
+      "archive": "西游记2003-2.rar",
+      "archive_num": "121",
+      "description": "档案名叫\"西游记2003-2\"，但游戏本身开机后自报家门是**三界神话（SanJieMyth）「测试二区」**——和 059 `sjcs`、060 `sanjieshenhua`是同一套\"三界\"代码库家族的另一个成员（`get_gender()`/`enter_world()`/`make_body()` 等核心函式和 `sanjieshenhua` 逐字比对完全一致），开机横幅还留着一段\"西游记之新纪元\"的 ASCII 字画，应该是更早一次改名留下的痕迹。",
+      "name": "西游记2003-2 (xyj20032)",
+      "port": "40119",
+      "status": "playable"
+    },
+    "xyj2006n": {
+      "archive": "西游记2006年.rar",
+      "archive_num": "122",
+      "description": "AKAI Studio 的 Tomud 品牌版西游记，和 xyj 系列/ES II 家族同宗，和`dtxywzxzb`（大唐西游完整修正版）地图逐字节相同（`d/gao/gate.lpc`等场景内容完全一致），应是同一套底层代码库的不同发行版本，此前两份档案都没有互相记录这层关系；`xyj2006zzzhx`（西游记2006之最终幻想）也是同一批发行版本的手足档案。**连线后第一行不是常见的 GB/BIG5 选择，而是一个裸的 `version ` 提示**，期待客户端回传字面值 `2060`（Tomud 或\"笑傲江湖\"客户端的自动应答）；任何其他内容都会被识别为\"非法客户端\"并立即断线——这是刻意设计的客户端识别机制，不是 bug，测试时第一行务必送 `2060`。",
+      "name": "西游记2006年 (xyj2006n)",
+      "port": "40157",
+      "status": "playable"
+    },
+    "xyj2006zzzhx": {
+      "archive": "西游记2006之最终幻想.rar",
+      "archive_num": "123",
+      "description": "AKAI Studio 的 Tomud 品牌版西游记的另一个分支——和 122 `xyj2006n`是同宗档案（文件结构和 bug 完全一致），连线握手方式也一样：**第一行必须是裸的 `2060`**（Tomud/\"笑傲江湖\"客户端的自动应答），任何其他内容都会被判定为非法客户端并断线。",
+      "name": "西游记2006之最终幻想 (xyj2006zzzhx)",
+      "port": "40159",
+      "status": "playable"
+    },
+    "xyj42": {
+      "archive": "西游记4.2.gz",
+      "archive_num": "156",
+      "description": "以西游记世界观为背景的 MUD。（`西游记4.2.rar` 是本归档纯换行符差异的重复版本，只处理了一次。）",
+      "name": "西游记 4.2",
+      "port": "40203",
+      "status": "playable"
+    },
+    "xyj451": {
+      "archive": "西游记451.rar",
+      "archive_num": "124",
+      "description": "西游记（ES II mudlib 家族，4.50 版）。注册流程**没有**\"new\"关键字：只要输入的英文 ID 还没有存档，就会直接问\"使用 X 这个名字将会创造一个新的人物，您确定吗(y/n)？\"。天赋点数不是选栏位调整，而是不断重掷的循环：\"您同意这组天赋数值吗？[n|y|q]\"——`n` 重掷、`y`接受、`q` 大概是放弃。",
+      "name": "西游记451 (xyj451)",
+      "port": "40112",
+      "status": "playable"
+    },
+    "xysylmhb": {
+      "archive": "夕阳三-炎龙美化版.rar",
+      "archive_num": "125",
+      "description": "《夕阳再现III 之 炎龙封印》，AKAI Studio 出品。和 xyj2006 系列一样用 Tomud/\"笑傲江湖\"客户端握手协议：**连线后第一行是裸的 `version `提示**，期待字面回传 `2060`。注册没有\"new\"关键字，任何还没存档的英文 ID 直接问\"使用 X 这个名字将会创造一个新的人物，您确定吗(y/n)？\"；天赋是菜单选栏位（`1-4` 指定单项数值，`0` 系统随机整组，然后 `y/n` 确认接受）。地图和\"天涯\"家族（`tybxjh`/`wlhd`/`xhcii`/`zxty`/`ffxymud`/`jhfy2`）逐字节相同（`d/city/sj.lpc` 的\"世界之巅\"跳崖场景一致），是这批档案里第七个确认的成员——虽然打的是\"夕阳再现\"品牌，实际地图和\"天涯\"同源，和真正的\"夕阳再现\"血统（`xajh4gkb`/`jhfy3`）反而没有关系，纯属品牌命名巧合。另外，`xyzx3`（夕阳再现III之炎龙封印）和这份档案几乎完全一致（`.lpc` 文件总数、目录结构、`d/city/sj.lpc` 都相同），很可能是同一个原始压缩包被本项目拆分成了两份独立档案。",
+      "name": "夕阳三-炎龙美化版 (xysylmhb)",
+      "port": "40169",
+      "status": "playable"
+    },
+    "xyxy2": {
+      "archive": "20150716未知lib.zip",
+      "archive_num": "003",
+      "description": "原始压缩包名为\"20150716未知lib.zip\"（来源不明），实际是**西游记题材、\"泥潭\"（nitan）系 MudOS 老牌 mudlib** 家族的一支，与本项目中的xiaoyuxiyou（同名系列的另一个快照）同源。",
+      "name": "小雨西游Ⅱ (Xiaoyu Xiyou II)",
+      "port": "40003",
+      "status": "playable"
+    },
+    "xyxyutf8": {
+      "archive": "小雨西游utf8.zip",
+      "archive_num": "126",
+      "description": "《小雨西游》/《小雨西游Ⅱ》引擎的另一份独立压缩包，档案名带\"utf8\" 暗示已经预先转成 UTF-8。和本项目已有的 003`xyxy2`（20150716未知lib）、003-1 `xiaoyuxiyou`（小雨西游）同属一个引擎家族，但经过内容哈希比对**不是**字节级重复（8753 对 11149 个 `.lpc` 档案，是不同时间点的快照，不只是重新编码而已），所以独立完整处理。",
+      "name": "小雨西游utf8 (xyxyutf8)",
+      "port": "40168",
+      "status": "playable"
+    },
+    "xyzx": {
+      "archive": "夕阳再现.rar",
+      "archive_num": "127",
+      "description": "《夕阳再现》之「风云再起Ⅱ」。`logind.lpc`/`master.lpc`/注册流程和`xysylmhb`（夕阳三-炎龙美化版）/`xyzxiiylzymh`（夕阳再现II-炎龙专用美化客户端）非常相似，但这份档案的**地图**（`d/city/sj.lpc` 等）才是真正的\"夕阳再现\"血统——和 `jhfy3`/`xajh4gkb` 逐字节相同。反而是打着同样\"夕阳再现\"招牌的 `xysylmhb`/`xyzxiiylzymh`，地图内容其实是完全不同的\"天涯\"家族（详见这两份档案的 README）——三者的关系和 `wlhd`/`tybxjh` 那种\"核心系统档案同源、地图各自独立替换\"的模式如出一辙。这份档案在**标准端口不需要** Tomud 客户端握手——`master.lpc` 的 `connect(port)` 只有连到专门的 TOMUD_PORT 才会设一个临时标记，`logind.lpc` 只有那个标记被设置时才会走 `2060` 版本检查，普通端口直接跳过。",
+      "name": "夕阳再现 (xyzx)",
+      "port": "40180",
+      "status": "playable"
+    },
+    "xyzx3": {
+      "archive": "夕阳再线III之炎龙封印.rar",
+      "archive_num": "033",
+      "description": "游戏全名《夕阳再现III之炎龙封印》，2006 年由\"阿凯工作室\"（AKAI Studio）制作，登录后能看到的实际站点名叫\"江湖风云\"。这是国产 MudOS 老武侠Mud 里比较有代表性的一支，风格偏经典门派、内功修炼的江湖养成玩法。这份档案和另一轮处理过的 `xysylmhb`（夕阳三-炎龙美化版）几乎完全一致（`.lpc` 文件总数、`d/` 目录结构、`d/city/sj.lpc` 内容都逐一核对相同），标题也几乎一样，很可能是同一个原始压缩包在本项目里被拆分成两份档案；地图本身其实是\"天涯\"家族血统，而不是真正的\"夕阳再现\"（详见`xyzx`/`jhfy3`/`xajh4gkb` 的说明），品牌名称在这批档案里不能作为判断血统的依据。",
+      "name": "夕阳再现III之炎龙封印",
+      "port": "40042",
+      "status": "playable"
+    },
+    "xyzxfk": {
+      "archive": "夕阳再现-疯狂江湖(1).rar",
+      "archive_num": "032",
+      "description": "站点子名\"疯狂江湖\"。属于\"夕阳再现\"这一支武侠 MUD 引擎家族——与本项目中的 `xyzxfy2`（风云再起Ⅱ）、`wmkj`（未明空间）、`jhfy`（江湖风云单机）、`bixiecanyang`（碧血残阳）等同源，各自是不同站点在同一套引擎基础上发展出的独立游戏世界。这一支和另一轮处理过的 `xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412` 是同一个真正的\"夕阳再现\"血统（`d/city/sj.lpc` 逐字节相同）——注意本项目里还有另一批同样打着\"夕阳再现\"招牌、地图却是完全不同的\"天涯\"家族的档案（`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3` 等），品牌名称不能作为判断血统的依据。",
+      "name": "夕阳再现·疯狂江湖",
+      "port": "40040",
+      "status": "playable"
+    },
+    "xyzxfy2": {
+      "archive": "夕阳再现-风云再起2.rar",
+      "archive_num": "032-1",
+      "description": "站点子名\"风云再起Ⅱ\"（域名 www.zhaoshu.net）。与本项目中的`xyzxfk`（疯狂江湖）同属\"夕阳再现\"这一支武侠 MUD 引擎家族——两者共享部分底层文件，但登录、安全、世界内容各自独立开发，是两个不同站点在同一基础引擎上分别发展出的游戏。这一支和另一轮处理过的 `xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412` 是同一个真正的\"夕阳再现\"血统（`d/city/sj.lpc` 逐字节相同）——注意本项目里还有另一批同样打着\"夕阳再现\"招牌、地图却是完全不同的\"天涯\"家族的档案（`xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3` 等），品牌名称不能作为判断血统的依据。",
+      "name": "夕阳再现·风云再起Ⅱ",
+      "port": "40041",
+      "status": "playable"
+    },
+    "xyzxiiylzymh": {
+      "archive": "夕阳再现II-炎龙专用美化客户端.rar",
+      "archive_num": "128",
+      "description": "《夕阳再现III 之 炎龙封印》，AKAI Studio 出品，`xysylmhb`（夕阳三-炎龙美化版）家族的另一个版本，一样用 Tomud 客户端握手协议（连线后第一行是裸的 `version ` 提示，期待字面回传 `2060`）。和 `xysylmhb`一样，地图其实是\"天涯\"家族血统（`d/city/sj.lpc` 逐字节相同），是这批档案里第八个确认的成员，标题品牌和实际代码血统再次对不上。",
+      "name": "夕阳再现II-炎龙专用美化客户端 (xyzxiiylzymh)",
+      "port": "40130",
+      "status": "playable"
+    },
+    "xyzxyl201412": {
+      "archive": "夕阳再现-炎龙20141231.rar",
+      "archive_num": "129",
+      "description": "《夕阳再现》家族里改动更大的一个后期版本：自定义巫师阶层一路到`(boss)`/`(ceo)`，天赋分配之后多了一步十一系魔法天赋选择，还支持多端口（ZMud/ToMud）连接。",
+      "name": "夕阳再现-炎龙20141231 (xyzxyl201412)",
+      "port": "40175",
+      "status": "playable"
+    },
+    "xzyx": {
+      "archive": "星战英雄.rar",
+      "archive_num": "002",
+      "description": "本游戏全名《乱世风沙之星战英雄》，属于早期国产 MudOS（xkx 系）派生的武侠 Mud。虽然名字听起来像科幻题材，实际是一款以江湖门派、内功外功为核心玩法的传统武侠 Mud，\"星战\"只是原作者取的一个响亮站名，与太空战争无关。",
+      "name": "星战英雄",
+      "port": "40002",
+      "status": "playable"
+    },
+    "yanhuangwuhun": {
+      "archive": "炎黄武魂_64bit.rar",
+      "archive_num": "045",
+      "description": "属于 ES II 引擎家族（2003 年\"炎黄\"分支），与同批的\"炎黄英雄史\"系出同门，都源自同一套 2003 年由\"lxtx\"改写的引擎版本。",
+      "name": "「武林群侠传」之炎黄武魂Ⅱ",
+      "port": "40060",
+      "status": "playable"
+    },
+    "yhwhpublicfi": {
+      "archive": "炎黄武魂public-final-2016-12-08.rar",
+      "archive_num": "130",
+      "description": "Doing 一脉的又一个分支（`master.lpc` 文件头注明\"for ES II mudlib...updated by Doing Lu for hell (2K), modified by Linux@lxtx for yh2003.3\"），游戏内标题为《武林群侠传》之炎黄武魂。注册流程采用姓+名分开输入，管理密码/登陆密码双密码制，角色创建时以 5 选 1 的角色类型菜单（猛士/智慧/耐力/敏捷/均衡）取代天赋随机菜单，且没有电子邮箱这一步。",
+      "name": "炎黄武魂public-final-2016-12-08 (yhwhpublicfi)",
+      "port": "40132",
+      "status": "playable"
+    },
+    "yhyxcs": {
+      "archive": "银河英雄传说.zip",
+      "archive_num": "064",
+      "description": "源自 2026-07-29 批量归档 `mudlib.rar` 中的 `银河英雄传说.zip`。ES II 引擎家族的一支（`master.c` 署名\"原作 Lil，Annihilator 改写\"），以田中芳树的科幻小说/动画《银河英雄传说》为背景重新设计。",
+      "name": "银河英雄传说",
+      "port": "40104",
+      "status": "playable"
+    },
+    "yhyxs": {
+      "archive": "炎黄英雄史.rar",
+      "archive_num": "045-1",
+      "description": "属于 ES II 引擎家族（2003 年\"炎黄\"分支），与\"炎黄武魂Ⅱ\"是关系很近的姊妹作，共享同一套底层引擎，但拥有各自独立的剧情内容与世界细节。",
+      "name": "炎黄英雄史（游戏内也称\"皇朝再现\"）",
+      "port": "40061",
+      "status": "playable"
+    },
+    "ylfyxa3": {
+      "archive": "炎龙封印-笑傲江湖3阿飞站.rar",
+      "archive_num": "033-1",
+      "description": "属于\"夕阳再现\"（XYZX/YLFY）引擎家族，游戏内登录横幅显示为「夕阳再现」之「笑傲江湖」，是由\"阿飞\"在\"碎梦\"修改的炎龙分支基础上再次深度改造而成的独立版本，与同引擎家族的其它\"夕阳再现\"系游戏是关系较远的表亲，而非同一份内容。",
+      "name": "炎龙封印（笑傲江湖·阿飞站）",
+      "port": "40062",
+      "status": "playable"
+    },
+    "yszz": {
+      "archive": "妖神之争.rar",
+      "archive_num": "143",
+      "description": "一款以\"西游记\"神话世界为背景的武侠/仙侠向 MUD，新角色由西行取经的框架切入，起手在长安城\"南城客栈\"落脚。",
+      "name": "妖神之争",
+      "port": "40192",
+      "status": "playable"
+    },
+    "yueyingqiyuan": {
+      "archive": "月影奇缘.rar",
+      "archive_num": "037",
+      "description": "登录横幅原文亦作\"世纪西游之月影奇缘\"/\"Moon Love Story\"，一个以《西游记》世界观为背景改编的老牌 MUD。属于 ES II 引擎系列（与 `es1_win`、`xkx2001`、`rzrmud`、`xo` 等同源，master 文件署名可追溯到 \"Lil\"→\"Annihilator\" 这一支）。",
+      "name": "月影奇缘",
+      "port": "40048",
+      "status": "playable"
+    },
+    "yxcs": {
+      "archive": "浴血重生MUD.rar",
+      "archive_num": "042",
+      "description": "登录横幅自称 \"1.YXCS\"/\"浴血重生\"。血统比较特殊：既有 ES II 引擎系列的痕迹（`chinesed.lpc` 等文件署名可追溯到 \"ES\"→\"XKX\" 一支），又混入了\"Lonely\"（\"nitan/NT\" 系列的作者）后期改写的部分模块，属于一个 ES 系底子上被二次深度魔改的分支，不是纯血统的任何一支。地图这一层可以更精确地定位：`d/city/sj.lpc`（\"世界之巅\"跳崖场景）和\"天涯\"家族逐字节相同（与 `xysylmhb`/`xyzxiiylzymh`/`yzxiiizylfy`/`xyzx3`/`tianxiawuxue` 这批同样打着别的招牌、实际却是\"天涯\"血统的档案一致），\"Lonely\"这条线索也和 `tianxiawuxue` 鸣谢名单里的同一位作者相呼应。",
+      "name": "浴血重生",
+      "port": "40056",
+      "status": "playable"
+    },
+    "yxjh": {
+      "archive": "浴血江湖.rar",
+      "archive_num": "131",
+      "description": "《浴血江湖3梦回江湖》，KMMUD.COM 出品，注册流程为英文 ID → 中文全名（一次输入，不分姓和名）→ 管理密码/登陆密码双密码制 → 天赋菜单（0 随机整组，y 接受）→ 电子邮件 → 性别。地图和\"天涯\"家族的`wlhd`（武林浩荡/金庸梦II）几乎完全一致——`d/city/sj.lpc`（\"世界之巅\"跳崖场景）逐字节相同，用的正是 `wlhd` 独立改写过的那个\"jump\"版本，而不是 `tybxjh` 那个原始的、没加引号的版本，说明这份档案是在 `wlhd` 基础上（或共同祖先）继续演化而来，此前没有任何档案互相记录过这层关系。",
+      "name": "浴血江湖 (yxjh)",
+      "port": "40148",
+      "status": "playable"
+    },
+    "yxsj": {
+      "archive": "逸侠世界.rar",
+      "archive_num": "132",
+      "description": "《逸俠之世界》（Daniel's World），ES II 引擎家族，台灣出品（BBS140.127.179.161，聯絡信箱 leonguo@tpts4.seed.net.tw）。注册流程为英文 ID → 中文名字 → 密码 + 确认 → 电子邮件 → 性别。",
+      "name": "逸俠世界 (yxsj)",
+      "port": "40167",
+      "status": "playable"
+    },
+    "yxxcii": {
+      "archive": "游侠笑传II.rar",
+      "archive_num": "133",
+      "description": "《游侠笑传II》。支持双编码客户端（连线后先选择 GB 或 BIG5，BIG5提示行在 GBK 视角下故意显示成乱码，这是刻意设计，不是转码 bug）。注册流程为编码选择 → 英文 ID → 中文名字 → 密码 + 确认 → 天赋（y 接受）→ 电子邮件 → 性别。",
+      "name": "游侠笑传II (yxxcii)",
+      "port": "40136",
+      "status": "playable"
+    },
+    "yxzsj": {
+      "archive": "逸  俠  之  世  界.rar",
+      "archive_num": "134",
+      "description": "《逸俠之世界》（Daniel's World），ES II 引擎家族，台湾出品。和`libs/yxsj` 是近亲关系（同样的标题、同样的联络信箱daniel@tpts4.seed.net.tw、同样的 bug 特征、同样的档案结构），但不是完全相同的档案——即使去掉空白/CRLF 差异后内容仍有差别（比如`adm/daemons/combatd.lpc` 差了大约 80 行），这份档案的`securityd.lpc` 存档路径检查本来就是对的（`yxsj` 那份需要修），说明这是同一份代码库在不同时间点的另一个版本，不是重新打包的同一批档案。",
+      "name": "逸俠之世界 (yxzsj)",
+      "port": "40170",
+      "status": "playable"
+    },
+    "yzxiiizylfy": {
+      "archive": "阳再线III之炎龙封印.rar",
+      "archive_num": "135",
+      "description": "《夕阳再现III之炎龙封印》，阿凯工作室（AKAI Studio）2006 年出品。和这批档案里其他\"夕阳再现\"家族一样，采用 Tomud \"2060\" 客户端版本握手（`get_id()` 会拒绝任何不是字面字符串 \"2060\" 的第一次输入，显示\"你的客户端非Tomud或者非笑傲江湖WWW客户端\"，然后才进入`get_id1()` 真正询问英文 ID）。虽然标题也叫\"夕阳再现\"，地图却和`xysylmhb`/`xyzxiiylzymh` 一样其实是\"天涯\"家族血统（`d/city/sj.lpc` 逐字节相同），和真正的\"夕阳再现\"血统（`xyzx`/`jhfy3`/`xajh4gkb`/`xyzxyl201412`）没有关系，是这批档案里第十个确认的\"天涯\"家族成员。",
+      "name": "夕阳再现III之炎龙封印 (yzxiiizylfy)",
+      "port": "40178",
+      "status": "playable"
+    },
+    "zhonghua2": {
+      "archive": "中华2.rar",
+      "archive_num": "023",
+      "description": "登录横幅完整标题为《中华英雄II武侠世界》，本压缩包是其中\"苏州站\"这一具体服务器实例，2006 年 3 月 1 日开站。核心引擎属于 ES II 引擎系列的衍生分支（master 文件署名一路可追溯 \"Lil\" → \"Annihilator\" → \"Xiang forXKX\" → \"Doing Lu for hell\"，最后由 \"Linux@lxtx\" 改写为本作），与本项目其它多个\"终极地狱\"/\"轩辕\"系列同属一个大家族，但内容和玩法已经改动很多，是相对独立的一支。",
+      "name": "中华英雄苏州站",
+      "port": "40028",
+      "status": "playable"
+    },
+    "zhongjidiyu": {
+      "archive": "终极地狱.rar",
+      "archive_num": "052",
+      "description": "MUD 内部标识为 `hell.local`，属于 ES II 引擎系列，与 `es1_win`/`xkx2001`/`rzrmud` 等同属一支，master 文件署名一路写明 \"for ES IImudlib\" → \"Annihilator\" → \"Xiang for XKX\" → \"Doing Lu for hell\"。需要特别说明：本项目里还有另外两个名字里也带\"终极地狱\"字样的压缩包（`zjdyaryl`、`zjdyzj`），那两个是\"地狱\"分支下的另一条独立血脉，与本作不是同一款游戏，只是碰巧都叫\"终极地狱\"，三者内容互不相同。",
+      "name": "终极地狱之轩辕传说",
+      "port": "40072",
+      "status": "playable"
+    },
+    "zitengzhan": {
+      "archive": "紫藤站.rar",
+      "archive_num": "051",
+      "description": "大唐西游之紫藤站（登录后横幅也作【紫藤西游】），属于 ES II 引擎系列（与 `es1_win`/`xkx2001`/`rzrmud` 等同源，master 文件署名同样能追溯到\"for ES II mudlib, original from Lil, rewritten by Annihilator\"）。",
+      "name": "紫藤站",
+      "port": "40071",
+      "status": "playable"
+    },
+    "zjdy2008wzb": {
+      "archive": "终极地狱2008完整版.rar",
+      "archive_num": "136",
+      "description": "《终极地狱2008完整版》（REVIVE OF ULTRA HELL(BLOOD & MAGIC) FROM1999.11.13，CDS 出品）。和本次会话已经处理过的 `hell` 档案是同一个 Doing 血统的家族，`master.lpc`/`logind.lpc`/`named.lpc`/`versiond.lpc` 的结构几乎逐行一致。注册流程为英文 ID → 中文姓氏 →中文名字 → 管理密码 + 确认 → 登陆密码 + 确认 → 角色类型菜单（1-5）→ 性别。这份档案的提示行有实时时钟，测试时用了`--idle 0.3`。",
+      "name": "终极地狱2008完整版 (zjdy2008wzb)",
+      "port": "40110",
+      "status": "playable"
+    },
+    "zjdyaryl": {
+      "archive": "终极地狱之爱若幽兰1.166正式版.rar",
+      "archive_num": "053",
+      "description": "游戏登录后自报家门为\"地狱泥潭---爱若幽兰\"（压缩包标题为\"终极地狱之爱若幽兰\"）。属于 ES II → XKX → \"地狱\"（hell）分支引擎家族，与`zjdyzj`（指间MUD版）是同一套\"地狱\"引擎核心的姊妹版本（两者 master 文件内容完全一致），与另一个同样带\"终极地狱\"字样、但内容完全不同的 `zhongjidiyu` 压缩包不是同一款游戏，只是名字碰巧相似。",
+      "name": "终极地狱之爱若幽兰",
+      "port": "40073",
+      "status": "playable"
+    },
+    "zjdywzb": {
+      "archive": "终极地狱完整版.rar",
+      "archive_num": "137",
+      "description": "《终极地狱完整版》（游戏内横幅：EMPEROR OF ULTRA HELL(BLOOD &MAGIC) FROM 2002.06.2）。和本次会话已经处理过的 `zjdy2008wzb` 是同一个 Doing 血统的家族，`master.lpc`/`logind.lpc`/`named.lpc` 结构几乎逐行一致（原始档案本身就叫 `hell`）。注册流程为英文 ID →确认(y/n) → 中文姓氏 → 中文名字 → 管理密码 + 确认 → 登陆密码 +确认 → 角色类型菜单（1-5）→ 性别。这份档案的提示行也有实时时钟，测试时用 `mudclient.py --idle 0.5`（不是 1.0——会和每秒一次的时钟刷新赛跑导致指令发不出去，详见下方\"深度功能测试\"一节）。**WASM 阶段\"注册流程完整验证过\"的结论具有误导性**：深度功能测试（§10.7）发现每一个新角色都会在人物创建的强制步骤上被永久卡死，详见下方\"深度功能测试\"一节。",
+      "name": "终极地狱完整版 (zjdywzb)",
+      "port": "40109",
+      "status": "playable"
+    },
+    "zjdyzj": {
+      "archive": "终极地狱-指间mud版服务端.rar",
+      "archive_num": "053-1",
+      "description": "游戏登录后自报家门为\"地狱无门\"（\"No Escape From Hell\"，压缩包标题为\"终极地狱-指间mud版服务端\"）。属于 ES II → XKX → \"地狱\"（hell）分支引擎家族，与 `zjdyaryl`（爱若幽兰）是同一套引擎核心的姊妹版本，本作在此基础上额外接入了一层\"指间MUD\"手机客户端专用协议。与另一个名字里也带\"终极地狱\"的 `zhongjidiyu` 压缩包不是同一款游戏。",
+      "name": "终极地狱-指间MUD版",
+      "port": "40074",
+      "status": "limited"
+    },
+    "zjmudhell": {
+      "archive": "指尖后端.7z",
+      "archive_num": "158",
+      "description": "从一个嵌套压缩包中提取（`zjmud.7z` 内的 `指间mud服务器+手机版客户端.zip`，内部文件夹名为 `hell`）——核心系统档案（`master.lpc`/`logind.lpc`等，为了配合下面的自定义手机协议被大幅改写过）和 `hell`/`zjdywzb`不同，master-hash 也不同，但地图内容其实逐字节相同（`d/motianya/mtdating.lpc` 等场景验证过完全一致，整个 `d/` 目录列表也几乎一样，只少了一个 `kunlun`）——这是本项目里\"核心系统改写、地图原样保留\"这一模式的又一个例子，此前 `hell` 的 README 没有记录过这层关系。和 [shujian3](../shujian3/) 是同一个手机 App 协议、同一套自定义 `logind.lpc` 血统，但注册流程的严格程度不同（见下）。",
+      "name": "指尖MUD",
+      "port": "40204",
+      "status": "playable"
+    },
+    "zsdsj": {
+      "archive": "重生的世界v1.0.1.rar",
+      "archive_num": "055",
+      "description": "RWlib v1.0.1，台湾团队开发的生活模拟/城市经营类 MUD，与本项目其他武侠类 mudlib 完全不属于同一谱系，是一套独立自制的引擎。",
+      "name": "重生的世界 (Revival World)",
+      "port": "40081",
+      "status": "playable"
+    },
+    "zxty": {
+      "archive": "再现天涯.rar",
+      "archive_num": "138",
+      "description": "《再现天涯》（游戏内横幅：梦回天涯）。和本次会话之前处理过的Doing 血统 `hell` 家族没有关系，但和 `tybxjh`/`wlhd`/`xhcii` 那个\"天涯\"家族是同源代码——`d/city/sj.lpc`（\"世界之巅\"跳崖场景）逐字节完全相同，此前处理这四份档案时都没有互相记录这层关系。档案里有一个巫师个人目录 `u/zjb/`，里面放了好几份核心系统文件的旧备份（`logind.lpc`、`master.lpc`、`securityd.lpc` 等）——用grep 确认过这些备份没有被任何活动路径引用（`include/globals.h`和 `config.fluffos` 里 `LOGIN_D`=`/adm/daemons/logind`、`MASTER_OB`=`/adm/obj/master`），所以本次只修了这两份真正生效的文件，`u/zjb/` 下的备份保持原样没动。",
+      "name": "再现天涯 (zxty)",
+      "port": "40166",
+      "status": "playable"
+    },
+    "zxty08nxgbb": {
+      "archive": "再现天涯08年修改版本.rar",
+      "archive_num": "138-1",
+      "description": "与 138/zxty 同一款游戏（\"再现天涯\"）的 2008 年修改重发布版本，master.lpc 内容不同、无精确 hash 匹配，但同名同源。",
+      "name": "再现天涯（08年修改版本）",
+      "port": "40193",
+      "status": "playable"
+    },
+    "zzfy": {
+      "archive": "zzfy (full).rar",
+      "archive_num": "020",
+      "description": "游戏登录后自报家门为\"天下无敌\"（压缩包标题\"郑州风云3\"是收藏者对这个具体服务器实例的称呼），属于风云（Fengyun）引擎系列，与本项目里的`fy2`/`fy2005`/`fengyun434`/`moniHuafu` 等同属一个大家族。",
+      "name": "郑州风云3",
+      "port": "40025",
+      "status": "playable"
+    },
+    "zzfy3": {
+      "archive": "郑州风云3.rar",
+      "archive_num": "139",
+      "description": "《郑州风云3》（游戏内横幅：风云系列之天下无敌）。以古龙小说为背景的风云系列 MUD，由长孙无情（Xgchen）建立，和 `wqfy`（无情风云，同样打着\"天下无敌\"横幅）是同一套\"郑州风云\"地图与代码库——`d/marry/hongniang-zhang.lpc` 逐字节相同，此前两份档案都没有互相记录这层关系。档案里有一个巫师个人目录 `u/wiz/u/xxy/`，里面是真正的游戏内容（武功/NPC 档案，不是死代码备份），另外还有几份真正没用的 `logind.lpc` 备份放在`d/wiz/xgchen/`、`u/wiz/u/china/`、`u/wiz/u/lxh/` 下——用`include/globals.h` 里的 `LOGIN_D`=`/adm/daemons/logind` 和`MASTER_OB`=`/adm/obj/master` 确认过只有`adm/daemons/logind.lpc` 和 `adm/obj/master.lpc` 是真正生效的，那几份 `logind.lpc` 备份没有动，但 `u/wiz/u/xxy/` 下的`is_killing()` 呼叫点是真正会被玩家碰到的游戏内容，**修了**。",
+      "name": "郑州风云3 (zzfy3)",
+      "port": "40120",
+      "status": "playable"
+    },
+    "zzhj": {
+      "archive": "最终幻境.zip",
+      "archive_num": "061",
+      "description": "「最终幻境」（The Final Frontier，简称 FF）是一个改写自「东方故事II」(ES2) 函数库的太空科幻题材 MUD，由 Spock 创立——是本项目 ES II/东方故事大家族里罕见的科幻换皮版本，而非武侠题材。存档原为繁体中文（BIG5）内容，已转换为 UTF-8。",
+      "name": "最终幻境 (The Final Frontier)",
+      "port": "40099",
+      "status": "playable"
+    }
+  }
+}

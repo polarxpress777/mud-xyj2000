@@ -1,0 +1,2214 @@
+{
+  "scheme": "NNN = one unique game/codebase; NNN-M = confirmed derivative/variant of the same codebase (lineage confirmed via scripts/lib_similarity_cluster.py and/or manual master.c/chinese.c/etc diffing per AGENTS.md §2.1). 9xx = non-LPC / not-convertible / deprioritized-English archives. Byte-identical duplicate archive files share their sibling's number (duplicate_of set).",
+  "unique_games": 153,
+  "libs": [
+    {
+      "number": "001",
+      "slug": "shzs",
+      "archive": "山海战神.rar",
+      "name": "山海战神",
+      "wasm_status": "playable",
+      "port": "40001",
+      "duplicate_of": null
+    },
+    {
+      "number": "002",
+      "slug": "xzyx",
+      "archive": "星战英雄.rar",
+      "name": "星战英雄",
+      "wasm_status": "playable",
+      "port": "40002",
+      "duplicate_of": null
+    },
+    {
+      "number": "003",
+      "slug": "xyxy2",
+      "archive": "20150716未知lib.zip",
+      "name": "小雨西游Ⅱ (Xiaoyu Xiyou II)",
+      "wasm_status": "playable",
+      "port": "40003",
+      "duplicate_of": null
+    },
+    {
+      "number": "003-1",
+      "slug": "xiaoyuxiyou",
+      "archive": "小雨西游.zip",
+      "name": "小雨西游",
+      "wasm_status": "playable",
+      "port": "40046",
+      "duplicate_of": null
+    },
+    {
+      "number": "004",
+      "slug": "bxsj",
+      "archive": "bxsj.rar",
+      "name": "书剑天下 (ShuJian MUD)",
+      "wasm_status": "playable",
+      "port": "40004",
+      "duplicate_of": null
+    },
+    {
+      "number": "004-1",
+      "slug": "bxsj1",
+      "archive": "bxsj1.rar",
+      "name": "书剑·经典 (ShuJian Classic)",
+      "wasm_status": "playable",
+      "port": "40005",
+      "duplicate_of": null
+    },
+    {
+      "number": "004-2",
+      "slug": "jinyongwenzi",
+      "archive": "金庸文字版 (1).exe",
+      "name": "金庸文字版",
+      "wasm_status": "playable",
+      "port": "40083",
+      "duplicate_of": null
+    },
+    {
+      "number": "005",
+      "slug": "chidi",
+      "archive": "chidi.rar",
+      "name": "江湖 I (Jianghu I)",
+      "wasm_status": "playable",
+      "port": "40006",
+      "duplicate_of": null
+    },
+    {
+      "number": "007",
+      "slug": "dtsl",
+      "archive": "DTSL.7z",
+      "name": "DTSL",
+      "wasm_status": "playable",
+      "port": "40008",
+      "duplicate_of": null
+    },
+    {
+      "number": "007-1",
+      "slug": "dtslmud",
+      "archive": "LLMUD(大唐双龙)v_0.11版.rar",
+      "name": "大唐双龙传（LLMUD）",
+      "wasm_status": "playable",
+      "port": "40015",
+      "duplicate_of": null
+    },
+    {
+      "number": "007-2",
+      "slug": "dtsl2",
+      "archive": "大唐双龙.rar",
+      "name": "大唐双龙 (DaTangShuangLong)",
+      "wasm_status": "playable",
+      "port": "40043",
+      "duplicate_of": null
+    },
+    {
+      "number": "008",
+      "slug": "es1_win",
+      "archive": "es1_win.rar",
+      "name": "东方故事（蓝天） — es1_win",
+      "wasm_status": "playable",
+      "port": "40009",
+      "duplicate_of": null
+    },
+    {
+      "number": "008-1",
+      "slug": "esI",
+      "archive": "esI.rar",
+      "name": "东方故事 — esI（\"屠龙之战\"）",
+      "wasm_status": "playable",
+      "port": "40010",
+      "duplicate_of": null
+    },
+    {
+      "number": "009",
+      "slug": "fengyun434",
+      "archive": "fengyun4-3-4.rar",
+      "name": "风云Ⅳ — fengyun434",
+      "wasm_status": "playable",
+      "port": "40011",
+      "duplicate_of": null
+    },
+    {
+      "number": "009-1",
+      "slug": "fy2005",
+      "archive": "fy2005.rar",
+      "name": "风云Ⅳ（2005 国内经典版）— fy2005",
+      "wasm_status": "playable",
+      "port": "40013",
+      "duplicate_of": null
+    },
+    {
+      "number": "010",
+      "slug": "xiyouji",
+      "archive": "西游记.rar",
+      "name": "西游记 (A Journey to the West)",
+      "wasm_status": "playable",
+      "port": "40079",
+      "duplicate_of": null
+    },
+    {
+      "number": "010-1",
+      "slug": "xyj2000f",
+      "archive": "fluffos(西游记2000).tar.gz",
+      "name": "西游记 2000 — xyj2000f",
+      "wasm_status": "playable",
+      "port": "40012",
+      "duplicate_of": null
+    },
+    {
+      "number": "010-2",
+      "slug": "xiyouji2003",
+      "archive": "西游记2003.rar",
+      "name": "西游记[光辉岁月]",
+      "wasm_status": "playable",
+      "port": "40075",
+      "duplicate_of": null
+    },
+    {
+      "number": "010-3",
+      "slug": "xiyouji450",
+      "archive": "西游记450.rar",
+      "name": "西游记450",
+      "wasm_status": "playable",
+      "port": "40078",
+      "duplicate_of": null
+    },
+    {
+      "number": "010-4",
+      "slug": "xiyouji2006",
+      "archive": "西游记2006之 最终幻想.rar",
+      "name": "西游记2006·大唐西游",
+      "wasm_status": "playable",
+      "port": "40077",
+      "duplicate_of": null
+    },
+    {
+      "number": "011",
+      "slug": "fy2",
+      "archive": "fy2.rar",
+      "name": "风云再起Ⅱ — fy2",
+      "wasm_status": "playable",
+      "port": "40014",
+      "duplicate_of": null
+    },
+    {
+      "number": "011-1",
+      "slug": "fy2qh",
+      "archive": "风云II (清华仿写版） (1).ZIP",
+      "name": "风云II",
+      "wasm_status": "playable",
+      "port": "40091",
+      "duplicate_of": null
+    },
+    {
+      "number": "012",
+      "slug": "mhxy",
+      "archive": "mhxy.rar",
+      "name": "梦幻西游 (mhxy)",
+      "wasm_status": "playable",
+      "port": "40016",
+      "duplicate_of": null
+    },
+    {
+      "number": "012-1",
+      "slug": "mhxyqd",
+      "archive": "梦幻西游2002版.rar",
+      "name": "梦幻西游（青岛站）",
+      "wasm_status": "playable",
+      "port": "40050",
+      "duplicate_of": null
+    },
+    {
+      "number": "013",
+      "slug": "xiakexing2017",
+      "archive": "MUD侠客行2017完整版.zip",
+      "name": "侠客行 (MUD侠客行2017完整版)",
+      "wasm_status": "playable",
+      "port": "40017",
+      "duplicate_of": null
+    },
+    {
+      "number": "014",
+      "slug": "nitan170911",
+      "archive": "nitan170911.7z",
+      "name": "仙剑奇侠传 (nitan170911)",
+      "wasm_status": "playable",
+      "port": "40018",
+      "duplicate_of": null
+    },
+    {
+      "number": "014-1",
+      "slug": "hhsj",
+      "archive": "洪荒世界.rar",
+      "name": "洪荒世界",
+      "wasm_status": "playable",
+      "port": "40106",
+      "duplicate_of": null
+    },
+    {
+      "number": "014-2",
+      "slug": "xfbhh",
+      "archive": "修复版洪荒.rar",
+      "name": "洪荒世界（修复版）",
+      "wasm_status": "playable",
+      "port": "40190",
+      "duplicate_of": null
+    },
+    {
+      "number": "015",
+      "slug": "nitan6",
+      "archive": "nitan6.zip",
+      "name": "笑傲江湖 (nitan6)",
+      "wasm_status": "playable",
+      "port": "40019",
+      "duplicate_of": null
+    },
+    {
+      "number": "016",
+      "slug": "rzrmud",
+      "archive": "rzrmud.20130220.tar.gz",
+      "name": "大唐西游 YWX人造人 (rzrmud)",
+      "wasm_status": "playable",
+      "port": "40020",
+      "duplicate_of": null
+    },
+    {
+      "number": "017",
+      "slug": "xkx2001",
+      "archive": "xkx2001测试用老lib.zip",
+      "name": "侠客行 Ⅰ (The Quest of Oriental Chivalry)",
+      "wasm_status": "playable",
+      "port": "40021",
+      "duplicate_of": null
+    },
+    {
+      "number": "017-1",
+      "slug": "bmxkx2001",
+      "archive": "北美侠客行2001.rar",
+      "name": "侠客行 (The Quest of Oriental Chivalry) — 北美 2001 版",
+      "wasm_status": "playable",
+      "port": "40039",
+      "duplicate_of": null
+    },
+    {
+      "number": "018",
+      "slug": "xlqy_new2007",
+      "archive": "xlqy_new2007.rar",
+      "name": "新仙侣情缘之飘渺纪元",
+      "wasm_status": "playable",
+      "port": "40022",
+      "duplicate_of": null
+    },
+    {
+      "number": "018-1",
+      "slug": "xlqy_early",
+      "archive": "xlqy-解压看readme.rar",
+      "name": "仙侣情缘（早期测试版）",
+      "wasm_status": "playable",
+      "port": "40076",
+      "duplicate_of": null
+    },
+    {
+      "number": "018-2",
+      "slug": "xlqyzdb",
+      "archive": "仙侣情缘浙大版.rar",
+      "name": "仙侣情缘·浙大版",
+      "wasm_status": "playable",
+      "port": "40033",
+      "duplicate_of": null
+    },
+    {
+      "number": "019",
+      "slug": "xo",
+      "archive": "xo.zip",
+      "name": "笑傲江湖（迷你版）",
+      "wasm_status": "playable",
+      "port": "40023",
+      "duplicate_of": null
+    },
+    {
+      "number": "019-1",
+      "slug": "xo_final",
+      "archive": "xo最终版1.2.rar",
+      "name": "笑傲江湖（最终版）",
+      "wasm_status": "playable",
+      "port": "40024",
+      "duplicate_of": null
+    },
+    {
+      "number": "019-2",
+      "slug": "xajh2",
+      "archive": "笑傲江湖II.rar",
+      "name": "笑傲江湖 II",
+      "wasm_status": "playable",
+      "port": "40068",
+      "duplicate_of": null
+    },
+    {
+      "number": "019-3",
+      "slug": "xajhxo",
+      "archive": "笑傲江湖XO .rar",
+      "name": "笑傲江湖 XO",
+      "wasm_status": "playable",
+      "port": "40069",
+      "duplicate_of": null
+    },
+    {
+      "number": "019-4",
+      "slug": "qhxajh",
+      "archive": "清华笑傲江湖）.tgz",
+      "name": "清华笑傲江湖",
+      "wasm_status": "playable",
+      "port": "40195",
+      "duplicate_of": null
+    },
+    {
+      "number": "020",
+      "slug": "zzfy",
+      "archive": "zzfy (full).rar",
+      "name": "郑州风云3",
+      "wasm_status": "playable",
+      "port": "40025",
+      "duplicate_of": null
+    },
+    {
+      "number": "020-1",
+      "slug": "fy3xd",
+      "archive": "风云III修订版  (1).rar",
+      "name": "风云III修订版",
+      "wasm_status": "playable",
+      "port": "40089",
+      "duplicate_of": null
+    },
+    {
+      "number": "020-2",
+      "slug": "fy3dz",
+      "archive": "风云III典藏版 (1).rar",
+      "name": "风云III典藏版",
+      "wasm_status": "playable",
+      "port": "40090",
+      "duplicate_of": null
+    },
+    {
+      "number": "021",
+      "slug": "shiji",
+      "archive": "世纪.zip",
+      "name": "世纪",
+      "wasm_status": "playable",
+      "port": "40026",
+      "duplicate_of": null
+    },
+    {
+      "number": "022",
+      "slug": "dfgs2",
+      "archive": "东方故事二 (1).rar",
+      "name": "东方故事二",
+      "wasm_status": "playable",
+      "port": "40027",
+      "duplicate_of": null
+    },
+    {
+      "number": "023",
+      "slug": "zhonghua2",
+      "archive": "中华2.rar",
+      "name": "中华英雄苏州站",
+      "wasm_status": "playable",
+      "port": "40028",
+      "duplicate_of": null
+    },
+    {
+      "number": "024",
+      "slug": "shujian2008",
+      "archive": "书剑2008.rar",
+      "name": "书剑天下 2008",
+      "wasm_status": "playable",
+      "port": "40029",
+      "duplicate_of": null
+    },
+    {
+      "number": "024-1",
+      "slug": "sjtx2",
+      "archive": "书剑天下.rar",
+      "name": "书剑天下（小熊泥苑分站）",
+      "wasm_status": "playable",
+      "port": "40030",
+      "duplicate_of": null
+    },
+    {
+      "number": "025",
+      "slug": "sjpl2",
+      "archive": "书剑飘零II .zip",
+      "name": "书剑飘零Ⅱ",
+      "wasm_status": "playable",
+      "port": "40031",
+      "duplicate_of": null
+    },
+    {
+      "number": "026",
+      "slug": "xianlvqiyuan",
+      "archive": "仙侣奇缘新版.rar",
+      "name": "仙侣情缘（知秋站 2001版）",
+      "wasm_status": "playable",
+      "port": "40032",
+      "duplicate_of": null
+    },
+    {
+      "number": "027",
+      "slug": "xjcq2000",
+      "archive": "仙剑传奇.rar",
+      "name": "仙剑狂侠2000（仙剑传奇）",
+      "wasm_status": "playable",
+      "port": "40034",
+      "duplicate_of": null
+    },
+    {
+      "number": "028",
+      "slug": "xkxz2",
+      "archive": "侠客新传(2).rar",
+      "name": "侠客新传 (New Legend of the Wandering Swordsman)",
+      "wasm_status": "playable",
+      "port": "40035",
+      "duplicate_of": null
+    },
+    {
+      "number": "029",
+      "slug": "xkyx3b",
+      "archive": "侠客英雄传III 可用.zip",
+      "name": "侠客英雄传 III",
+      "wasm_status": "playable",
+      "port": "40036",
+      "duplicate_of": null
+    },
+    {
+      "number": "030",
+      "slug": "xiakexing100",
+      "archive": "侠客行100.rar",
+      "name": "侠客行一百 (Xia Ke Xing - Yi Bai)",
+      "wasm_status": "playable",
+      "port": "40037",
+      "duplicate_of": null
+    },
+    {
+      "number": "031",
+      "slug": "jqxz2008",
+      "archive": "金庸群侠传2008加强版.rar",
+      "name": "金庸群侠传（2008 加强版）",
+      "wasm_status": "playable",
+      "port": "40082",
+      "duplicate_of": null
+    },
+    {
+      "number": "031-1",
+      "slug": "jqxz2008std",
+      "archive": "金庸群侠传2008版.rar",
+      "name": "金庸群侠传（2008 标准版）",
+      "wasm_status": "playable",
+      "port": "40084",
+      "duplicate_of": null
+    },
+    {
+      "number": "031-2",
+      "slug": "jqxz2008dlx",
+      "archive": "金庸群侠传2008超豪华版.rar",
+      "name": "金庸群侠传（2008 超豪华版）",
+      "wasm_status": "playable",
+      "port": "40085",
+      "duplicate_of": null
+    },
+    {
+      "number": "031-3",
+      "slug": "jqxz2015",
+      "archive": "金庸群侠传2015版.rar",
+      "name": "金庸群侠传（2015版）",
+      "wasm_status": "playable",
+      "port": "40086",
+      "duplicate_of": null
+    },
+    {
+      "number": "031-4",
+      "slug": "xiakexing3",
+      "archive": "侠客行III .rar",
+      "name": "金庸群侠传 (原名\"侠客行三\")",
+      "wasm_status": "playable",
+      "port": "40038",
+      "duplicate_of": null
+    },
+    {
+      "number": "032",
+      "slug": "xyzxfk",
+      "archive": "夕阳再现-疯狂江湖(1).rar",
+      "name": "夕阳再现-疯狂江湖",
+      "wasm_status": "playable",
+      "port": "40040",
+      "duplicate_of": null
+    },
+    {
+      "number": "032-1",
+      "slug": "xyzxfy2",
+      "archive": "夕阳再现-风云再起2.rar",
+      "name": "夕阳再现·风云再起Ⅱ",
+      "wasm_status": "playable",
+      "port": "40041",
+      "duplicate_of": null
+    },
+    {
+      "number": "032-2",
+      "slug": "jhfy",
+      "archive": "江湖风云 (1).rar",
+      "name": "江湖风云",
+      "wasm_status": "playable",
+      "port": "40053",
+      "duplicate_of": null
+    },
+    {
+      "number": "033",
+      "slug": "xyzx3",
+      "archive": "夕阳再线III之炎龙封印.rar",
+      "name": "夕阳再现III之炎龙封印",
+      "wasm_status": "playable",
+      "port": "40042",
+      "duplicate_of": null
+    },
+    {
+      "number": "033-1",
+      "slug": "ylfyxa3",
+      "archive": "炎龙封印-笑傲江湖3阿飞站.rar",
+      "name": "炎龙封印（笑傲江湖·阿飞站）",
+      "wasm_status": "playable",
+      "port": "40062",
+      "duplicate_of": null
+    },
+    {
+      "number": "033-2",
+      "slug": "longyunmeng",
+      "archive": "龙云梦-炎龙封印源码版.rar",
+      "name": "龙云梦·炎龙封印（源码版）",
+      "wasm_status": "playable",
+      "port": "40094",
+      "duplicate_of": null
+    },
+    {
+      "number": "033-3",
+      "slug": "longyunmeng_binary",
+      "archive": "龙云梦-炎龙封印-二进制版.rar",
+      "name": "龙云梦·炎龙封印（二进制版）",
+      "wasm_status": "not-convertible",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "033-4",
+      "slug": "xyzxiiidup",
+      "archive": "夕阳再现III.rar",
+      "name": "夕阳再现III (dup)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "identical config.xyzx and near-identical file count to 033 (xiyangzaixian3, archive 夕阳再线III之炎龙封印.rar) -- same archive re-uploaded under a different filename, not reprocessed separately",
+      "duplicate_of": "033"
+    },
+    {
+      "number": "034",
+      "slug": "tianxia",
+      "archive": "天下.tar.gz",
+      "name": "天下 Beta",
+      "wasm_status": "playable",
+      "port": "40044",
+      "duplicate_of": null
+    },
+    {
+      "number": "035",
+      "slug": "tianxiawuxue",
+      "archive": "天下无雪.rar",
+      "name": "天下无雪",
+      "wasm_status": "playable",
+      "port": "40045",
+      "duplicate_of": null
+    },
+    {
+      "number": "036",
+      "slug": "kxkj",
+      "archive": "新狂想空间II.rar",
+      "name": "狂想空间",
+      "wasm_status": "playable",
+      "port": "40047",
+      "duplicate_of": null
+    },
+    {
+      "number": "036-1",
+      "slug": "kxkj1",
+      "archive": "狂想空间 (1).rar",
+      "name": "狂想空间",
+      "wasm_status": "playable",
+      "port": "40063",
+      "duplicate_of": null
+    },
+    {
+      "number": "037",
+      "slug": "yueyingqiyuan",
+      "archive": "月影奇缘.rar",
+      "name": "月影奇缘",
+      "wasm_status": "playable",
+      "port": "40048",
+      "duplicate_of": null
+    },
+    {
+      "number": "038",
+      "slug": "wmkj",
+      "archive": "未明空间.rar",
+      "name": "未明空间 (Weiming Kongjian / \"wmkj\")",
+      "wasm_status": "playable",
+      "port": "40049",
+      "duplicate_of": null
+    },
+    {
+      "number": "039",
+      "slug": "moniHuafu",
+      "archive": "mnhf.zip",
+      "name": "mnhf",
+      "wasm_status": "playable",
+      "port": "",
+      "duplicate_of": "mnhf"
+    },
+    {
+      "number": "040",
+      "slug": "wuhanzhan",
+      "archive": "武汉站.rar",
+      "name": "大话西游 (A Chinese Odyssey)",
+      "wasm_status": "playable",
+      "port": "40052",
+      "duplicate_of": null
+    },
+    {
+      "number": "041",
+      "slug": "nitan_ceshi",
+      "archive": "泥潭III测试版.rar",
+      "name": "泥潭III测试版 / 《終極魔界》 (nitan_ceshi)",
+      "wasm_status": "playable",
+      "port": "40054",
+      "duplicate_of": null
+    },
+    {
+      "number": "041-1",
+      "slug": "nitan_san",
+      "archive": "泥潭三.rar",
+      "name": "泥潭三 / 《終極魔界》 (nitan_san)",
+      "wasm_status": "playable",
+      "port": "40055",
+      "duplicate_of": null
+    },
+    {
+      "number": "042",
+      "slug": "yxcs",
+      "archive": "浴血重生MUD.rar",
+      "name": "浴血重生",
+      "wasm_status": "playable",
+      "port": "40056",
+      "duplicate_of": null
+    },
+    {
+      "number": "043",
+      "slug": "haiyang2",
+      "archive": "海洋II 2010 正式无错完整版下载 (1).rar",
+      "name": "海洋II 2010 正式无错完整版下载",
+      "wasm_status": "playable",
+      "port": "40057",
+      "duplicate_of": null
+    },
+    {
+      "number": "043-1",
+      "slug": "hymud",
+      "archive": "hymud-main.zip",
+      "name": "海洋V·星月传奇",
+      "wasm_status": "playable",
+      "port": "40103",
+      "duplicate_of": null
+    },
+    {
+      "number": "044",
+      "slug": "huoying",
+      "archive": "Naruto.rar",
+      "name": "Naruto",
+      "wasm_status": "playable",
+      "port": "40059",
+      "duplicate_of": null
+    },
+    {
+      "number": "045",
+      "slug": "yanhuangwuhun",
+      "archive": "炎黄武魂_64bit.rar",
+      "name": "「武林群侠传」之炎黄武魂Ⅱ",
+      "wasm_status": "playable",
+      "port": "40060",
+      "duplicate_of": null
+    },
+    {
+      "number": "045-1",
+      "slug": "yhyxs",
+      "archive": "炎黄英雄史.rar",
+      "name": "炎黄英雄史（游戏内也称\"皇朝再现\"）",
+      "wasm_status": "playable",
+      "port": "40061",
+      "duplicate_of": null
+    },
+    {
+      "number": "046",
+      "slug": "xuanjianlu",
+      "archive": "玄剑录.rar",
+      "name": "玄剑录",
+      "wasm_status": "playable",
+      "port": "40064",
+      "duplicate_of": null
+    },
+    {
+      "number": "047",
+      "slug": "bixiecanyang",
+      "archive": "碧血残阳之豪侠晚歌.rar",
+      "name": "碧血残阳 之「豪侠晚歌」",
+      "wasm_status": "playable",
+      "port": "40065",
+      "duplicate_of": null
+    },
+    {
+      "number": "048",
+      "slug": "shenzhou",
+      "archive": "神州.rar",
+      "name": "神州",
+      "wasm_status": "playable",
+      "port": "40066",
+      "duplicate_of": null
+    },
+    {
+      "number": "049",
+      "slug": "shenmo",
+      "archive": "神魔20190924版本.rar",
+      "name": "神魔（西游记之神魔传说）",
+      "wasm_status": "playable",
+      "port": "40067",
+      "duplicate_of": null
+    },
+    {
+      "number": "050",
+      "slug": "xajhzcjh",
+      "archive": "笑傲江湖服务端+客户端.rar",
+      "name": "笑傲江湖之重出江湖",
+      "wasm_status": "playable",
+      "port": "40070",
+      "duplicate_of": null
+    },
+    {
+      "number": "051",
+      "slug": "zitengzhan",
+      "archive": "紫藤站.rar",
+      "name": "紫藤站",
+      "wasm_status": "playable",
+      "port": "40071",
+      "duplicate_of": null
+    },
+    {
+      "number": "052",
+      "slug": "zhongjidiyu",
+      "archive": "终极地狱.rar",
+      "name": "终极地狱之轩辕传说",
+      "wasm_status": "playable",
+      "port": "40072",
+      "duplicate_of": null
+    },
+    {
+      "number": "053",
+      "slug": "zjdyaryl",
+      "archive": "终极地狱之爱若幽兰1.166正式版.rar",
+      "name": "终极地狱之爱若幽兰",
+      "wasm_status": "playable",
+      "port": "40073",
+      "duplicate_of": null
+    },
+    {
+      "number": "053-1",
+      "slug": "zjdyzj",
+      "archive": "终极地狱-指间mud版服务端.rar",
+      "name": "终极地狱-指间MUD版",
+      "wasm_status": "limited",
+      "port": "40074",
+      "duplicate_of": null
+    },
+    {
+      "number": "054",
+      "slug": "xixingzhanji",
+      "archive": "西行战记.gz",
+      "name": "西行战记",
+      "wasm_status": "playable",
+      "port": "40080",
+      "duplicate_of": null
+    },
+    {
+      "number": "055",
+      "slug": "zsdsj",
+      "archive": "重生的世界v1.0.1.rar",
+      "name": "重生的世界 (Revival World)",
+      "wasm_status": "playable",
+      "port": "40081",
+      "duplicate_of": null
+    },
+    {
+      "number": "056",
+      "slug": "tiexuejianghu",
+      "archive": "铁血江湖.rar",
+      "name": "铁血江湖 (Tie Xue Jiang Hu)",
+      "wasm_status": "playable",
+      "port": "40087",
+      "duplicate_of": null
+    },
+    {
+      "number": "057",
+      "slug": "syxjl",
+      "archive": "随缘洗剑录.rar",
+      "name": "随缘洗剑录",
+      "wasm_status": "playable",
+      "port": "40088",
+      "duplicate_of": null
+    },
+    {
+      "number": "058",
+      "slug": "mohuanshiji",
+      "archive": "魔幻世纪.rar",
+      "name": "魔幻世纪 (mohuanshiji)",
+      "wasm_status": "playable",
+      "port": "40092",
+      "duplicate_of": null
+    },
+    {
+      "number": "059",
+      "slug": "sjcs",
+      "archive": "三界传说.rar",
+      "name": "三界传说",
+      "wasm_status": "playable",
+      "port": "40097",
+      "duplicate_of": null
+    },
+    {
+      "number": "060",
+      "slug": "sanjieshenhua",
+      "archive": "三界神话-春节.rar",
+      "name": "三界神话「嘉峪关」",
+      "wasm_status": "playable",
+      "port": "40098",
+      "duplicate_of": null
+    },
+    {
+      "number": "061",
+      "slug": "zzhj",
+      "archive": "最终幻境.zip",
+      "name": "最终幻境",
+      "wasm_status": "playable",
+      "port": "40099",
+      "duplicate_of": null
+    },
+    {
+      "number": "062",
+      "slug": "niaoren",
+      "archive": "最新鳥人世界.zip",
+      "name": "最新鳥人世界",
+      "wasm_status": "playable",
+      "port": "40100",
+      "duplicate_of": null
+    },
+    {
+      "number": "063",
+      "slug": "aoxiangtianji",
+      "archive": "翱翔天际utf8.7z",
+      "name": "翱翔天际",
+      "wasm_status": "playable",
+      "port": "40101",
+      "duplicate_of": null
+    },
+    {
+      "number": "064",
+      "slug": "yhyxcs",
+      "archive": "银河英雄传说.zip",
+      "name": "银河英雄传说",
+      "wasm_status": "playable",
+      "port": "40104",
+      "duplicate_of": null
+    },
+    {
+      "number": "065",
+      "slug": "ldtx",
+      "archive": "鹿鼎天下.rar",
+      "name": "鹿鼎天下 (in-game: 雄霸天下『西安站』)",
+      "wasm_status": "playable",
+      "port": "40105",
+      "duplicate_of": null
+    },
+    {
+      "number": "066",
+      "slug": "hc",
+      "archive": "红尘.rar",
+      "name": "红尘 (in-game: 红尘录)",
+      "wasm_status": "playable",
+      "port": "40107",
+      "duplicate_of": null
+    },
+    {
+      "number": "067",
+      "slug": "cctx",
+      "archive": "驰骋天下.rar",
+      "name": "驰骋天下",
+      "wasm_status": "playable",
+      "port": "40161",
+      "duplicate_of": null
+    },
+    {
+      "number": "068",
+      "slug": "dfgsiiv13b",
+      "archive": "东方故事IIv1.3b.tar.gz",
+      "name": "东方故事IIv1.3b",
+      "wasm_status": "playable",
+      "port": "40144",
+      "duplicate_of": null
+    },
+    {
+      "number": "070",
+      "slug": "dtxywzxzb",
+      "archive": "大唐西游完整修正版.rar",
+      "name": "大唐西游完整修正版",
+      "wasm_status": "playable",
+      "port": "40150",
+      "duplicate_of": null
+    },
+    {
+      "number": "071",
+      "slug": "ffxymud",
+      "archive": "非凡夕阳MUD.rar",
+      "name": "非凡夕阳MUD",
+      "wasm_status": "playable",
+      "port": "40142",
+      "duplicate_of": null
+    },
+    {
+      "number": "072",
+      "slug": "fys",
+      "archive": "风云三.rar",
+      "name": "风云三",
+      "wasm_status": "playable",
+      "port": "40164",
+      "duplicate_of": null
+    },
+    {
+      "number": "073",
+      "slug": "fysjmb",
+      "archive": "风云四解密版.rar",
+      "name": "风云四解密版",
+      "wasm_status": "playable",
+      "port": "40165",
+      "duplicate_of": null
+    },
+    {
+      "number": "074",
+      "slug": "fyzfqyy",
+      "archive": "风云之风起云涌.rar",
+      "name": "风云之风起云涌",
+      "wasm_status": "playable",
+      "port": "40133",
+      "duplicate_of": null
+    },
+    {
+      "number": "075",
+      "slug": "gjzddmudda",
+      "archive": "国家制度的MUD DA.rar",
+      "name": "国家制度的MUD DA",
+      "wasm_status": "playable",
+      "port": "40122",
+      "duplicate_of": null
+    },
+    {
+      "number": "076",
+      "slug": "hell",
+      "archive": "hell.7z",
+      "name": "hell",
+      "wasm_status": "playable",
+      "port": "40114",
+      "duplicate_of": null
+    },
+    {
+      "number": "077",
+      "slug": "hxxtjqb",
+      "archive": "幻想西天加强版.rar",
+      "name": "幻想西天加强版",
+      "wasm_status": "playable",
+      "port": "40177",
+      "duplicate_of": null
+    },
+    {
+      "number": "079",
+      "slug": "hy2000",
+      "archive": "海洋2000.rar",
+      "name": "海洋2000",
+      "wasm_status": "playable",
+      "port": "40174",
+      "duplicate_of": null
+    },
+    {
+      "number": "080",
+      "slug": "hy2002",
+      "archive": "海洋2002.rar",
+      "name": "海洋2002",
+      "wasm_status": "playable",
+      "port": "40116",
+      "duplicate_of": null
+    },
+    {
+      "number": "081",
+      "slug": "hy3",
+      "archive": "火云.rar",
+      "name": "火云",
+      "wasm_status": "playable",
+      "port": "40162",
+      "duplicate_of": null
+    },
+    {
+      "number": "082",
+      "slug": "hyiishzdscbb",
+      "archive": "海洋II上海站第三次版本.rar",
+      "name": "海洋II上海站第三次版本",
+      "wasm_status": "playable",
+      "port": "40147",
+      "duplicate_of": null
+    },
+    {
+      "number": "083",
+      "slug": "jh2006",
+      "archive": "江湖2006.rar",
+      "name": "江湖2006",
+      "wasm_status": "playable",
+      "port": "40128",
+      "duplicate_of": null
+    },
+    {
+      "number": "084",
+      "slug": "jhfy2",
+      "archive": "江湖风云2.rar",
+      "name": "江湖风云2",
+      "wasm_status": "playable",
+      "port": "40137",
+      "duplicate_of": null
+    },
+    {
+      "number": "085",
+      "slug": "jhfy3",
+      "archive": "江湖风云3.rar",
+      "name": "江湖风云3",
+      "wasm_status": "playable",
+      "port": "40143",
+      "duplicate_of": null
+    },
+    {
+      "number": "086",
+      "slug": "jyqxc",
+      "archive": "金庸群侠传 (1).rar",
+      "name": "金庸群侠传",
+      "wasm_status": "playable",
+      "port": "40129",
+      "duplicate_of": null
+    },
+    {
+      "number": "087",
+      "slug": "jyqxc2",
+      "archive": "金庸群侠传.rar",
+      "name": "金庸群侠传",
+      "wasm_status": "playable",
+      "port": "40172",
+      "duplicate_of": null
+    },
+    {
+      "number": "088",
+      "slug": "jyqxc2013fwq",
+      "archive": "金庸群侠传2013_服务器版.rar",
+      "name": "金庸群侠传2013_服务器版",
+      "wasm_status": "playable",
+      "port": "40108",
+      "duplicate_of": null
+    },
+    {
+      "number": "089",
+      "slug": "kxkjii2",
+      "archive": "狂想空间II.rar",
+      "name": "狂想空间II",
+      "wasm_status": "playable",
+      "port": "40160",
+      "duplicate_of": null
+    },
+    {
+      "number": "090",
+      "slug": "ldtxii",
+      "archive": "鹿鼎天下II.rar",
+      "name": "鹿鼎天下II",
+      "wasm_status": "playable",
+      "port": "40176",
+      "duplicate_of": null
+    },
+    {
+      "number": "091",
+      "slug": "mnhf",
+      "archive": "模拟华附.rar",
+      "name": "模拟华附",
+      "wasm_status": "playable",
+      "port": "40156",
+      "duplicate_of": null
+    },
+    {
+      "number": "092",
+      "slug": "nte",
+      "archive": "泥潭二.rar",
+      "name": "泥潭二",
+      "wasm_status": "playable",
+      "port": "40115",
+      "duplicate_of": null
+    },
+    {
+      "number": "093",
+      "slug": "ntii",
+      "archive": "泥潭II.rar",
+      "name": "泥潭II",
+      "wasm_status": "playable",
+      "port": "40151",
+      "duplicate_of": null
+    },
+    {
+      "number": "094",
+      "slug": "sj",
+      "archive": "世纪.rar",
+      "name": "世纪",
+      "wasm_status": "playable",
+      "port": "40127",
+      "duplicate_of": null
+    },
+    {
+      "number": "095",
+      "slug": "sje",
+      "archive": "书剑贰.rar",
+      "name": "书剑贰",
+      "wasm_status": "playable",
+      "port": "40146",
+      "duplicate_of": null
+    },
+    {
+      "number": "096",
+      "slug": "sjecl",
+      "archive": "书剑恩仇录.rar",
+      "name": "书剑恩仇录",
+      "wasm_status": "playable",
+      "port": "40139",
+      "duplicate_of": null
+    },
+    {
+      "number": "097",
+      "slug": "sjplgfjxb",
+      "archive": "书剑飘零官方教学版 .rar",
+      "name": "书剑飘零官方教学版",
+      "wasm_status": "playable",
+      "port": "40134",
+      "duplicate_of": null
+    },
+    {
+      "number": "098",
+      "slug": "sjplii",
+      "archive": "书剑飘零II.rar",
+      "name": "书剑飘零II",
+      "wasm_status": "playable",
+      "port": "40153",
+      "duplicate_of": null
+    },
+    {
+      "number": "099",
+      "slug": "sjsh",
+      "archive": "三界神话（宝鸡站的版本）.rar",
+      "name": "三界神话",
+      "wasm_status": "playable",
+      "port": "40141",
+      "duplicate_of": null
+    },
+    {
+      "number": "100",
+      "slug": "sjshv150",
+      "archive": "三界神话V1.50.rar",
+      "name": "三界神话V1.50",
+      "wasm_status": "playable",
+      "port": "40171",
+      "duplicate_of": null
+    },
+    {
+      "number": "101",
+      "slug": "sjshv2578bb",
+      "archive": "三界神话v2.578b版.rar",
+      "name": "三界神话v2.578b版",
+      "wasm_status": "playable",
+      "port": "40125",
+      "duplicate_of": null
+    },
+    {
+      "number": "102",
+      "slug": "sjshwzb",
+      "archive": "三界神话完整版.rar",
+      "name": "三界神话完整版",
+      "wasm_status": "playable",
+      "port": "40113",
+      "duplicate_of": null
+    },
+    {
+      "number": "103",
+      "slug": "sjshwzjqb",
+      "archive": "三界神话完整加强版.rar",
+      "name": "三界神话完整加强版",
+      "wasm_status": "playable",
+      "port": "40173",
+      "duplicate_of": null
+    },
+    {
+      "number": "104",
+      "slug": "tybxjh",
+      "archive": "天涯&碧血江湖.rar",
+      "name": "天涯&碧血江湖",
+      "wasm_status": "playable",
+      "port": "40158",
+      "duplicate_of": null
+    },
+    {
+      "number": "105",
+      "slug": "wlhd",
+      "archive": "武林浩荡.rar",
+      "name": "武林浩荡",
+      "wasm_status": "playable",
+      "port": "40121",
+      "duplicate_of": null
+    },
+    {
+      "number": "106",
+      "slug": "wqfy",
+      "archive": "无情风云.rar",
+      "name": "无情风云",
+      "wasm_status": "playable",
+      "port": "40124",
+      "duplicate_of": null
+    },
+    {
+      "number": "107",
+      "slug": "xajdxyj",
+      "archive": "西安交大西游记.rar",
+      "name": "西安交大西游记",
+      "wasm_status": "playable",
+      "port": "40179",
+      "duplicate_of": null
+    },
+    {
+      "number": "108",
+      "slug": "xajh4gkb",
+      "archive": "笑傲江湖4公开版.rar",
+      "name": "笑傲江湖4公开版",
+      "wasm_status": "playable",
+      "port": "40154",
+      "duplicate_of": null
+    },
+    {
+      "number": "109",
+      "slug": "xhcii",
+      "archive": "笑红尘Ⅱ .rar",
+      "name": "笑红尘Ⅱ",
+      "wasm_status": "playable",
+      "port": "40163",
+      "duplicate_of": null
+    },
+    {
+      "number": "110",
+      "slug": "xkx100",
+      "archive": "侠客行一百.rar",
+      "name": "侠客行一百",
+      "wasm_status": "playable",
+      "port": "40117",
+      "duplicate_of": null
+    },
+    {
+      "number": "111",
+      "slug": "xkx2000zxb",
+      "archive": "侠客行2000最新版.rar",
+      "name": "侠客行2000最新版",
+      "wasm_status": "playable",
+      "port": "40140",
+      "duplicate_of": null
+    },
+    {
+      "number": "112",
+      "slug": "xkx2017",
+      "archive": "侠客行2017（MUD）.rar",
+      "name": "侠客行2017",
+      "wasm_status": "playable",
+      "port": "40145",
+      "duplicate_of": null
+    },
+    {
+      "number": "113",
+      "slug": "xkxc98sj",
+      "archive": "侠客新传98书剑.rar",
+      "name": "侠客新传98书剑",
+      "wasm_status": "playable",
+      "port": "40126",
+      "duplicate_of": null
+    },
+    {
+      "number": "114",
+      "slug": "xkxyb",
+      "archive": "侠客行一百 (1).rar",
+      "name": "侠客行一百",
+      "wasm_status": "playable",
+      "port": "40152",
+      "duplicate_of": null
+    },
+    {
+      "number": "115",
+      "slug": "xkyxciii",
+      "archive": "侠客英雄传III.rar",
+      "name": "侠客英雄传III",
+      "wasm_status": "playable",
+      "port": "40118",
+      "duplicate_of": null
+    },
+    {
+      "number": "116",
+      "slug": "xsfyssjb",
+      "archive": "心声风云四升级版.rar",
+      "name": "心声风云四升级版",
+      "wasm_status": "playable",
+      "port": "40149",
+      "duplicate_of": null
+    },
+    {
+      "number": "117",
+      "slug": "xxcq",
+      "archive": "小雪初晴.rar",
+      "name": "小雪初晴",
+      "wasm_status": "playable",
+      "port": "40135",
+      "duplicate_of": null
+    },
+    {
+      "number": "118",
+      "slug": "xxcqii",
+      "archive": "小雪初晴II.rar",
+      "name": "小雪初晴II",
+      "wasm_status": "playable",
+      "port": "40131",
+      "duplicate_of": null
+    },
+    {
+      "number": "119",
+      "slug": "xxcqii2",
+      "archive": "小雪初晴II  .zip",
+      "name": "小雪初晴II",
+      "wasm_status": "playable",
+      "port": "",
+      "duplicate_of": "xxcqii"
+    },
+    {
+      "number": "120",
+      "slug": "xyj2000",
+      "archive": "西游记2000.rar",
+      "name": "西游记2000",
+      "wasm_status": "playable",
+      "port": "40155",
+      "duplicate_of": null
+    },
+    {
+      "number": "121",
+      "slug": "xyj20032",
+      "archive": "西游记2003-2.rar",
+      "name": "西游记2003-2",
+      "wasm_status": "playable",
+      "port": "40119",
+      "duplicate_of": null
+    },
+    {
+      "number": "122",
+      "slug": "xyj2006n",
+      "archive": "西游记2006年.rar",
+      "name": "西游记2006年",
+      "wasm_status": "playable",
+      "port": "40157",
+      "duplicate_of": null
+    },
+    {
+      "number": "123",
+      "slug": "xyj2006zzzhx",
+      "archive": "西游记2006之最终幻想.rar",
+      "name": "西游记2006之最终幻想",
+      "wasm_status": "playable",
+      "port": "40159",
+      "duplicate_of": null
+    },
+    {
+      "number": "124",
+      "slug": "xyj451",
+      "archive": "西游记451.rar",
+      "name": "西游记451",
+      "wasm_status": "playable",
+      "port": "40112",
+      "duplicate_of": null
+    },
+    {
+      "number": "125",
+      "slug": "xysylmhb",
+      "archive": "夕阳三-炎龙美化版.rar",
+      "name": "夕阳三-炎龙美化版",
+      "wasm_status": "playable",
+      "port": "40169",
+      "duplicate_of": null
+    },
+    {
+      "number": "126",
+      "slug": "xyxyutf8",
+      "archive": "小雨西游utf8.zip",
+      "name": "小雨西游utf8",
+      "wasm_status": "playable",
+      "port": "40168",
+      "duplicate_of": null
+    },
+    {
+      "number": "127",
+      "slug": "xyzx",
+      "archive": "夕阳再现.rar",
+      "name": "夕阳再现",
+      "wasm_status": "playable",
+      "port": "40180",
+      "duplicate_of": null
+    },
+    {
+      "number": "128",
+      "slug": "xyzxiiylzymh",
+      "archive": "夕阳再现II-炎龙专用美化客户端.rar",
+      "name": "夕阳再现II-炎龙专用美化客户端",
+      "wasm_status": "playable",
+      "port": "40130",
+      "duplicate_of": null
+    },
+    {
+      "number": "129",
+      "slug": "xyzxyl201412",
+      "archive": "夕阳再现-炎龙20141231.rar",
+      "name": "夕阳再现-炎龙20141231",
+      "wasm_status": "playable",
+      "port": "40175",
+      "duplicate_of": null
+    },
+    {
+      "number": "130",
+      "slug": "yhwhpublicfi",
+      "archive": "炎黄武魂public-final-2016-12-08.rar",
+      "name": "炎黄武魂public-final-2016-12-08",
+      "wasm_status": "playable",
+      "port": "40132",
+      "duplicate_of": null
+    },
+    {
+      "number": "131",
+      "slug": "yxjh",
+      "archive": "浴血江湖.rar",
+      "name": "浴血江湖",
+      "wasm_status": "playable",
+      "port": "40148",
+      "duplicate_of": null
+    },
+    {
+      "number": "132",
+      "slug": "yxsj",
+      "archive": "逸侠世界.rar",
+      "name": "逸侠世界",
+      "wasm_status": "playable",
+      "port": "40167",
+      "duplicate_of": null
+    },
+    {
+      "number": "133",
+      "slug": "yxxcii",
+      "archive": "游侠笑传II.rar",
+      "name": "游侠笑传II",
+      "wasm_status": "playable",
+      "port": "40136",
+      "duplicate_of": null
+    },
+    {
+      "number": "134",
+      "slug": "yxzsj",
+      "archive": "逸  俠  之  世  界.rar",
+      "name": "逸  俠  之  世  界",
+      "wasm_status": "playable",
+      "port": "40170",
+      "duplicate_of": null
+    },
+    {
+      "number": "135",
+      "slug": "yzxiiizylfy",
+      "archive": "阳再线III之炎龙封印.rar",
+      "name": "阳再线III之炎龙封印",
+      "wasm_status": "playable",
+      "port": "40178",
+      "duplicate_of": null
+    },
+    {
+      "number": "136",
+      "slug": "zjdy2008wzb",
+      "archive": "终极地狱2008完整版.rar",
+      "name": "终极地狱2008完整版",
+      "wasm_status": "playable",
+      "port": "40110",
+      "duplicate_of": null
+    },
+    {
+      "number": "137",
+      "slug": "zjdywzb",
+      "archive": "终极地狱完整版.rar",
+      "name": "终极地狱完整版",
+      "wasm_status": "playable",
+      "port": "40109",
+      "duplicate_of": null
+    },
+    {
+      "number": "138",
+      "slug": "zxty",
+      "archive": "再现天涯.rar",
+      "name": "再现天涯",
+      "wasm_status": "playable",
+      "port": "40166",
+      "duplicate_of": null
+    },
+    {
+      "number": "138-1",
+      "slug": "zxty08nxgbb",
+      "archive": "再现天涯08年修改版本.rar",
+      "name": "再现天涯（08年修改版本）",
+      "wasm_status": "playable",
+      "port": "40193",
+      "duplicate_of": null
+    },
+    {
+      "number": "139",
+      "slug": "zzfy3",
+      "archive": "郑州风云3.rar",
+      "name": "郑州风云3",
+      "wasm_status": "playable",
+      "port": "40120",
+      "duplicate_of": null
+    },
+    {
+      "number": "141",
+      "slug": "wxddym",
+      "archive": "武学大道源码.7z",
+      "name": "武学大道",
+      "wasm_status": "playable",
+      "port": "40189",
+      "duplicate_of": null
+    },
+    {
+      "number": "142",
+      "slug": "nt6",
+      "archive": "泥潭6.zip",
+      "name": "泥潭6",
+      "wasm_status": "playable",
+      "port": "40186",
+      "duplicate_of": null
+    },
+    {
+      "number": "142-1",
+      "slug": "nt6nitan6win",
+      "archive": "泥潭6nitan6-win_nodb.rar",
+      "name": "泥潭6 (win_nodb版)",
+      "wasm_status": "playable",
+      "port": "40187",
+      "duplicate_of": null
+    },
+    {
+      "number": "143",
+      "slug": "yszz",
+      "archive": "妖神之争.rar",
+      "name": "妖神之争",
+      "wasm_status": "playable",
+      "port": "40192",
+      "duplicate_of": null
+    },
+    {
+      "number": "144",
+      "slug": "njhhdxdes2hx",
+      "archive": "南京河海大学的es2和xkx《校内_1.01版》.tar.gz",
+      "name": "es2/侠客行（南京河海大学校内版1.01）",
+      "wasm_status": "playable",
+      "port": "40194",
+      "duplicate_of": null
+    },
+    {
+      "number": "146",
+      "slug": "hy",
+      "archive": "海洋（由千堆雪上传）.rar",
+      "name": "海洋（基础版）",
+      "wasm_status": "playable",
+      "port": "40182",
+      "duplicate_of": null
+    },
+    {
+      "number": "146-1",
+      "slug": "hy5",
+      "archive": "海洋5.7z",
+      "name": "海洋5",
+      "wasm_status": "playable",
+      "port": "40183",
+      "duplicate_of": null
+    },
+    {
+      "number": "147",
+      "slug": "jym",
+      "archive": "金庸梦.rar",
+      "name": "金庸梦",
+      "wasm_status": "playable",
+      "port": "40184",
+      "duplicate_of": null
+    },
+    {
+      "number": "148",
+      "slug": "nt1",
+      "archive": "泥潭1.gz",
+      "name": "泥潭1",
+      "wasm_status": "playable",
+      "port": "40185",
+      "duplicate_of": null
+    },
+    {
+      "number": "149",
+      "slug": "wdxtym",
+      "archive": "武动仙途源码.rar",
+      "name": "武动仙途",
+      "wasm_status": "playable",
+      "port": "40188",
+      "duplicate_of": null
+    },
+    {
+      "number": "150",
+      "slug": "xkm",
+      "archive": "侠客梦.rar",
+      "name": "侠客梦",
+      "wasm_status": "playable",
+      "port": "40191",
+      "duplicate_of": null
+    },
+    {
+      "number": "151",
+      "slug": "fqyy2",
+      "archive": "风起云涌2修正版.rar",
+      "name": "风起云涌2",
+      "wasm_status": "playable",
+      "port": "40197",
+      "duplicate_of": null
+    },
+    {
+      "number": "152",
+      "slug": "fy2mg",
+      "archive": "风云II(美国版本）.rar",
+      "name": "风云II（美国版本）",
+      "wasm_status": "playable",
+      "port": "40198",
+      "duplicate_of": null
+    },
+    {
+      "number": "153",
+      "slug": "fy330",
+      "archive": "风云III(3.0).rar",
+      "name": "风云III (3.0)",
+      "wasm_status": "playable",
+      "port": "40199",
+      "duplicate_of": null
+    },
+    {
+      "number": "154",
+      "slug": "xbtxiii",
+      "archive": "雄霸天下III.rar",
+      "name": "雄霸天下III",
+      "wasm_status": "playable",
+      "port": "40201",
+      "duplicate_of": null
+    },
+    {
+      "number": "155",
+      "slug": "xkxlb",
+      "archive": "侠客行老版(金庸群侠传）.rar",
+      "name": "侠客行（老版/金庸群侠传）",
+      "wasm_status": "playable",
+      "port": "40202",
+      "duplicate_of": null
+    },
+    {
+      "number": "156",
+      "slug": "xyj42",
+      "archive": "西游记4.2.gz",
+      "name": "西游记 4.2",
+      "wasm_status": "playable",
+      "port": "40203",
+      "duplicate_of": null
+    },
+    {
+      "number": "156-1",
+      "slug": "xyj42dup",
+      "archive": "西游记4.2.rar",
+      "name": "西游记4.2 (dup)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "line-ending-only duplicate of 156 (xyj42, archive 西游记4.2.gz) -- identical file tree, every file differs only by CRLF vs LF; processed once",
+      "duplicate_of": "156"
+    },
+    {
+      "number": "157",
+      "slug": "shujian3",
+      "archive": "最新独立安卓客户端和书剑源码一键架站.zip",
+      "name": "书剑3",
+      "wasm_status": "playable",
+      "port": "40200",
+      "duplicate_of": null
+    },
+    {
+      "number": "158",
+      "slug": "zjmudhell",
+      "archive": "指尖后端.7z",
+      "name": "指尖MUD",
+      "wasm_status": "playable",
+      "port": "40204",
+      "duplicate_of": null
+    },
+    {
+      "number": "901",
+      "slug": "dw_fluffos_v1",
+      "archive": "dw_fluffos_v1.tar.gz",
+      "name": "Discworld MUD lib (v1)",
+      "wasm_status": "deprioritized",
+      "port": "",
+      "group_note": "Discworld (English); deprioritized",
+      "duplicate_of": null
+    },
+    {
+      "number": "901-1",
+      "slug": "dw_fluffos_v2",
+      "archive": "dw_fluffos_v2.zip",
+      "name": "Discworld MUD lib (v2)",
+      "wasm_status": "deprioritized",
+      "port": "",
+      "group_note": "same Discworld bundle, later version",
+      "duplicate_of": null
+    },
+    {
+      "number": "901-2",
+      "slug": "dw_fluffos_v3",
+      "archive": "dw_fluffos_v3.zip",
+      "name": "Discworld MUD lib (v3)",
+      "wasm_status": "deprioritized",
+      "port": "",
+      "group_note": "same Discworld bundle, later version",
+      "duplicate_of": null
+    },
+    {
+      "number": "902",
+      "slug": "tomud_vc",
+      "archive": "TOMud_VC源代码.rar",
+      "name": "TOMud VC++ 客户端源码",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "Windows MFC mud CLIENT, not a mudlib",
+      "duplicate_of": null
+    },
+    {
+      "number": "903",
+      "slug": "sanguowaizhuan",
+      "archive": "三国歪传.rar",
+      "name": "三国歪传 (Diku/Merc)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "DikuMUD/Merc C server, not LPC",
+      "duplicate_of": null
+    },
+    {
+      "number": "903-1",
+      "slug": "sgwcxz",
+      "archive": "三国歪传下载.rar",
+      "name": "三国歪传 (下载版)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": "903"
+    },
+    {
+      "number": "904",
+      "slug": "atlantis",
+      "archive": "消失的亞特蘭提斯MUD破解版 (2).zip",
+      "name": "消失的亞特蘭提斯MUD破解版",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": "消失的亞特蘭提斯MUD破解版.zip"
+    },
+    {
+      "number": "905",
+      "slug": "chongchujianghu",
+      "archive": "重出江湖.rar",
+      "name": "重出江湖 (C++ engine)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "905-1",
+      "slug": "chongchujianghu_win",
+      "archive": "重出江湖WIN完全版.rar",
+      "name": "重出江湖 WIN完全版",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "905-2",
+      "slug": "chongchujianghu_linux_src",
+      "archive": "重出江湖完整源码linunx_2.71原版.rar",
+      "name": "重出江湖 Linux 源码 v2.71",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "905-3",
+      "slug": "zcjh",
+      "archive": "重出江湖.rar",
+      "name": "重出江湖",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": "905"
+    },
+    {
+      "number": "905-4",
+      "slug": "zcjh271yb",
+      "archive": "重出江湖_2.71原版.rar",
+      "name": "重出江湖 2.71原版",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": "905"
+    },
+    {
+      "number": "906",
+      "slug": "mofaleidemuba",
+      "archive": "魔法类的泥巴.rar",
+      "name": "魔法类的泥巴 (EmberMUD)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "907",
+      "slug": "tianlongbabu",
+      "archive": "天龙八部.tgz",
+      "name": "天龙八部 (incomplete archive)",
+      "wasm_status": "not-convertible",
+      "port": "",
+      "group_note": "real LPC mudlib (DAEMONS/OBJ/FEATURE/etc. all present, genuine inherit-based .c source) but ships with NO master object at all -- exhaustively searched (no master.c/master.lpc anywhere, no connect()/valid_read/valid_write applies in any file, no config file, BINARIES/MUDLIB empty) -- archive is missing its most critical file, not reconstructable from what's shipped",
+      "duplicate_of": null
+    },
+    {
+      "number": "908",
+      "slug": "xianwukungfu",
+      "archive": "仙武kungfu.rar",
+      "name": "仙武kungfu (content module, not a mudlib)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "just a kungfu/ skill-content subtree (class/condition/skill/special) meant to be merged into an existing mudlib's tree -- no master.c, no config, not independently bootable",
+      "duplicate_of": null
+    },
+    {
+      "number": "909",
+      "slug": "fsxy13",
+      "archive": "浮世侠影1.3.rar",
+      "name": "浮世侠影1.3",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "910",
+      "slug": "glhj",
+      "archive": "攻略合集.rar",
+      "name": "攻略合集",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "911",
+      "slug": "jyqs",
+      "archive": "金庸全索.rar",
+      "name": "金庸全索",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "912",
+      "slug": "kxkjii",
+      "archive": "狂想空間Ⅱ(www版).tgz",
+      "name": "狂想空間II (WWW版, PHP)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "913",
+      "slug": "lordstar40",
+      "archive": "LordStar4.0.7z",
+      "name": "LordStar 4.0",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "914",
+      "slug": "mhjh10203",
+      "archive": "梦回江湖1.02.03.rar",
+      "name": "梦回江湖 1.02.03",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "915",
+      "slug": "sgqycoljc",
+      "archive": "三国群英传OL教程.rar",
+      "name": "三国群英传OL私服架设教程",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "916",
+      "slug": "szkf",
+      "archive": "神州开发.rar",
+      "name": "神州开发",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "917",
+      "slug": "wintin",
+      "archive": "WinTin++.7z",
+      "name": "WinTin++",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "918",
+      "slug": "wlfymudsqyx",
+      "archive": "网路风云MUD社区游戏.rar",
+      "name": "网路风云MUD社区游戏",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "919",
+      "slug": "xjmhmudyx",
+      "archive": "星际迷航MUD游戏.rar",
+      "name": "星际迷航MUD游戏",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "920",
+      "slug": "xky2",
+      "archive": "侠客游2.rar",
+      "name": "侠客游2",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "921",
+      "slug": "xyj",
+      "archive": "西游记(三国群英传2mod).rar",
+      "name": "西游记(三国群英传2mod)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "922",
+      "slug": "xyjjqzl",
+      "archive": "西游记机器资料.rar",
+      "name": "西游记机器资料",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "923",
+      "slug": "yhwhckdm",
+      "archive": "炎黄武魂参考代码（d,kungfu,clone）.rar",
+      "name": "炎黄武魂参考代码",
+      "wasm_status": "not-convertible",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "924",
+      "slug": "yy",
+      "archive": "异域.rar",
+      "name": "异域",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "925",
+      "slug": "zjhd",
+      "archive": "指尖后端.7z",
+      "name": "指尖后端",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "926",
+      "slug": "zjwygjb",
+      "archive": "指尖网页改进版（需要v2019驱动）.rar",
+      "name": "指尖网页改进版",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "927",
+      "slug": "zxmudkhd",
+      "archive": "最新mud客户端.rar",
+      "name": "最新mud客户端",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "duplicate_of": null
+    },
+    {
+      "number": "928",
+      "slug": "duobao",
+      "archive": "duobao.7z",
+      "name": "duobao",
+      "wasm_status": "password-protected",
+      "port": "",
+      "group_note": "7z reports 'Can not open encrypted archive' with no known password; not attempted to crack, blocked",
+      "duplicate_of": null
+    },
+    {
+      "number": "929",
+      "slug": "nitanpw",
+      "archive": "nitan.7z",
+      "name": "nitan (加密版)",
+      "wasm_status": "password-protected",
+      "port": "",
+      "group_note": "7z reports 'Can not open encrypted archive' with no known password; not attempted to crack, blocked -- unrelated to the already-processed nitan6/nitan170911/nt1/nt6 archives, which are separate un-encrypted drops",
+      "duplicate_of": null
+    },
+    {
+      "number": "930",
+      "slug": "dtxyzjb",
+      "archive": "大唐西游指间版.rar",
+      "name": "大唐西游指间版",
+      "wasm_status": "password-protected",
+      "port": "",
+      "group_note": "unrar prompts for a per-file password ('Enter password for 大唐西游2009/adm/daemons/aliasd.c') with no known password; blocked",
+      "duplicate_of": null
+    },
+    {
+      "number": "931",
+      "slug": "wlqxcmudlib",
+      "archive": "武林群侠传MUDLIB.7z",
+      "name": "武林群侠传 MUDLIB",
+      "wasm_status": "password-protected",
+      "port": "",
+      "group_note": "7z reports 'Can not open encrypted archive' with no known password; blocked",
+      "duplicate_of": null
+    },
+    {
+      "number": "932",
+      "slug": "swzf",
+      "archive": "谁与争锋.7z",
+      "name": "谁与争锋",
+      "wasm_status": "password-protected",
+      "port": "",
+      "group_note": "7z reports 'Can not open encrypted archive' with no known password; blocked",
+      "duplicate_of": null
+    },
+    {
+      "number": "933",
+      "slug": "xyzxwww0707",
+      "archive": "夕阳再现WWW安装客户端Setup20100707.rar",
+      "name": "夕阳再现 WWW安装客户端 (20100707)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "single Setup.exe installer for a WWW client, no source; duplicate of the 20100718 build below aside from date",
+      "duplicate_of": null
+    },
+    {
+      "number": "934",
+      "slug": "xyzxwww0718",
+      "archive": "夕阳再现WWW安装客户端Setup20100718.rar",
+      "name": "夕阳再现 WWW安装客户端 (20100718)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "single Setup.exe installer for a WWW client, no source",
+      "duplicate_of": null
+    },
+    {
+      "number": "935",
+      "slug": "zjmudv13",
+      "archive": "指间MUDV1.3.rar",
+      "name": "指间MUD V1.3",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "single Android .apk, no source",
+      "duplicate_of": null
+    },
+    {
+      "number": "936",
+      "slug": "ptjnbxq",
+      "archive": "普通技能编写器.rar",
+      "name": "普通技能编写器",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "Windows .exe skill-authoring tool, not a mudlib",
+      "duplicate_of": null
+    },
+    {
+      "number": "937",
+      "slug": "xlwebmud",
+      "archive": "西陆WEBMUD仗剑江湖.rar",
+      "name": "西陆WEBMUD 仗剑江湖",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "webmud_source.zip inside is a C++ engine (yactor/yuser/ycomm .cpp/.h files), not LPC -- a generic third-party webmud gateway wrapper, unrelated to this collection's LPC mudlibs",
+      "duplicate_of": null
+    },
+    {
+      "number": "938",
+      "slug": "njhhdxfhzxth",
+      "archive": "南京河海大学的es2和xkx《包含纵横天下》.gz",
+      "name": "es2/xkx（南京河海大学，含纵横天下）",
+      "wasm_status": "not-convertible",
+      "port": "",
+      "group_note": "tar archive with '../' member paths inside a nested tar-in-gz structure that failed extraction (GNU tar hard-refuses '..' members before Python tarfile stripping can help, and this one's specific member layout wasn't successfully unwound); the sibling archive 南京河海大学的es2和xkx《校内_1.01版》.tar.gz (a different snapshot of the same es2/xkx campus build) extracted cleanly and is processed as 144 (njhhdxdes2hx) -- not re-attempted here since 144 already covers this codebase family",
+      "duplicate_of": "144"
+    },
+    {
+      "number": "939",
+      "slug": "zjmudouter",
+      "archive": "zjmud.7z",
+      "name": "zjmud (outer container)",
+      "wasm_status": "not-mudlib",
+      "port": "",
+      "group_note": "outer archive was just a container for two nested drops, both processed separately: 指尖后端.7z (925, PHP web backend, not-mudlib) and 指间mud服务器+手机版客户端.zip (whose hell/ folder became 158, zjmudhell) -- this entry exists only so the container archive itself shows up in the numbering index",
+      "duplicate_of": null
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+// GM daemon: loads any registered character's body object for
+// inspection/editing, whether they're currently online or not.
+//
+// obj/login.lpc's set() is a nomask security gate requiring ROOT_UID
+// (see its own "Protect login object's data against hackers" comment),
+// so an offline restore (new(LOGIN_OB)->set("id",...)->restore()) only
+// works from a root-euid caller -- same reason cmds/usr/finger.lpc goes
+// through this /adm/daemons/ tier (fingerd.lpc) instead of doing it
+// itself. This daemon is that tier for GM inspection/editing.
+
+void create() { seteuid(getuid()); }
+
+// body -> its login_ob, only present for bodies we loaded offline.
+mapping pending_login_obs = ([]);
+
+object gm_load(string id) {
+  object online, login_ob, body;
+
+  online = find_player(id);
+  if (online) return online;
+
+  login_ob = new(LOGIN_OB);
+  login_ob->set("id", id);
+  if (!login_ob->restore()) {
+    destruct(login_ob);
+    return 0;
+  }
+
+  body = LOGIN_D->make_body(login_ob);
+  if (!body || !body->restore()) {
+    if (body) destruct(body);
+    destruct(login_ob);
+    return 0;
+  }
+
+  pending_login_obs[body] = login_ob;
+  return body;
+}
+
+int gm_is_offline(object body) {
+  return !!pending_login_obs[body];
+}
+
+void gm_unload(object body) {
+  object login_ob;
+
+  if (!body) return;
+  login_ob = pending_login_obs[body];
+  if (!login_ob) return;  // was already online; nothing to clean up.
+
+  body->save();
+  destruct(body);
+  destruct(login_ob);
+  map_delete(pending_login_obs, body);
+}
