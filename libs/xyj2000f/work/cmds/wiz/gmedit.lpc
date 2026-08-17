@@ -13,6 +13,22 @@ nosave int sort_keys(string one, string two) {
   return strcmp(one, two);
 }
 
+// Skills are NOT dbase properties -- feature/skill.lpc keeps them in a
+// separate `skills` mapping reached via set_skill()/query_skill(). A
+// plain set("literate", 150) silently writes an unrelated dbase key and
+// leaves the real skill untouched, which is exactly what it looked like:
+// the edit "succeeded" and `skills` still showed 1.
+private int is_skill_name(string prop) {
+  return prop && file_size(SKILL_D(prop) + ".lpc") >= 0;
+}
+
+// `age` is derived, not stored: obj/user.lpc's update_age() recomputes it
+// from age_modify + mud_age on every heartbeat and overwrites whatever is
+// in the dbase, so setting it directly never sticks. Age 14 is the
+// floor at 0 modification, and one in-game year is one real day.
+#define AGE_BASE 14
+#define SECS_PER_YEAR 86400
+
 int main(object me, string arg) {
   string id, prop, val;
   object body;
@@ -37,15 +53,52 @@ int main(object me, string arg) {
     write(sprintf("已删除 %s 的 %s%s\n", id, prop,
       GMD->gm_is_offline(body) ? "（离线角色，已存档）" : "（在线角色，立即生效）"));
   } else if (val) {
-    // numeric if it parses cleanly, else treat as string.
-    if (sscanf(val, "%d", ret) == 1 && ret + "" == val)
+    string suffix = GMD->gm_is_offline(body)
+      ? "（离线角色，已存档）" : "（在线角色，立即生效）";
+    int numeric = (sscanf(val, "%d", ret) == 1 && ret + "" == val);
+
+    if (is_skill_name(prop)) {
+      mixed err;
+      if (!numeric) return notify_fail("技能等级必须是数字。\n");
+      // set_skill() error()s on an unknown skill; catch so a typo
+      // reports cleanly instead of aborting the command.
+      err = catch(body->set_skill(prop, ret));
+      if (err) return notify_fail("无法设定技能 " + prop + "。\n");
+      write(sprintf("已设定 %s 的技能 %s = %d%s\n",
+        id, prop, body->query_skill(prop, 1), suffix));
+    } else if (prop == "age") {
+      // Translate the requested age into the age_modify that survives
+      // update_age()'s recomputation.
+      if (!numeric) return notify_fail("年龄必须是数字。\n");
+      // Set the character's clock instead of stacking a modifier: with
+      // age_modify at 0, update_age() computes age = 14 + mud_age/86400,
+      // so backdating accumulated play time alone yields the age, and
+      // the birthday follows from it. AGE_BASE (14) is therefore a hard
+      // floor -- anything lower would need negative play time.
+      if (ret < AGE_BASE)
+        return notify_fail(sprintf("年龄最低只能设到 %d 岁。\n", AGE_BASE));
+      body->set("age_modify", 0);
+      body->delete_temp("age_modify");
+      body->set("mud_age", (ret - AGE_BASE) * SECS_PER_YEAR);
+      body->set("birthday", time() - (ret - AGE_BASE) * SECS_PER_YEAR);
+      body->set("age", ret);   // immediate effect; heartbeat agrees
+      write(sprintf("已设定 %s 的 age = %d（已重设出生时间与游戏时数）%s\n",
+        id, ret, suffix));
+    } else if (numeric) {
       body->set(prop, ret);
-    else
+      write(sprintf("已设定 %s 的 %s = %O%s\n",
+        id, prop, body->query(prop), suffix));
+    } else {
       body->set(prop, val);
-    write(sprintf("已设定 %s 的 %s = %O%s\n", id, prop, body->query(prop),
-      GMD->gm_is_offline(body) ? "（离线角色，已存档）" : "（在线角色，立即生效）"));
+      write(sprintf("已设定 %s 的 %s = %O%s\n",
+        id, prop, body->query(prop), suffix));
+    }
   } else if (prop) {
-    write(sprintf("%s 的 %s = %O\n", id, prop, body->query(prop)));
+    if (is_skill_name(prop))
+      write(sprintf("%s 的技能 %s = %d\n", id, prop,
+        body->query_skill(prop, 1)));
+    else
+      write(sprintf("%s 的 %s = %O\n", id, prop, body->query(prop)));
   } else {
     mapping dbase;
     mixed *keys;

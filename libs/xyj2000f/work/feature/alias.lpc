@@ -15,6 +15,15 @@ nosave int last_time = time(), cmd_cnt = 0, cmd_cnt1 = 0, cmd_cnt2 = 0;
 // call_out so the batch can't trip the anti-flood guard above.
 nosave string *cmd_queue = ({});
 
+// Seconds already spent waiting for the CURRENT queued command to become
+// runnable. Non-instant actions (dazuo/exercise, meditate, learn, xiudao,
+// chanting, steal, sleep ...) call start_busy() and return immediately,
+// so a repeat has to wait for the action to finish instead of firing on
+// the next tick and failing with 你的动作还没有完成.
+nosave int queue_waited;
+
+#define MAX_QUEUE_WAIT 30   // seconds to wait per command before giving up
+
 string resolve_alias(string str);
 
 // speed of player input commands.
@@ -34,6 +43,10 @@ private string *expand_repeat(string cmd) {
 
   if (sscanf(cmd, "%s#%d", base, n) != 2) return ({ cmd });
   if (n < 1) return ({ base });
+  // Never repeat an irreversible command -- a typo shouldn't be able to
+  // run it 50 times.
+  if (base == "suicide" || resolve_alias(base) == "suicide")
+    return ({ base });
   // Reuse the file's existing ceiling rather than inventing a second one.
   if (n > MAX_REPEAT) n = MAX_REPEAT;
 
@@ -75,12 +88,40 @@ void run_queued_command() {
 
   if (me->is_fighting()) {
     cmd_queue = ({});
+    queue_waited = 0;
     tell_object(me, "（战斗中，后续指令已取消。）\n");
+    return;
+  }
+
+  // Wait, don't fail, while the previous action is still running or the
+  // player is answering a prompt. is_busy() covers every start_busy()
+  // action; in_input() covers commands that read a reply (passwd,
+  // abandon, observe) -- firing into those would feed queued commands to
+  // the prompt as if they were answers.
+  // is_busy() is not the whole story: several commands track "action
+  // still running" with their own pending/* temp flag as well, and
+  // exercise/meditate refuse to start again while theirs is set. Waiting
+  // on is_busy() alone made dazuo#3 fail on the second repetition with
+  // 你现在正忙着呢.
+  if (me->is_busy() || in_input(me)
+    || me->query_temp("pending/exercising")
+    || me->query_temp("pending/meditating")
+    || me->query_temp("pending/sleep")) {
+    if (queue_waited >= MAX_QUEUE_WAIT) {
+      cmd_queue = ({});
+      queue_waited = 0;
+      tell_object(me, sprintf("（等了 %d 秒仍无法继续，"
+        "后续指令已取消。）\n", MAX_QUEUE_WAIT));
+      return;
+    }
+    queue_waited++;
+    call_out("run_queued_command", 1);
     return;
   }
 
   next = cmd_queue[0];
   cmd_queue = cmd_queue[1..];
+  queue_waited = 0;
 
   if (!command(resolve_alias(next))) {
     cmd_queue = ({});
@@ -88,7 +129,9 @@ void run_queued_command() {
     return;
   }
 
-  if (sizeof(cmd_queue)) call_out("run_queued_command", 0);
+  // 1s rather than 0s: the action just issued may only set its busy flag
+  // on the next heartbeat, and checking too early would race it.
+  if (sizeof(cmd_queue)) call_out("run_queued_command", 1);
 }
 
 string process_input(string str) {
@@ -189,6 +232,7 @@ command("rumor 害虫一边跑一边恨恨地道：原来是个机器人，牙�
       // hide its success/failure from run_queued_command(), so a chain
       // whose opening step was blocked would carry on regardless.
       cmd_queue = batch;
+      queue_waited = 0;
       call_out("run_queued_command", 0);
       return "";
     }
