@@ -53,6 +53,18 @@ int main(object me, string arg) {
     if ((wiz_level(me) == 0) && (member_array(term, wiz_only) != -1))
       return notify_fail("只有巫师能用这个设定。\n");
 
+    // Wizards skip the whitelist above, so a mistyped name just becomes
+    // a junk env var nothing ever reads -- that's where env/force=300 on
+    // the fluffos character came from (`set force 300`, meant as a stat,
+    // silently filed under env/). Refuse to CREATE an unrecognised one;
+    // editing an existing var, or any whitelisted name, still works.
+    if (wizardp(me)
+      && member_array(term, allowed) == -1
+      && member_array(term, wiz_only) == -1
+      && (!mapp(env) || undefinedp(env[term])))
+      return notify_fail("没有「" + term + "」这个环境变数，可能是打错了。\n"
+        "（角色属性请用 gmedit ── set 只管 env/*。）\n");
+
     if (term == "wimpy" && (intp(data) < 0 || intp(data) > 80)) {
       return COMMAND_DIR "usr/wimpy"->help(me);
     }

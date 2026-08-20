@@ -29,13 +29,133 @@ private int is_skill_name(string prop) {
 #define AGE_BASE 14
 #define SECS_PER_YEAR 86400
 
+// Properties that only mean anything on a ROOM. These are read as
+// environment(me)->query(...) (cast.lpc:26, exercise.lpc:16,
+// meditate.lpc:16, ...), so setting them on a player is silently inert.
+//
+// "no_magic" is deliberately NOT in this list: adm/daemons/updated.lpc:38
+// sets it on every character at login on purpose ("player body is a safe
+// room ... can't practice inside a body"), because a body is itself an
+// environment for anything carried or contained inside it.
+private string *ROOM_ONLY = ({
+  "no_fight", "sleep_room", "outdoors", "no_clean_up",
+  "if_bed", "alternative_die", "no_upgrade_age",
+});
+
+// Stats with no meaningful negative value. A negative kee/sen/gin in
+// particular is what std/char.lpc:76 treats as "dying", so writing one
+// by hand can knock a player out or kill them outright.
+private string *NON_NEGATIVE = ({
+  "kee", "sen", "gin", "force", "mana", "atman",
+  "max_kee", "max_sen", "max_gin", "max_force", "max_mana", "max_atman",
+  "maximum_force", "maximum_mana", "eff_kee", "eff_sen", "eff_gin",
+  "potential", "learned_points", "daoxing", "combat_exp", "age",
+  "str", "con", "int", "spi", "per", "kar", "cps", "cor",
+  "food", "water", "balance", "bellicosity",
+});
+
+// Current-pool props and the max each is bounded by.
+private mapping POOL_MAX = ([
+  "kee": "max_kee", "sen": "max_sen", "gin": "max_gin",
+  "force": "max_force", "mana": "max_mana", "atman": "max_atman",
+]);
+
+// Returns an error string if this write would leave the character in a
+// state the game's own logic can't produce, or 0 if it's fine.
+// Everything here is overridable with -f, because a GM occasionally does
+// need to build an impossible character on purpose.
+private string check_change(object body, string prop, int ret, int numeric) {
+  int cap, cur;
+  mapping dbase;
+
+  if (member_array(prop, ROOM_ONLY) != -1)
+    return sprintf("「%s」是房间属性，设在角色身上不会有任何作用"
+      "（只有 environment()->query() 会读它）。\n", prop);
+
+  if (numeric && ret < 0 && member_array(prop, NON_NEGATIVE) != -1)
+    return sprintf("「%s」不能设成负数（%d）。\n", prop, ret);
+
+  if (!numeric) return 0;
+
+  // max_force / max_mana are bounded by the skill levels that derive
+  // them -- feature/skill.lpc query_max_force()/query_max_mana(). Going
+  // above the cap makes dazuo/mingsi report 瓶颈 forever.
+  if (prop == "max_force") {
+    cap = (int)body->query_max_force();
+    if (ret > cap)
+      return sprintf("max_force 最高只能是 %d（由 force/%s 技能等级算出）。\n",
+        cap, "对应内功");
+  }
+  if (prop == "max_mana") {
+    cap = (int)body->query_max_mana();
+    if (ret > cap)
+      return sprintf("max_mana 最高只能是 %d（由 spells/对应法术技能等级算出）。\n", cap);
+  }
+
+  // maximum_* is an all-time high-water mark maintained by
+  // exercise.lpc:86-87 / meditate.lpc:86-87, so it can never be below
+  // the current max. This is exactly the maximum_force=6 vs
+  // max_force=2500 corruption found on fluffos.
+  if (prop == "maximum_force") {
+    cur = (int)body->query("max_force");
+    if (ret < cur)
+      return sprintf("maximum_force（历史最高）不能低于目前的 max_force=%d。\n", cur);
+  }
+  if (prop == "maximum_mana") {
+    cur = (int)body->query("max_mana");
+    if (ret < cur)
+      return sprintf("maximum_mana（历史最高）不能低于目前的 max_mana=%d。\n", cur);
+  }
+
+  // learn.lpc:80-84 computes upper = potential - learned_points and
+  // refuses to teach when that's <= 0.
+  if (prop == "potential") {
+    cur = (int)body->query("learned_points");
+    if (ret < cur)
+      return sprintf("potential 不能低于 learned_points=%d，"
+        "否则这个角色永远学不了技能。\n", cur);
+  }
+  if (prop == "learned_points") {
+    cur = (int)body->query("potential");
+    if (ret > cur)
+      return sprintf("learned_points 不能高于 potential=%d。\n", cur);
+  }
+
+  // A current pool above its own max just gets clamped back down by the
+  // heartbeat, so it silently "doesn't stick".
+  if (!undefinedp(POOL_MAX[prop])) {
+    cur = (int)body->query(POOL_MAX[prop]);
+    if (ret > cur)
+      return sprintf("%s 不能超过 %s=%d。\n", prop, POOL_MAX[prop], cur);
+  }
+
+  return 0;
+}
+
+// A property that doesn't exist yet AND isn't a real skill is almost
+// always a typo -- a misspelled skill name (moonshengton vs
+// moonshengtong) or a Chinese display label (潜能 instead of potential).
+// Both used to be written silently as junk dbase keys that nothing ever
+// reads.
+private int is_new_key(object body, string prop) {
+  mapping dbase;
+
+  if (strsrch(prop, '/') != -1) return 0;   // nested paths: don't guess
+  dbase = (mapping)body->query_entire_dbase();
+  if (!mapp(dbase)) return 0;
+  return undefinedp(dbase[prop]);
+}
+
 int main(object me, string arg) {
   string id, prop, val;
   object body;
-  int ret;
+  int ret, forced;
 
   if (!wizardp(me)) return notify_fail("只有巫师能使用这个指令。\n");
   if (!arg) return help(me), 1;
+
+  // -f overrides every guard below.
+  if (sscanf(arg, "-f %s", arg) == 1) forced = 1;
 
   if (sscanf(arg, "%s %s %s", id, prop, val) != 3) {
     val = 0;
@@ -84,12 +204,44 @@ int main(object me, string arg) {
       body->set("age", ret);   // immediate effect; heartbeat agrees
       write(sprintf("已设定 %s 的 age = %d（已重设出生时间与游戏时数）%s\n",
         id, ret, suffix));
-    } else if (numeric) {
-      body->set(prop, ret);
-      write(sprintf("已设定 %s 的 %s = %O%s\n",
-        id, prop, body->query(prop), suffix));
     } else {
-      body->set(prop, val);
+      string err;
+
+      if (!forced) {
+        // check_change() first: it knows *why* a specific property is
+        // wrong (room-only, inverted watermark, over cap). The new-key
+        // guard is the catch-all fallback, so running it first would
+        // mask those clearer messages for any prop the character
+        // happens not to have yet.
+        if (err = check_change(body, prop, ret, numeric)) {
+          GMD->gm_unload(body);
+          return notify_fail(err + "要强制设定请用 gmedit -f ...\n");
+        }
+        if (is_new_key(body, prop)) {
+          GMD->gm_unload(body);
+          return notify_fail(sprintf(
+            "%s 身上没有「%s」这个属性，也不是技能名称。\n"
+            "多半是打错了（技能名拼错，或用了中文标签而不是英文键名，"
+            "例如 潜能 应该写 potential）。\n"
+            "确定要新增这个属性的话，用：gmedit -f %s %s %s\n",
+            id, prop, id, prop, val));
+        }
+      }
+
+      if (numeric) body->set(prop, ret);
+      else body->set(prop, val);
+
+      // Keep the high-water marks consistent instead of making the GM
+      // remember to bump them by hand -- raising max_force above
+      // maximum_force is legitimate and common, and leaving the pair
+      // inverted is the corruption this command now rejects.
+      if (numeric && prop == "max_force"
+        && (int)body->query("maximum_force") < ret)
+        body->set("maximum_force", ret);
+      if (numeric && prop == "max_mana"
+        && (int)body->query("maximum_mana") < ret)
+        body->set("maximum_mana", ret);
+
       write(sprintf("已设定 %s 的 %s = %O%s\n",
         id, prop, body->query(prop), suffix));
     }
@@ -97,6 +249,11 @@ int main(object me, string arg) {
     if (is_skill_name(prop))
       write(sprintf("%s 的技能 %s = %d\n", id, prop,
         body->query_skill(prop, 1)));
+    else if (is_new_key(body, prop))
+      // Distinguish "absent" from "genuinely 0" -- query() returns 0 for
+      // both, which made `gmedit polar 潜能` look like a real answer.
+      write(sprintf("%s 身上没有「%s」这个属性（不是 0，是不存在）。\n",
+        id, prop));
     else
       write(sprintf("%s 的 %s = %O\n", id, prop, body->query(prop)));
   } else {
@@ -124,12 +281,26 @@ int help(object me) {
            gmedit <id> <属性>           查看单一属性
            gmedit <id> <属性> <值>      设定属性并存档
            gmedit <id> <属性> DELETE    删除该属性（整个 key 移除，不只是设成 0）
+           gmedit -f <id> <属性> <值>   跳过所有合理性检查，强制设定
 
 范例：
   gmedit polar
   gmedit polar age
   gmedit polar str 200
   gmedit polar family DELETE
+
+技能用英文名称，例如 gmedit polar lotusforce 300。
+
+合理性检查（可用 -f 跳过）：
+  * 新增不存在、也不是技能的属性会被挡下（多半是拼错，或误用中文标签）
+  * max_force / max_mana 不能超过技能等级算出的上限
+  * maximum_force / maximum_mana（历史最高）不能低于目前的 max_*
+  * potential 不能低于 learned_points（否则永远学不了技能）
+  * kee/sen/gin/force/mana 不能超过各自的 max_*
+  * 房间属性（no_magic、sleep_room 等）不能设在角色身上
+  * 上列数值属性不能是负数
+
+设定 max_force / max_mana 时会自动把 maximum_* 一起拉高，保持一致。
 
 离线角色会自动从存档读入、修改、存档、卸载，不需要该玩家在线。
 HELP

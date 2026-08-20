@@ -1,0 +1,28 @@
+# Run:  cd docker && docker compose up -d --build
+# Logs: docker compose logs -f
+# Stop: docker compose down
+#
+# "40012:40012" publishes on 0.0.0.0, so anyone on your wifi can reach it
+# at <your-lan-ip>:40012. Bind to 127.0.0.1:40012:40012 instead if you
+# want it local-only.
+
+services:
+  mud:
+    build:
+      context: .
+      args:
+        # Pin to the commit you've verified locally rather than tracking
+        # upstream master, so a rebuild months from now still works.
+        FLUFFOS_REF: master
+    image: xyj2000-mud
+    container_name: xyj2000-mud
+    ports:
+      - "40012:40012"
+    volumes:
+      # Mudlib is bind-mounted, not copied in: host edits are live, and
+      # player saves under work/data persist on the host automatically.
+      # This IS the persistence layer -- see docker/README.md.
+      - ../libs/xyj2000f/work:/mud/work
+      - ../libs/xyj2000f/config.fluffos:/mud/config.fluffos:ro
+    restart: unless-stopped
+    stop_grace_period: 30s
