@@ -8,27 +8,44 @@
 middle: it relays both directions verbatim, watches the mud's output for
 triggers, and intercepts /commands you type before they reach the game.
 
-  /bots            list your bots
-  /<name>          run the bot called <name>
+Two kinds of bot live here:
+  - regex triggers/timers, edited as JSON via the browser form (bots.json)
+  - real Python scripts in bots/<name>.py with a run(api) function,
+    for logic that needs loops/conditionals/state (see botapi.py)
+
+  /bots            list trigger/timer bots (JSON)
+  /<name>          run a trigger/timer bot's actions once
+  /list            list Python bots (bots/*.py) and whether they're running
+  /run <name>      start a Python bot on its own thread
+  /stop <name>     stop a running Python bot
   /auto            master on/off for triggers and timers
   /reload          re-read bots.json (the editor writes it)
   /help
 
-Edit bots in the browser editor (booteditor.py), not here.
+Edit trigger/timer bots in the browser editor (boteditor.py). Python
+bots are just files -- write them in bots/<name>.py with any editor.
 """
 from __future__ import annotations
 
+import re
 import socket
 import threading
 import time
 from pathlib import Path
 
-from ansi import strip_iac
+from ansi import strip_ansi, strip_iac
+from botmanager import BotManager
 from triggers import load_config
 
 CONFIG = Path(__file__).with_name("bots.json")
 LISTEN_PORT = 40099
 MUD_HOST, MUD_PORT = "127.0.0.1", 40012
+
+# The five lines `hp` prints. This mudlib has no way to read hp without
+# running the command (the prompt is a hardcoded "> " in
+# feature/message.lpc), so a polling bot has to send `hp` -- but the
+# player doesn't need the block pasted in every loop, so it gets gagged.
+STATUS_RE = re.compile(r"^\s*(气血|精神|食物|饮水|潜能)[：:]")
 
 
 class Session:
@@ -38,9 +55,13 @@ class Session:
         self.client = client
         self.mud = socket.create_connection((MUD_HOST, MUD_PORT))
         self.engine = load_config(CONFIG)
+        self.pybots = BotManager(self)
         self.alive = True
         self.buf = b""          # partial line from the mud
         self.inbuf = b""        # partial line from the player
+        self.frag_sent = 0      # bytes of the current partial line already relayed
+        self.gag_lines = 0      # status lines still to swallow
+        self.gag_deadline = 0.0
 
     # -- plumbing -------------------------------------------------------
     def to_player(self, text: str):
@@ -55,9 +76,28 @@ class Session:
         except OSError:
             self.alive = False
 
+    def to_player_bytes(self, data: bytes):
+        try:
+            self.client.sendall(data)
+        except OSError:
+            self.alive = False
+
     def note(self, text: str):
         # Cyan so bot activity is distinguishable from game output.
         self.to_player(f"\x1b[36m[bot] {text}\x1b[0m\r\n")
+
+    # -- output gagging -------------------------------------------------
+    def arm_gag(self, nlines=6, seconds=3.0):
+        """Swallow the next few status lines instead of showing them.
+
+        Bounded by both a line count and a wall-clock deadline, so a
+        reply that never arrives can't leave real game output gagged.
+        """
+        self.gag_lines = nlines
+        self.gag_deadline = time.time() + seconds
+
+    def gag_active(self):
+        return self.gag_lines > 0 and time.time() < self.gag_deadline
 
     # -- mud -> player --------------------------------------------------
     def pump_mud(self):
@@ -68,21 +108,46 @@ class Session:
                 break
             if not data:
                 break
-            self.client.sendall(data)          # relay verbatim first
 
-            # Feed complete lines to the trigger engine. Prompts arrive
-            # without a newline, so also test the trailing fragment --
-            # those are exactly the lines players trigger on.
             self.buf += strip_iac(data)
-            *lines, self.buf = self.buf.split(b"\n")
             now = time.time()
-            for raw in lines:
-                self.fire(raw.rstrip(b"\r").decode("utf-8", "replace"), now)
-            if self.buf:
-                self.fire(self.buf.decode("utf-8", "replace"), now)
+
+            while b"\n" in self.buf:
+                line, self.buf = self.buf.split(b"\n", 1)
+                text = strip_ansi(line.rstrip(b"\r").decode("utf-8", "replace"))
+
+                # frag_sent > 0 means part of this line already went out as
+                # a prompt fragment; it has to be finished either way, or
+                # the player is left looking at a truncated line.
+                if (self.gag_active() and not self.frag_sent
+                        and STATUS_RE.match(text)):
+                    self.gag_lines -= 1
+                else:
+                    self.to_player_bytes(line[self.frag_sent:] + b"\n")
+                self.frag_sent = 0
+
+                self.fire(text, now)
+
+            # The trailing fragment is the prompt. Hold it while a gag is
+            # armed so it lands after the swallowed block, not before it.
+            if self.buf and not self.gag_active():
+                new = self.buf[self.frag_sent:]
+                if new:
+                    self.to_player_bytes(new)
+                    self.frag_sent = len(self.buf)
+                    # Prompts never end in a newline, so triggers would
+                    # never see them if only complete lines were fed.
+                    # Bots deliberately don't get partial lines: half a
+                    # status line parses as plausible-but-wrong numbers.
+                    self.fire_triggers_only(
+                        strip_ansi(self.buf.decode("utf-8", "replace")), now)
         self.alive = False
 
     def fire(self, line: str, now: float):
+        self.pybots.feed(line)
+        self.fire_triggers_only(line, now)
+
+    def fire_triggers_only(self, line: str, now: float):
         for cmd in self.engine.process_line(line, now):
             self.note(f"→ {cmd}")
             self.to_mud(cmd)
@@ -120,8 +185,9 @@ class Session:
         name = cmd[1:].split(" ")[0].lower()
 
         if name in ("help", ""):
-            self.note("/bots 列出机器人  /<名称> 执行  /auto 开关  "
-                      "/reload 重新载入  /help")
+            self.note("/bots 列出触发机器人  /list 列出 Python 机器人  "
+                      "/run <名称> 启动  /stop <名称> 停止  "
+                      "/auto 开关  /reload 重新载入  /help")
             return True
         if name == "auto":
             self.engine.enabled = not self.engine.enabled
@@ -131,6 +197,24 @@ class Session:
             self.engine = load_config(CONFIG)
             self.note(f"已重新载入 {len(self.engine.triggers)} 个触发、"
                       f"{len(self.engine.timers)} 个循环")
+            return True
+        if name == "list":
+            self.pybots.status()
+            return True
+        if name == "run":
+            rest = cmd[len("/run"):].strip()
+            if not rest:
+                return self.note("指令格式：/run <机器人名称> [参数]") or True
+            target, _, bot_arg = rest.partition(" ")
+            self.pybots.start(target, bot_arg.strip() or None)
+            return True
+        if name == "stop":
+            target = cmd[len("/stop"):].strip()
+            if not target:
+                self.pybots.stop_all()
+                self.note("已停止所有 Python 机器人。")
+                return True
+            self.pybots.stop(target)
             return True
         if name == "bots":
             if not self.engine.triggers and not self.engine.timers:
@@ -165,6 +249,7 @@ class Session:
             threading.Thread(target=fn, daemon=True).start()
         self.note("botproxy 已连线。输入 /help 查看指令。")
         self.pump_player()
+        self.pybots.stop_all()
         for s in (self.client, self.mud):
             try:
                 s.close()

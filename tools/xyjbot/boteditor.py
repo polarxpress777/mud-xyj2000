@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""boteditor -- browser UI for building bots.
+"""boteditor -- browser code editor for bots/*.py.
 
     python3 boteditor.py        then open http://127.0.0.1:8777
 
-A browser form is the right place for this: pasting Chinese trigger text,
-copying patterns between people, and testing a regex against sample text
-are all awkward in a terminal. Reads and writes the same bots.json the
-proxy uses, so /reload in game picks up changes immediately.
+Bots are plain Python files with a run(api) function (see botapi.py) --
+this is just a textarea that reads/writes bots/<name>.py, so you can
+paste/copy freely and it's the same files botproxy.py's /run loads.
+Any real editor works too; this exists for convenience, not because
+the format needs one.
 
 Stdlib only.
 """
@@ -19,8 +20,19 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-CONFIG = Path(__file__).with_name("bots.json")
+BOTS_DIR = Path(__file__).with_name("bots")
 PORT = 8777
+NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+TEMPLATE = '''# %s -- describe what this bot does here.
+#
+# Run in-game with: /run %s   (stop with /stop %s)
+
+def run(api):
+    while not api.stopped():
+        api.send("look")
+        api.sleep(5)
+'''
 
 PAGE = r"""<!doctype html>
 <html lang="zh"><head><meta charset="utf-8">
@@ -28,144 +40,121 @@ PAGE = r"""<!doctype html>
 <style>
  body{font:14px/1.5 -apple-system,"PingFang SC",sans-serif;margin:0;
       background:#1e1f22;color:#e6e6e6}
- header{background:#2b2d31;padding:12px 20px;font-weight:600}
+ header{background:#2b2d31;padding:12px 20px;font-weight:600;
+        display:flex;align-items:center;gap:10px}
+ header .hint{color:#9aa0a6;font-weight:400;font-size:12px}
  main{display:flex;gap:20px;padding:20px;align-items:flex-start}
  .col{background:#2b2d31;border-radius:8px;padding:16px}
- #list{width:340px} #form{flex:1;min-width:420px}
+ #list{width:220px} #editor{flex:1;min-width:480px}
  h2{font-size:13px;text-transform:uppercase;color:#9aa0a6;margin:0 0 10px}
- .item{padding:8px;border-radius:6px;cursor:pointer;margin-bottom:4px}
+ .item{padding:8px;border-radius:6px;cursor:pointer;margin-bottom:4px;
+       font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
  .item:hover{background:#3a3d43} .item.sel{background:#3f4d5a}
- .item .n{font-weight:600} .item .d{color:#9aa0a6;font-size:12px}
  label{display:block;margin:10px 0 4px;color:#9aa0a6;font-size:12px}
- input[type=text],textarea,select{width:100%;box-sizing:border-box;
+ input[type=text]{width:100%;box-sizing:border-box;
    background:#1e1f22;color:#e6e6e6;border:1px solid #4a4d53;
    border-radius:6px;padding:8px;font:14px/1.4 inherit}
- textarea{min-height:60px;resize:vertical}
- .row{display:flex;gap:12px} .row>*{flex:1}
+ textarea{width:100%;box-sizing:border-box;background:#161719;color:#d4d4d4;
+   border:1px solid #4a4d53;border-radius:6px;padding:12px;
+   font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+   min-height:420px;resize:vertical;tab-size:4;white-space:pre;}
  button{background:#4a7dbb;color:#fff;border:0;border-radius:6px;
    padding:9px 14px;font-weight:600;cursor:pointer;margin-right:8px}
  button.sec{background:#4a4d53} button.del{background:#a3423c}
- .match{margin-top:8px;padding:8px;border-radius:6px;font-weight:600}
- .yes{background:#1e4620;color:#7ee787} .no{background:#4a2020;color:#ffa198}
- .hint{color:#9aa0a6;font-size:12px;margin-top:4px}
- code{background:#1e1f22;padding:1px 5px;border-radius:4px}
+ .status{margin-top:8px;font-size:12px;color:#9aa0a6}
+ .api{margin-top:14px;font-size:12px;color:#9aa0a6;line-height:1.6}
+ .api code{background:#1e1f22;padding:1px 5px;border-radius:4px;color:#7ee787}
 </style></head><body>
-<header>西游记 机器人编辑器 &nbsp;<span style="color:#9aa0a6;font-weight:400">
- 存到 bots.json — 游戏里打 /reload 生效</span></header>
+<header>西游记 机器人编辑器
+  <span class="hint">bots/*.py — 游戏里打 /run &lt;名称&gt; 启动，/stop &lt;名称&gt; 停止</span></header>
 <main>
  <div class="col" id="list">
    <h2>机器人</h2><div id="items"></div>
-   <button onclick="newBot('trigger')">+ 触发</button>
-   <button onclick="newBot('timer')" class="sec">+ 循环</button>
+   <button onclick="newBot()">+ 新建</button>
  </div>
- <div class="col" id="form">
-   <h2 id="ftitle">编辑</h2>
-   <label>名称（游戏里用 /名称 执行）</label>
-   <input type="text" id="name">
-   <div id="trigfields">
-     <label>触发文字（贴上游戏里出现的整句）</label>
-     <textarea id="pattern"></textarea>
-     <div class="row">
-       <div><label>比对方式</label>
-         <select id="isregex" onchange="test()">
-           <option value="0">纯文字（建议）</option>
-           <option value="1">正规表示式</option></select></div>
-       <div><label>冷却秒数（0 = 不限）</label>
-         <input type="text" id="cooldown" value="0"></div>
-     </div>
-     <label>测试文字（贴一行游戏输出试试）</label>
-     <textarea id="sample"></textarea>
-     <div id="result" class="match no">尚未比对</div>
-     <div class="hint">正规表示式可用 <code>(\d+)</code> 抓数字，
-       动作里用 <code>$1</code> 代入。</div>
-   </div>
-   <div id="timerfields" style="display:none">
-     <label>每隔几秒执行</label><input type="text" id="interval" value="10">
-   </div>
-   <label>要送出的指令（一行一个）</label>
-   <textarea id="actions"></textarea>
-   <label><input type="checkbox" id="enabled" style="width:auto"> 启用</label>
+ <div class="col" id="editor">
+   <h2 id="ftitle">选择或新建一个机器人</h2>
+   <label>名称（游戏里用 /run 名称 启动）</label>
+   <input type="text" id="name" disabled>
+   <label>代码</label>
+   <textarea id="code" spellcheck="false" disabled></textarea>
    <div style="margin-top:14px">
      <button onclick="save()">储存</button>
      <button onclick="del()" class="del">删除</button>
    </div>
+   <div class="status" id="status"></div>
+   <div class="api">
+     可用的 <code>api</code> 方法：<code>api.send(cmd)</code> 送指令 ·
+     <code>api.sleep(sec)</code> 可中断的等待 ·
+     <code>api.hp()</code> 送 hp 并回传 (气血, 上限, 百分比) ·
+     <code>api.wait_line(regex, timeout)</code> 等特定输出 ·
+     <code>api.stopped()</code> 是否该结束（while 条件里要判断这个）·
+     <code>api.log(msg)</code> 显示讯息
+   </div>
  </div>
 </main>
 <script>
-let data={triggers:[],timers:[]}, sel=null;
+let bots=[], sel=null, dirty=false;
 const $=id=>document.getElementById(id);
 
-async function load(){ data=await (await fetch('/api/bots')).json(); render(); }
+async function load(){ bots=(await (await fetch('/api/bots')).json()).bots; render(); }
 function render(){
   const el=$('items'); el.innerHTML='';
-  data.triggers.forEach((t,i)=>el.appendChild(row(t,'trigger',i,
-    '当「'+t.pattern+'」')));
-  data.timers.forEach((t,i)=>el.appendChild(row(t,'timer',i,
-    '每 '+t.interval+' 秒')));
+  bots.forEach(name=>{
+    const d=document.createElement('div');
+    d.className='item'+(sel===name?' sel':'');
+    d.textContent='/'+name;
+    d.onclick=()=>open(name);
+    el.appendChild(d);
+  });
 }
-function row(t,kind,i,desc){
-  const d=document.createElement('div');
-  d.className='item'+(sel&&sel.kind===kind&&sel.i===i?' sel':'');
-  d.innerHTML='<div class="n">'+(t.enabled?'☑':'☐')+' /'+t.name+'</div>'+
-              '<div class="d">'+desc+' → '+(t.actions||[]).join(' ; ')+'</div>';
-  d.onclick=()=>{sel={kind,i};edit(t,kind);render();};
-  return d;
-}
-function newBot(kind){
-  const t=kind==='trigger'
-    ?{name:'新触发',pattern:'',is_regex:false,actions:[],cooldown:0,
-      once:false,enabled:true}
-    :{name:'新循环',interval:10,actions:[],enabled:true};
-  (kind==='trigger'?data.triggers:data.timers).push(t);
-  sel={kind,i:(kind==='trigger'?data.triggers:data.timers).length-1};
-  edit(t,kind); render();
-}
-function edit(t,kind){
-  $('ftitle').textContent=kind==='trigger'?'编辑触发':'编辑循环';
-  $('trigfields').style.display=kind==='trigger'?'':'none';
-  $('timerfields').style.display=kind==='timer'?'':'none';
-  $('name').value=t.name||'';
-  $('actions').value=(t.actions||[]).join('\n');
-  $('enabled').checked=!!t.enabled;
-  if(kind==='trigger'){
-    $('pattern').value=t.pattern||''; $('isregex').value=t.is_regex?'1':'0';
-    $('cooldown').value=t.cooldown||0; test();
-  } else $('interval').value=t.interval||10;
-}
-function current(){
-  if(!sel)return null;
-  return (sel.kind==='trigger'?data.triggers:data.timers)[sel.i];
-}
-async function test(){
-  const p=$('pattern').value, s=$('sample').value, r=$('result');
-  if(!p||!s){r.className='match no';r.textContent='尚未比对';return;}
-  const res=await (await fetch('/api/test',{method:'POST',
-    body:JSON.stringify({pattern:p,sample:s,is_regex:$('isregex').value==='1'})
-  })).json();
-  r.className='match '+(res.ok?'yes':'no');
-  r.textContent=res.ok?('比对成功！'+(res.groups.length?
-    '  捕获：'+res.groups.map((g,i)=>'$'+(i+1)+'='+g).join('  '):''))
-    :(res.error||'不符合');
-}
-$('pattern').addEventListener('input',test);
-$('sample').addEventListener('input',test);
-async function save(){
-  const t=current(); if(!t)return;
-  t.name=$('name').value.trim().replace(/\s+/g,'');
-  t.actions=$('actions').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  t.enabled=$('enabled').checked;
-  if(sel.kind==='trigger'){
-    t.pattern=$('pattern').value; t.is_regex=$('isregex').value==='1';
-    t.cooldown=parseFloat($('cooldown').value)||0;
-  } else t.interval=parseFloat($('interval').value)||10;
-  await fetch('/api/bots',{method:'POST',body:JSON.stringify(data)});
+async function open(name){
+  const r=await fetch('/api/bot?name='+encodeURIComponent(name));
+  if(!r.ok){ $('status').textContent='读取失败'; return; }
+  const data=await r.json();
+  sel=name; dirty=false;
+  $('ftitle').textContent='编辑 /'+name;
+  $('name').value=name; $('name').disabled=true;
+  $('code').value=data.code; $('code').disabled=false;
+  $('status').textContent='';
   render();
 }
+function newBot(){
+  const name=prompt('机器人名称（英文、数字、- 或 _）：');
+  if(!name) return;
+  if(!/^[A-Za-z0-9_-]+$/.test(name)){ alert('名称只能是英文字母、数字、- 或 _'); return; }
+  if(bots.includes(name)){ open(name); return; }
+  sel=name; dirty=true;
+  $('ftitle').textContent='新建 /'+name;
+  $('name').value=name; $('name').disabled=true;
+  $('code').disabled=false;
+  fetch('/api/template?name='+encodeURIComponent(name)).then(r=>r.json()).then(d=>{
+    $('code').value=d.code;
+  });
+}
+async function save(){
+  if(!sel) return;
+  const code=$('code').value;
+  const r=await fetch('/api/bot',{method:'POST',
+    body:JSON.stringify({name:sel, code})});
+  if(r.ok){
+    $('status').textContent='已储存。游戏里打 /run '+sel+' 试试。';
+    if(!bots.includes(sel)) bots.push(sel);
+    render();
+  } else {
+    $('status').textContent='储存失败：'+(await r.text());
+  }
+}
 async function del(){
-  if(!sel)return;
-  (sel.kind==='trigger'?data.triggers:data.timers).splice(sel.i,1);
+  if(!sel) return;
+  if(!confirm('删除 /'+sel+' ？')) return;
+  await fetch('/api/bot',{method:'DELETE',
+    body:JSON.stringify({name:sel})});
+  bots=bots.filter(n=>n!==sel);
   sel=null;
-  await fetch('/api/bots',{method:'POST',body:JSON.stringify(data)});
+  $('ftitle').textContent='选择或新建一个机器人';
+  $('name').value=''; $('name').disabled=true;
+  $('code').value=''; $('code').disabled=true;
   render();
 }
 load();
@@ -174,21 +163,46 @@ load();
 
 
 class Handler(BaseHTTPRequestHandler):
-    def _send(self, body: bytes, ctype="application/json"):
-        self.send_response(200)
+    def _send(self, body: bytes, ctype="application/json", status=200):
+        self.send_response(status)
         self.send_header("Content-Type", ctype + "; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
+    def _json(self, obj, status=200):
+        self._send(json.dumps(obj, ensure_ascii=False).encode("utf-8"), status=status)
+
+    def _safe_name(self, name: str):
+        return name if isinstance(name, str) and NAME_RE.match(name) else None
+
     def do_GET(self):
         path = urlparse(self.path).path
+        qs = dict(p.split("=", 1) for p in urlparse(self.path).query.split("&") if "=" in p)
+
         if path == "/":
             return self._send(PAGE.encode("utf-8"), "text/html")
+
         if path == "/api/bots":
-            if CONFIG.exists():
-                return self._send(CONFIG.read_bytes())
-            return self._send(b'{"triggers":[],"timers":[]}')
+            BOTS_DIR.mkdir(exist_ok=True)
+            names = sorted(p.stem for p in BOTS_DIR.glob("*.py"))
+            return self._json({"bots": names})
+
+        if path == "/api/bot":
+            from urllib.parse import unquote
+            name = self._safe_name(unquote(qs.get("name", "")))
+            if not name:
+                return self._send(b"bad name", status=400)
+            f = BOTS_DIR / f"{name}.py"
+            if not f.exists():
+                return self._send(b"not found", status=404)
+            return self._json({"name": name, "code": f.read_text(encoding="utf-8")})
+
+        if path == "/api/template":
+            from urllib.parse import unquote
+            name = self._safe_name(unquote(qs.get("name", "bot"))) or "bot"
+            return self._json({"code": TEMPLATE % (name, name, name)})
+
         self.send_error(404)
 
     def do_POST(self):
@@ -196,28 +210,31 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(n) or b"{}")
 
-        if path == "/api/bots":
-            CONFIG.write_text(
-                json.dumps(payload, ensure_ascii=False, indent=2),
-                encoding="utf-8")
-            return self._send(b'{"saved":true}')
+        if path == "/api/bot":
+            name = self._safe_name(payload.get("name", ""))
+            code = payload.get("code", "")
+            if not name:
+                return self._send(b"bad name", status=400)
+            BOTS_DIR.mkdir(exist_ok=True)
+            (BOTS_DIR / f"{name}.py").write_text(code, encoding="utf-8")
+            return self._json({"saved": True})
 
-        if path == "/api/test":
-            # Live pattern tester -- the "PATTERN MATCHES!" panel.
-            pat, sample = payload.get("pattern", ""), payload.get("sample", "")
-            if payload.get("is_regex"):
-                try:
-                    m = re.search(pat, sample)
-                except re.error as e:
-                    return self._send(json.dumps(
-                        {"ok": False, "error": f"正规表示式错误：{e}"},
-                        ensure_ascii=False).encode("utf-8"))
-                out = {"ok": bool(m),
-                       "groups": list(m.groups()) if m else []}
-            else:
-                out = {"ok": pat in sample, "groups": []}
-            return self._send(json.dumps(out, ensure_ascii=False)
-                              .encode("utf-8"))
+        self.send_error(404)
+
+    def do_DELETE(self):
+        path = urlparse(self.path).path
+        n = int(self.headers.get("Content-Length", 0))
+        payload = json.loads(self.rfile.read(n) or b"{}")
+
+        if path == "/api/bot":
+            name = self._safe_name(payload.get("name", ""))
+            if not name:
+                return self._send(b"bad name", status=400)
+            f = BOTS_DIR / f"{name}.py"
+            if f.exists():
+                f.unlink()
+            return self._json({"deleted": True})
+
         self.send_error(404)
 
     def log_message(self, *a):
@@ -225,6 +242,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    BOTS_DIR.mkdir(exist_ok=True)
     srv = HTTPServer(("127.0.0.1", PORT), Handler)
     url = f"http://127.0.0.1:{PORT}"
     print(f"boteditor: {url}   (Ctrl-C to stop)")
