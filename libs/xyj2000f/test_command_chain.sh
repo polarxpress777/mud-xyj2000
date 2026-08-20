@@ -123,6 +123,58 @@ else
   FAILED=1
 fi
 
+# --- Test 6: instant commands don't idle a second between repeats ----
+# The gap between queued commands used to be a flat 1 second, so "s#12"
+# spent twelve seconds walking twelve rooms. Movement and look finish the
+# moment they return -- no start_busy(), no pending/* flag -- so they now
+# chain on the next backend cycle instead.
+#
+# Timed as a DIFFERENCE between a short and a long repeat: login, boot and
+# the client's idle timeout dominate any single run, but they are constant
+# across the two, so the extra 10 repeats are what the delta measures.
+T_START=$(date +%s)
+play --send "goto /d/city/kezhan" --send "look#2" >/dev/null
+T_SHORT=$(( $(date +%s) - T_START ))
+T_START=$(date +%s)
+play --send "goto /d/city/kezhan" --send "look#12" >/dev/null
+T_LONG=$(( $(date +%s) - T_START ))
+DELTA=$(( T_LONG - T_SHORT ))
+echo "timing: look#2 took ${T_SHORT}s, look#12 took ${T_LONG}s, delta ${DELTA}s"
+# At the old flat 1s gap the extra ten repeats cost ~10s. Allow generous
+# headroom for a loaded machine while still failing if the gap came back.
+if [ "$DELTA" -le 4 ]; then
+  echo "PASS: 10 extra instant repeats cost ${DELTA}s (was ~10s at the flat 1s gap)"
+else
+  echo "FAIL: 10 extra instant repeats cost ${DELTA}s -- the per-command gap is back"
+  FAILED=1
+fi
+
+# --- Test 7: non-instant actions still wait for each other -----------
+# The speedup must not fire dazuo repeats into a still-busy character.
+# exercise.lpc:46-47 sets start_busy() AND pending/exercising, so if the
+# gap logic wrongly treated a busy action as instant, repeats 2 and 3
+# would die on 你现在正忙着呢 and the batch would be cancelled.
+#
+# Preconditions from cmds/std/exercise.lpc, all easy to get wrong:
+#   :16 no_fight/no_magic rooms refuse with 安全区内禁止练功 -- so this
+#       runs in 天监台, NOT 南城客栈 like the tests above
+#   :38 the cost must be at least 20 气
+# A longer idle than play() uses, because three cycles genuinely take
+# several seconds -- that is the point of the test.
+OUT7=$(python3 "$PROJECT_DIR/scripts/mudclient.py" 127.0.0.1 $PORT \
+  --timeout 90 --idle 12 \
+  --send "gb" --send "no" --send "fluffos" --send "Mud@2026" \
+  --send "goto /d/city/tianjiantai" --send "dazuo 20#3" \
+  --send "quit" 2>&1)
+N_DAZUO=$(printf '%s' "$OUT7" | grep -ac "运气用功")
+check "'dazuo 20#3' completes all three busy cycles" 3 "$N_DAZUO"
+if printf '%s' "$OUT7" | grep -q "后续指令已取消"; then
+  echo "FAIL: dazuo 20#3 was cancelled -- busy actions are not being waited for"
+  FAILED=1
+else
+  echo "PASS: dazuo 20#3 not cancelled (busy actions still waited for)"
+fi
+
 echo "---"
 if [ $FAILED -eq 0 ]; then
   echo "ALL PASS"

@@ -3,6 +3,17 @@
 
 #define MAX_REPEAT 50
 #define MAX_ALIASES 40
+
+// Ceiling on a WHOLE batch, not just one "#N".
+//
+// MAX_REPEAT bounds a single repeat, but "w#50;e#50;n#50;..." was
+// unbounded, and each queued command schedules the next with
+// call_out(..., 0). The driver counts those as nested call_out(0) and
+// aborts the chain past 1000 -- exactly how prewarmd.lpc:70 dies on this
+// mudlib (4938 files / 5 per batch = ~988 levels, right at the edge).
+// Capping the queue keeps the deepest possible chain an order of
+// magnitude clear of that limit.
+#define MAX_BATCH 100
 #define HISTORY_BUFFER_SIZE 10
 
 mapping alias;
@@ -24,7 +35,40 @@ nosave int queue_waited;
 
 #define MAX_QUEUE_WAIT 30   // seconds to wait per command before giving up
 
+// Gap before the next queued command runs.
+//
+// QUEUE_GAP_WAIT is a poll interval, used only while the previous action
+// is still running; MAX_QUEUE_WAIT counts those polls, so it has to stay
+// at one second to keep meaning seconds.
+//
+// QUEUE_GAP_INSTANT is for commands that finished the moment they
+// returned -- movement, look, inventory, get/drop. Those used to wait a
+// full second each anyway, which made "s#12" take twelve seconds to walk
+// twelve rooms. Zero means "next backend cycle", so the batch runs about
+// as fast as the driver can process it while still being one command per
+// call_out (each gets its own eval budget, so a long chain can't blow
+// the evaluation cost the way an inline loop would).
+#define QUEUE_GAP_WAIT    1
+#define QUEUE_GAP_INSTANT 0
+
 string resolve_alias(string str);
+
+// True while the previous queued action is still running, or the player
+// is sitting at a prompt.
+//
+// is_busy() covers every start_busy() action; in_input() covers commands
+// that read a reply (passwd, abandon, observe) -- firing into one of
+// those would feed the queued commands to the prompt as if they were
+// answers. is_busy() alone is not enough: exercise, meditate and sleep
+// also track "still running" with their own pending/* temp flag and
+// refuse to start again while it is set, which is what made dazuo#3 fail
+// on the second repetition with 你现在正忙着呢.
+private int still_working(object me) {
+  return me->is_busy() || in_input(me)
+    || me->query_temp("pending/exercising")
+    || me->query_temp("pending/meditating")
+    || me->query_temp("pending/sleep");
+}
 
 // speed of player input commands.
 int query_cmd_count() { return cmd_cnt2; }
@@ -70,7 +114,9 @@ private string *parse_batch(string str) {
     while (strlen(p) && p[strlen(p) - 1] == ' ') p = p[0..strlen(p) - 2];
     if (!strlen(p)) continue;
     out += expand_repeat(p);
+    if (sizeof(out) >= MAX_BATCH) break;
   }
+  if (sizeof(out) > MAX_BATCH) out = out[0..MAX_BATCH - 1];
   return out;
 }
 
@@ -93,20 +139,8 @@ void run_queued_command() {
     return;
   }
 
-  // Wait, don't fail, while the previous action is still running or the
-  // player is answering a prompt. is_busy() covers every start_busy()
-  // action; in_input() covers commands that read a reply (passwd,
-  // abandon, observe) -- firing into those would feed queued commands to
-  // the prompt as if they were answers.
-  // is_busy() is not the whole story: several commands track "action
-  // still running" with their own pending/* temp flag as well, and
-  // exercise/meditate refuse to start again while theirs is set. Waiting
-  // on is_busy() alone made dazuo#3 fail on the second repetition with
-  // 你现在正忙着呢.
-  if (me->is_busy() || in_input(me)
-    || me->query_temp("pending/exercising")
-    || me->query_temp("pending/meditating")
-    || me->query_temp("pending/sleep")) {
+  // Wait, don't fail, while the previous action is still running.
+  if (still_working(me)) {
     if (queue_waited >= MAX_QUEUE_WAIT) {
       cmd_queue = ({});
       queue_waited = 0;
@@ -115,7 +149,7 @@ void run_queued_command() {
       return;
     }
     queue_waited++;
-    call_out("run_queued_command", 1);
+    call_out("run_queued_command", QUEUE_GAP_WAIT);
     return;
   }
 
@@ -129,9 +163,15 @@ void run_queued_command() {
     return;
   }
 
-  // 1s rather than 0s: the action just issued may only set its busy flag
-  // on the next heartbeat, and checking too early would race it.
-  if (sizeof(cmd_queue)) call_out("run_queued_command", 1);
+  // Pace the next one against what the command we just ran actually did.
+  // start_busy() (feature/action.lpc:6) is a plain assignment made during
+  // the command's own execution, and the pending/* flags likewise, so by
+  // the time command() has returned the flag is already there to read --
+  // there is no heartbeat to race, and an instant command need not sleep
+  // a second to discover it was instant.
+  if (sizeof(cmd_queue))
+    call_out("run_queued_command",
+      still_working(me) ? QUEUE_GAP_WAIT : QUEUE_GAP_INSTANT);
 }
 
 string process_input(string str) {
