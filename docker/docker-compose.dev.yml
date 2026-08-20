@@ -1,0 +1,21 @@
+# Development overlay -- the mudlib comes from the host, so editing .lpc
+# and running in-game `update` works, exactly as before this split.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Every state path is re-pointed at the host tree, not just /mud/work.
+# Compose merges `volumes` BY TARGET: listing only /mud/work would leave
+# the named volumes mounted on top of it at /mud/work/data/user and
+# friends, so the host's characters would be invisible while the image's
+# game data was correctly shadowed -- the confusing half-and-half state
+# this file exists to avoid.
+
+services:
+  mud:
+    volumes:
+      - ../libs/xyj2000f/work:/mud/work
+      - ../libs/xyj2000f/config.fluffos:/mud/config.fluffos:ro
+      - ../libs/xyj2000f/work/data/user:/mud/work/data/user
+      - ../libs/xyj2000f/work/data/login:/mud/work/data/login
+      - ../libs/xyj2000f/work/data/npc/boss:/mud/work/data/npc/boss
+      - ../libs/xyj2000f/work/log:/mud/work/log

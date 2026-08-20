@@ -7,6 +7,53 @@ Newest first.
 
 ---
 
+## 2026-08-20 — Self-contained image + named state volumes
+
+Design: [self-contained-image.md](self-contained-image.md). Closes PRD
+P0-1, P0-2, P0-3, P1-1, P1-2.
+
+The image now bakes the mudlib in and volume-mounts only what the driver
+writes player state to. The whole database turned out to be **280 KB**
+(`data/user` 28K, `data/login` 28K, `data/npc/boss` 224K); the other
+6.4 MB under `data/` is derived and regenerated at boot, so it ships in
+the image.
+
+**Verified:**
+
+| Test | Result |
+|---|---|
+| `docker run` from `/tmp`, no repo checkout | playable, `(healthy)` |
+| character survives `docker rm -f` + recreate | logs back in |
+| backup → delete character → restore | account recognised again |
+| dev overlay live `.lpc` edit | appears and reverts in-container |
+| prod mode | host tree correctly invisible |
+
+Also: driver pinned to `6cf257ce…` (was `master`), TCP healthcheck,
+container logs capped at 5x10 MB, listener moved to `127.0.0.1`, and
+`work/log` on a volume rather than tmpfs so logs survive the restart you
+need them for.
+
+`./backup.sh` does snapshot / list / restore / import, tarring volumes
+through a throwaway container so it works whether or not the MUD runs.
+
+**Two things this got wrong first, worth remembering:**
+
+- Compose merges `volumes` **by target**. The dev overlay listed only
+  `/mud/work`, so the named volumes stayed mounted on top of it and host
+  characters were invisible while image data was correctly shadowed. The
+  overlay must re-point every state path.
+- Switching prod to volumes stranded all 7 existing characters in the
+  host tree — every login read 没有这个玩家. "Host state is invisible in
+  prod" was verified as a *passing test* without noticing it also meant
+  *migration was missing*. Fixed by `./backup.sh import`, which refuses
+  to overwrite a non-empty volume without `--force`.
+
+**Fixed alongside:** `.gitignore`'s `libs/*/work/**/log` was excluding
+`work/doc/efuns/log` and `.../floats/log` — man pages for the `log()`
+efun, i.e. shipped content, not logs. Narrowed to `libs/*/work/log/**`.
+
+---
+
 ## 2026-08-19 — Bot: navigation, sustenance and hang removal
 
 Six defects in `tools/xyjbot/bots/changan-mieyao-bot.py` and its

@@ -21,7 +21,11 @@ scripts/lib_content_fingerprints.json
 # Runtime logs (debug.log etc) -- recreated by the driver on every boot.
 libs/*/log/
 libs/*/work/log/
-libs/*/work/**/log
+# NOTE: deliberately NOT "libs/*/work/**/log" -- that also excludes
+# work/doc/efuns/log and work/doc/efuns/floats/log, which are the man
+# pages for the log() efun (natural logarithm), i.e. shipped content.
+# Same trap as the banned_name case above.
+libs/*/work/log/**
 libs/*/boot.log
 libs/*/driver.pid
 libs/*/convert.log

@@ -1,6 +1,11 @@
 # planned
 
-Designed, accepted, ready to implement. Nothing here yet.
+Designed, accepted, ready to implement.
+
+Currently empty — the one item that lived here
+(self-contained image + state volumes) is now in
+[`../built/`](../built/). Remaining problems are still in
+[`../needs-building/`](../needs-building/) awaiting a design.
 
 An item arrives from [`../needs-building/`](../needs-building/) once it
 has:

@@ -61,6 +61,12 @@ Their serialisation is **stable across boots** (verified: identical
 md5s over a restart), so they can be committed without churn — but they
 are not authored content either.
 
+**Resolved 2026-08-20.** The line is drawn: code in the image, the
+280 KB of genuine player state in three named volumes. The derived-state
+row is what made this non-obvious, and it is why the volumes are narrow
+rather than one mount at `data/`. See
+[../built/self-contained-image.md](../built/self-contained-image.md).
+
 ## Seam 2 — the bot's world model is derived from source, offline
 
 `build_map.py` parses 4938 `.lpc` files and emits `rooms.json` (2505
@@ -144,11 +150,11 @@ and the real state had silently diverged.
 
 | Risk | Severity | Standing |
 |---|---|---|
-| Player state has no backup | **high** | open (P0-3) |
-| Wedged driver undetected | **high** | open (P0-2) |
-| Image not runnable standalone | medium | open (P0-1) |
-| Logs unbounded | medium | open (P1-1) |
-| Driver version unpinned | medium | open (P1-2) |
+| Player state has no backup | **high** | closed 2026-08-20 — `docker/backup.sh` |
+| Wedged driver undetected | **high** | closed 2026-08-20 — TCP healthcheck |
+| Image not runnable standalone | medium | closed 2026-08-20 — mudlib baked in |
+| Logs unbounded | medium | closed 2026-08-20 — 5x10 MB cap |
+| Driver version unpinned | medium | closed 2026-08-20 — pinned to 6cf257ce |
 | Prewarm broken since Aug 16 | medium | open (P1-3) |
 | Bot proxy dies with its terminal | medium | open (P1-4) |
 | ~60% of map cannot route home | low | open (P2-1), bot degrades honestly |

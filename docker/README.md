@@ -3,53 +3,97 @@
 Player-facing connection instructions live in
 [`guide/connecting.md`](../guide/connecting.md) — send that to friends.
 
-## TL;DR for LAN play
-
-You do **not** need Docker for friends to join. The driver already binds
-`*:40012` (all interfaces), so on the same wifi they connect to:
-
-```
-telnet 192.168.20.20 40012
-```
-
-Docker is for packaging/reproducibility, not for LAN access.
-
-## Running under Docker
-
-> [!WARNING]
-> **Never run the native driver and the container at the same time.**
-> Both write LPC save files into the same `work/data/`, and two drivers
-> writing the same player `.o` files will corrupt characters. Stop the
-> native one first:
-> ```bash
-> pkill -f "driver config.fluffos"
-> ```
+## TL;DR
 
 ```bash
 cd docker
 docker compose up -d --build     # first build compiles FluffOS, takes a while
 docker compose logs -f
-docker compose down
+./backup.sh                      # snapshot player state (~4 KB)
+docker compose down              # volumes survive
 ```
 
-Build verified: image `xyj2000-mud` (627 MB), driver
-`fluffos 20260729-19ffcc7a-6cf257ce` — the same upstream commit as the
-local native build (`6cf257c`).
+Connects on `127.0.0.1:40012`. Player-facing instructions:
+[`guide/connecting.md`](../guide/connecting.md).
 
-The mudlib is **bind-mounted**, not baked into the image
-(`../libs/xyj2000f/work` → `/mud/work`), so:
+> [!WARNING]
+> **Never run the native driver and a dev-mode container at the same
+> time.** Both write LPC saves into the same `work/data/`, and two
+> drivers writing the same `.o` files corrupt characters. Stop the
+> native one first: `pkill -f "driver config.fluffos"`.
+> Prod mode is unaffected — it uses volumes, not the host tree.
 
-- editing `.lpc` files on the host still works with in-game `update`
-- player saves written to `work/data/` land on the host automatically
+## Two modes
 
-`entrypoint.sh` rewrites the config's absolute `mudlib directory` line to
-the container path at startup, so there's only one `config.fluffos` and it
-can't drift.
+| | command | mudlib from | player saves in |
+|---|---|---|---|
+| **prod** (default) | `docker compose up -d` | the image | named volumes |
+| **dev** | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d` | the host tree | the host tree |
 
-Note: the repo's `config.fluffos` still contains a stale host path from
-before the project was renamed (`Mud西游记/...`). The native driver happens
-to work because it's started from the right cwd, but that line should be
-corrected — under Docker the entrypoint overrides it regardless.
+Prod is self-contained: `docker run -p 40012:40012 xyj2000-mud` works
+with no checkout of this repo. Dev restores live `.lpc` editing with
+in-game `update`.
+
+The dev overlay re-points **every** state path at the host, not just
+`/mud/work`. Compose merges `volumes` by target, so listing only
+`/mud/work` leaves the named volumes mounted on top of it and the host's
+characters stay invisible — a half-and-half state that looks like it
+works until you wonder where your character went.
+
+## What is in the image vs in a volume
+
+The whole database is **280 KB**. Everything else the game needs is
+regenerated from code at boot, so it ships in the image.
+
+| Path | Size | Where | Why |
+|---|---|---|---|
+| `data/user/` | 28K | volume | characters |
+| `data/login/` | 28K | volume | accounts, holds password hashes |
+| `data/npc/boss/` | 224K | volume | boss respawn timers |
+| `log/` | — | volume | must survive a restart to debug a crash-loop |
+| rest of `data/` | 6.4M | image | derived; driver rewrites it at boot |
+
+Three narrow volumes rather than one at `data/` on purpose: Docker seeds
+a named volume from image content **on first run only**, so a volume at
+`data/` would freeze the 6.4 MB of derived files at first boot and shadow
+every later image update.
+
+`data/login` is also excluded from the image via `.dockerignore` — a
+runtime volume shadows it, but shadowing is not the same as never
+shipping password hashes in a distributable artifact.
+
+## Backups
+
+```bash
+./backup.sh                              # -> backups/xyj-state-<ts>.tar.gz
+./backup.sh list
+./backup.sh restore backups/xyj-....tar.gz
+```
+
+Tars the volumes through a throwaway container, so it works whether or
+not the MUD is running, and keeps the last 30 (safe to cron). Restore
+clears the volumes first — a plain untar would merge, leaving characters
+that exist now but not in the snapshot.
+
+Verified end to end: back up, delete a character's save, restore, and the
+account is recognised again at the login prompt.
+
+## Pinning
+
+`FLUFFOS_REF` is pinned to `6cf257cedbb38e4b122ad79df08742c6629860aa`,
+the commit the native driver was verified against. The running container
+reports it:
+
+```bash
+docker logs xyj2000-mud | grep entrypoint:
+```
+
+## Health
+
+A `HEALTHCHECK` opens a TCP connection to 40012. `restart:
+unless-stopped` alone only reacts to the process *exiting*; a driver that
+is up but no longer accepting logins would otherwise stay "running"
+forever. Container stdout is capped at 5 x 10 MB.
 
 ## About "a database"
 

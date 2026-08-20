@@ -1,28 +1,60 @@
-# Run:  cd docker && docker compose up -d --build
-# Logs: docker compose logs -f
-# Stop: docker compose down
+# Production: self-contained image, named volumes for state.
 #
-# "40012:40012" publishes on 0.0.0.0, so anyone on your wifi can reach it
-# at <your-lan-ip>:40012. Bind to 127.0.0.1:40012:40012 instead if you
-# want it local-only.
+#   docker compose up -d --build      start
+#   docker compose logs -f            follow
+#   docker compose down               stop (volumes survive)
+#   ./backup.sh                       back the volumes up
+#
+# For live .lpc editing, add the dev overlay:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Bound to 127.0.0.1 so the MUD is local-only. There is no encryption and
+# passwords cross the wire in the clear, so publishing on 0.0.0.0 exposes
+# them to everyone on your wifi. Change the mapping to "40012:40012" only
+# if you mean to.
+
+# Fixed project name so the volumes are always xyj2000_xyj-{user,login,boss}
+# rather than being named after whatever directory you ran this from --
+# backup.sh and any restore depend on those names being stable.
+name: xyj2000
 
 services:
   mud:
     build:
-      context: .
-      args:
-        # Pin to the commit you've verified locally rather than tracking
-        # upstream master, so a rebuild months from now still works.
-        FLUFFOS_REF: master
+      context: ..
+      dockerfile: docker/Dockerfile
     image: xyj2000-mud
     container_name: xyj2000-mud
     ports:
-      - "40012:40012"
+      - "127.0.0.1:40012:40012"
+
+    # Only what the driver writes player state to. Everything else lives
+    # in the image. Deliberately three narrow mounts rather than one at
+    # data/: Docker seeds a named volume from image content on FIRST RUN
+    # ONLY, so a volume at data/ would freeze the 6.4 MB of derived game
+    # files at first boot and shadow every later image update.
     volumes:
-      # Mudlib is bind-mounted, not copied in: host edits are live, and
-      # player saves under work/data persist on the host automatically.
-      # This IS the persistence layer -- see docker/README.md.
-      - ../libs/xyj2000f/work:/mud/work
-      - ../libs/xyj2000f/config.fluffos:/mud/config.fluffos:ro
+      - xyj-user:/mud/work/data/user
+      - xyj-login:/mud/work/data/login
+      - xyj-boss:/mud/work/data/npc/boss
+      # A volume rather than tmpfs: logs must survive a restart, or the
+      # one thing you need to diagnose a crash-loop dies with each loop.
+      # Prune with: docker volume rm xyj2000_xyj-log
+      - xyj-log:/mud/work/log
+
     restart: unless-stopped
     stop_grace_period: 30s
+
+    # Bounded, or a container running for months fills the disk with the
+    # boot-time error dump alone (~326 KB per boot today).
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  xyj-user:
+  xyj-login:
+  xyj-boss:
+  xyj-log:

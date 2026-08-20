@@ -20,11 +20,13 @@ Verified by running it, not by reading it:
 | Player saves persist to host | works — correct ownership (`polar staff`), no root-owned files |
 | Survives host reboot | works — `restart: unless-stopped` |
 | Bots via proxy on :40099 | works — but the proxy is a host process, not in the image |
-| Runs unattended | **no** — see P1–P4 |
+| Runs unattended | P0-1/2/3 and P1-1/2 closed 2026-08-20; P1-3 and P1-4 remain |
 
 ## Problems
 
 ### P0-1 — The image is not self-contained
+
+> **CLOSED 2026-08-20** — [../built/self-contained-image.md](../built/self-contained-image.md)
 
 **Problem.** The image holds only the driver. The mudlib arrives by bind
 mount, so `docker run xyj2000-mud` exits immediately:
@@ -62,6 +64,8 @@ still exists.
 
 ### P0-2 — Nothing detects or recovers a wedged server
 
+> **CLOSED 2026-08-20** — TCP `HEALTHCHECK` on 40012.
+
 **Problem.** No healthcheck is configured (verified: `health=NONE CONFIGURED`).
 `restart: unless-stopped` only reacts to the process *exiting*. A driver
 that is up but not accepting logins stays "running" forever.
@@ -75,6 +79,8 @@ automatically and the event is visible in the logs.
 ---
 
 ### P0-3 — No backup of the only copy of player state
+
+> **CLOSED 2026-08-20** — `docker/backup.sh`; restore exercised end to end.
 
 **Problem.** `work/data/` (~6.3 MB of flat `.o` files) is the entire
 persistence layer. There is no backup, no rotation, no restore procedure.
@@ -91,6 +97,8 @@ and log in as that character.
 
 ### P1-1 — Logs grow without bound
 
+> **CLOSED 2026-08-20** — container logs capped at 5x10 MB; `work/log` on its own volume.
+
 **Problem.** Docker's log driver is `json-file` with **no** options set —
 no `max-size`, no `max-file`. One boot writes ~326 KB, largely the
 prewarm error dump (P1-3). Separately `work/log/log` is already 8.9 MB
@@ -104,6 +112,8 @@ stated ceiling.
 ---
 
 ### P1-2 — The driver version is not pinned
+
+> **CLOSED 2026-08-20** — pinned to `6cf257cedbb38e4b122ad79df08742c6629860aa`.
 
 **Problem.** `docker-compose.yml` sets `FLUFFOS_REF: master`, directly
 contradicting its own adjacent comment ("Pin to the commit you've
@@ -197,9 +207,10 @@ routable (with the transition encoded) or explicitly declined.
 
 ## Open questions
 
-1. **Is the live-edit workflow a requirement, or a convenience?** The
-   answer decides P0-1's shape. If `.lpc` edits must be live in the
-   hosted instance, code and state cannot be cleanly separated.
+1. ~~**Is the live-edit workflow a requirement, or a convenience?**~~
+   **Answered by building it:** kept as a separate dev mode
+   (`docker-compose.dev.yml`), so prod can be self-contained without
+   losing it.
 2. **Who is this hosted for?** Just you, or others on the LAN? Decides
    whether P0-2/P0-3 need alerting or just recovery, and whether the
    listener should stay on `0.0.0.0` (currently it is, so anyone on the

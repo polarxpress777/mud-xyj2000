@@ -1,0 +1,33 @@
+# Build context is the repo root, because the image has to copy the
+# mudlib in. Without this file ~90 MB of libs/ plus the git history goes
+# to the daemon on every build.
+
+.git
+.git-mudlibs-backup
+.DS_Store
+
+# Only xyj2000f is built into the image.
+libs/xyj2000
+libs/*/raw
+archives
+
+# Host tooling, docs and tests are not part of the running server.
+docs
+guide
+scripts
+tools
+libs/*/test_*.sh
+libs/*/test_*.py
+libs/*/NOTES.md
+libs/*/README.md
+
+# PLAYER STATE -- must never be baked into an image.
+# data/login in particular holds password hashes; a volume shadows these
+# paths at runtime, but shadowing is not the same as never shipping them.
+libs/xyj2000f/work/data/user
+libs/xyj2000f/work/data/login
+libs/xyj2000f/work/data/playerhomes
+libs/xyj2000f/work/data/npc/boss
+
+# Recreated every boot.
+libs/xyj2000f/work/log
