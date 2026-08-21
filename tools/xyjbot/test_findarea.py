@@ -112,6 +112,26 @@ check("without slash", find_area("d/moon/wroom"), "月宫")
 print("\nand a path with nothing named on it still refuses to guess")
 check("unnamed tree", find_area("d/nowhere/at/all"), None)
 
+print("\nmiscd's own logging cannot throw during preload")
+# A guard, not a behaviour spec: there is no driver here to run LPC
+# against. adm/etc/preload:19 preloads /adm/daemons/miscd, so anything
+# create() throws happens at boot; adm/simul_efun/file.lpc:8 is a bare
+# write_file(LOG_DIR + file, text) with no assure_file(), and LOG_DIR
+# exists only because docker/entrypoint.sh creates it. The mud's own
+# crash handler has already tripped this exact shape:
+#   *Wrong permissions for opening file /log/nosave/CRASHES for append.
+# AGENTS.md 7.11: mkdir the directory AND catch() at the call site.
+for lib in ("xyj2000", "xyj2000f"):
+    src = (HERE.parent.parent / "libs" / lib
+           / "work/adm/daemons/miscd.lpc").read_text(encoding="utf-8")
+    # Strip // comments first, or the rule trips over its own explanation.
+    code = "\n".join(re.sub(r"//.*", "", line) for line in src.splitlines())
+    calls = code.count("log_file(")
+    caught = code.count("catch(log_file(")
+    check(f"{lib}: every log_file() is inside catch()", (caught, calls),
+          (calls, calls))
+    check(f"{lib}: and there is logging to guard", calls > 0, True)
+
 print("\nthe mudlib really calls find_area from both yaoguai files")
 for rel in ("d/dntg/yunlou/npc/yaoguai.lpc", "d/city/npc/yg/yaoguai.lpc"):
     for lib in ("xyj2000", "xyj2000f"):

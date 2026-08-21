@@ -340,7 +340,13 @@ RIDE_OK = "稳稳地"        # mount.lpc:56, the successful mount
 
 # Where the horse is and whether we're on it. Module-level because
 # step_full() has to be able to get off a horse that can't follow.
-RIDE = {"want": False, "on": False, "name": "", "left_at": None}
+# `fell_off` bridges the one place that knows we got off (step_full, which
+# has no idea where it is) to the one that knows where we were (ride_note,
+# which the walker calls with the room we left). Without it the horse was
+# abandoned with no record of the room, and ride_recover could never fetch
+# it -- in exactly the case this exists for, a gate the mount can't pass.
+RIDE = {"want": False, "on": False, "name": "", "left_at": None,
+        "fell_off": False}
 
 INTRUDER_WAIT = 45     # seconds to sit one room away before peeking back
 INTRUDER_TRIES = 6     # how many times to peek before giving up on the job
@@ -470,6 +476,7 @@ def step_full(api, direction):
         api.send(f"dismount {RIDE_ID}", quiet=True)
         read_reply(api)
         RIDE["on"] = False
+        RIDE["fell_off"] = True
         api.drain()
         api.send(direction, quiet=True)
         title, exits, text = read_room(api)
@@ -668,7 +675,9 @@ def ride_note(api, text, was_at):
     if RIDE_ARRIVE in text:
         RIDE["on"] = True
         RIDE["left_at"] = None
-    elif RIDE["on"]:
+        RIDE["fell_off"] = False
+    elif RIDE["on"] or RIDE["fell_off"]:
+        RIDE["fell_off"] = False
         ride_lost(api, was_at)
 
 
@@ -699,6 +708,7 @@ def ride_mount(api):
         was_on = RIDE["on"]
         RIDE["want"] = RIDE["on"] = True
         RIDE["left_at"] = None
+        RIDE["fell_off"] = False
         m = re.search(r"[骑坐乘]在(.+?)上", reply)
         if m:
             RIDE["name"] = m.group(1)

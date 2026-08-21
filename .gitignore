@@ -114,3 +114,6 @@ libs/*/work/data/playerhomes/
 # Personal bot definitions for tools/xyjbot -- local automation, not
 # shared configuration.
 tools/xyjbot/bots.json
+
+# Matt Pocock skills local ticket mode; the tracker is GitHub, so this is scratch only.
+.scratch/

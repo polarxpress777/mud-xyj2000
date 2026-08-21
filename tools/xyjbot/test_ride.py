@@ -34,7 +34,8 @@ def check(label, got, want):
 
 def reset():
     bot.BROKEN_EXITS.clear()
-    bot.RIDE.update(want=False, on=False, name="", left_at=None)
+    bot.RIDE.update(want=False, on=False, name="", left_at=None,
+                    fell_off=False)
 
 
 ROOMS = {
@@ -158,10 +159,16 @@ class GateAPI(FakeAPI):
 
 
 api = GateAPI()
-title, _, _ = bot.step_full(api, "enter")
+title, _, text = bot.step_full(api, "enter")
 check("got through on foot", title, "普陀山")
 check("got off first", api.sent, ["enter", "dismount horse", "enter"])
 check("knows it's on foot", bot.RIDE["on"], False)
+
+# The walker calls ride_note() after every step. This is the whole point
+# of getting off: the horse is still standing in the room we came FROM,
+# and ride_recover() can only go back for it if that room was recorded.
+bot.ride_note(api, text, "d/nanhai/road")
+check("and remembers where the horse is", bot.RIDE["left_at"], "d/nanhai/road")
 
 print("\nsleep -> 红楼一梦 is detected by the dream room, not by a line "
       "nobody prints")

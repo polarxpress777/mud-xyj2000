@@ -27,8 +27,11 @@ void create() {
     // Silent failure here degrades every location the mud reports into a
     // bare room name -- 休息室, 山路, 大官道 -- which is exactly what
     // 袁天罡's 灭妖 assignment must never say. Make it visible.
-    log_file("miscd", "find.map 读不到（" + filename + "），"
-      "所有地点都会退化成房间名。\n");
+    // catch(): this is create() in a PRELOADED daemon (adm/etc/preload:19)
+    // and log_file() is a bare write_file() (adm/simul_efun/file.lpc:8), so
+    // a missing /log throws at boot. AGENTS.md 7.11.
+    catch(log_file("miscd", "find.map 读不到（" + filename + "），"
+      "所有地点都会退化成房间名。\n"));
     return;  //no data available.
   }
 
@@ -47,7 +50,7 @@ void create() {
   }
 
   if (!sizeof(maps))
-    log_file("miscd", "find.map 解析出 0 条地区名（" + filename + "）。\n");
+    catch(log_file("miscd", "find.map 解析出 0 条地区名（" + filename + "）。\n"));
 }
 
 int random_capture(object me, int chance, int silent) {
@@ -151,7 +154,7 @@ int check_date() {
     past=(now-current)/day;
     
     if(past<-2 || past >(30*6)) {
-	log_file("shutdown",ctime(time())+" expired.\n");
+	catch(log_file("shutdown",ctime(time())+" expired.\n"));
 	shutdown(-1);
 	return 0;
     }
