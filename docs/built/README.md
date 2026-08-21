@@ -56,7 +56,7 @@ efun, i.e. shipped content, not logs. Narrowed to `libs/*/work/log/**`.
 
 ## 2026-08-19 — Bot: navigation, sustenance and hang removal
 
-Six defects in `tools/xyjbot/bots/changan-mieyao-bot.py` and its
+Six defects in `tools/xyjbot/bots/changan-mieyao.py` and its
 supporting tools. Each was reported as "the bot got stuck".
 
 ### 1. Thirst silently froze healing

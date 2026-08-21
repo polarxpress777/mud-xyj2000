@@ -1,7 +1,7 @@
 # Bot event stream + world state (mieyao bot spine)
 
 **Status:** designed, accepted, not started.
-**Scope:** `tools/xyjbot/botapi.py`, `tools/xyjbot/bots/changan-mieyao-bot.py`.
+**Scope:** `tools/xyjbot/botapi.py`, `tools/xyjbot/bots/changan-mieyao.py`.
 
 ## The problem
 
@@ -58,7 +58,7 @@ it degrades gracefully on the mudlib strings nobody has read yet.
 2. **A world-state object**, updated by every line before any handler
    sees it: position, hp, mount, current target, `in_combat`, room
    contents, quest state. The `RIDE` dict
-   (`changan-mieyao-bot.py`) is a module global precisely because there
+   (`changan-mieyao.py`) is a module global precisely because there
    is nowhere for this to live today.
 3. **Combat as a tick loop over a priority ladder**, evaluated against
    state rather than "the next line I happen to see": dead → done; hp
@@ -93,7 +93,7 @@ the *destructiveness*, not the blocking style.
 - `botapi.py` — buffer + cursors + `wait_for`; keep `wait_line` as a thin
   compatibility wrapper so nothing has to move at once.
 - New `botstate.py` — the world-state object and its line handlers.
-- `changan-mieyao-bot.py` — port **combat only**: `fight_target()` plus
+- `changan-mieyao.py` — port **combat only**: `fight_target()` plus
   its six result branches, ~250 lines of a ~2200-line file. Leave the
   walker, the errands and the sustenance code alone.
 

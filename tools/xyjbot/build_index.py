@@ -274,6 +274,45 @@ def search(db_path, term, kind=None, limit=50):
 
 
 DANGER_OUT = HERE / "danger.json"
+TEACHERS_OUT = HERE / "teachers.json"
+
+
+def dump_teachers(db_path, out=TEACHERS_OUT):
+    """Write every NPC who can induct or teach, with their 门派.
+
+    `learn` (cmds/std/learn.lpc:31) refuses anyone who is not the teacher's
+    apprentice, and apprenticeship follows the sect -- so a bot needs to know
+    which 门派 a teacher belongs to BEFORE trying, or it just collects
+    refusals. create_family() is the authority (see CONTEXT.md 3).
+
+    Keyed by every id the NPC answers to, so a bot can match whatever the
+    player typed.
+    """
+    db = sqlite3.connect(db_path)
+    db.row_factory = sqlite3.Row
+    out_rows = {}
+    for r in db.execute("SELECT path, name, ids, family, generation, skills "
+                        "FROM entities WHERE kind='npc' AND family != ''"):
+        skills = json.loads(r["skills"]) if r["skills"] else {}
+        entry = {"name": r["name"], "family": r["family"],
+                 "generation": r["generation"], "path": r["path"],
+                 "skills": skills}
+        # Keys are over-generated on purpose. The index joins an NPC's ids
+        # with a single space, so ("yun jing", "yun") becomes "yun jing yun"
+        # and the original split cannot be recovered. Emitting every word,
+        # every adjacent pair, the whole string and space-stripped forms
+        # means whatever the player types will hit. Collisions are harmless:
+        # this only maps a typed name to a 门派.
+        words = (r["ids"] or "").split()
+        pairs = [" ".join(words[i:i + 2]) for i in range(len(words) - 1)]
+        keys = set(words) | set(pairs) | {" ".join(words), r["name"] or ""}
+        keys |= {k.replace(" ", "") for k in keys}
+        for key in (k for k in keys if k):
+            out_rows.setdefault(key.lower(), entry)
+    db.close()
+    Path(out).write_text(json.dumps(out_rows, ensure_ascii=False, indent=0),
+                         encoding="utf-8")
+    return out_rows
 
 
 def dump_danger(db_path, out=DANGER_OUT):
@@ -396,6 +435,8 @@ def main(argv=None):
         total = build_index(root, out, verbose=True)
         print(f"{total} entities indexed, {out.stat().st_size // 1024} KB")
         danger = dump_danger(out)
+        teachers = dump_teachers(out)
+        print(f"{len(teachers)} teacher ids -> {TEACHERS_OUT.name}")
         print(f"{len(danger)} rooms with an aggressive resident -> "
               f"{DANGER_OUT.name} (worst {max(danger.values()) if danger else 0})")
         return 0
