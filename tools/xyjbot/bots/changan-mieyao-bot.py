@@ -64,6 +64,38 @@ MAP_FILE = Path(__file__).resolve().parent.parent / "rooms.json"
 # like anywhere else rather than conceded.
 AVOID_ROOMS = set()
 
+# Rooms whose RESIDENTS can kill this character -- avoided for that reason
+# alone, and only while we are too weak. 海底莽林 (d/sea/maze1-10) holds:
+#
+#   beast3  370,000 exp, every skill 170, attitude "aggressive"  x3
+#   beast2  170,000 exp, dodge 140,       attitude "aggressive"  x2  (roams)
+#   beast1   50,000 exp                                          x2
+#   kid2 小虾米  60 exp, peaceful                                 x3
+#
+# feature/attack.lpc:244 makes an "aggressive" NPC auto_fight any player who
+# walks in, so beast2 and beast3 attack on sight -- there is no tactic that
+# survives that, only absence. beast1 has no attitude set and fights only if
+# you type `train` (its do_train, gated on 东海龙宫), which the bot never does.
+#
+# The gate is arithmetic, not preference: 袁天罡 stops issuing quests once
+# (daoxing+combat_exp)/2 passes 50,000, so a character on HIS quest is always
+# an order of magnitude below beast3. 李靖's quest has no upper bound, so a
+# strong character lifts this restriction by itself.
+# The table itself is GENERATED, not hand-written: build_index.py sweeps
+# every room for residents with attitude "aggressive" and records the
+# strongest one's combat_exp into danger.json, keyed by room path (休息室
+# exists four times and 海底莽林 ten, and only some are lethal). 60 rooms
+# qualify today, the worst being 盘丝岭's 蝎公 at 3,600,000.
+#
+# Not covered, and worth knowing: NPCs that attack on a SCRIPT rather than an
+# attitude. 马盗 is attitude "heroism" and attacks 25 seconds after you arrive
+# via call_out -> command("kill"); no attribute reveals that. He is handled
+# separately, by paying his toll.
+DANGER_FILE = Path(__file__).resolve().parent.parent / "danger.json"
+DANGER = {}                # room path -> strongest aggressive resident's exp
+DANGER_MARGIN = 2          # need this multiple of that exp to risk the room
+_MY_EXP = [0]              # this character's 武学, refreshed each job
+
 # Mazes: rooms whose exits are randomised at create() time, so the static
 # map is useless inside them -- d/nanhai/zhulin*.lpc builds every looping
 # exit as "zhulin" + sprintf("%d", random(6)), which build_map records as
@@ -251,6 +283,7 @@ WIMPY_LIMIT = 6        # per job, before we tell the player to lower it
 # makes it a reliable "your target is dead" signal even when we weren't
 # the ones swinging at the time.
 REST_RETREATS = 3      # extra rooms to give ground before just resting
+REWARD_GRACE = 3       # seconds to wait for the reward after a death line
 
 # Peace rooms. cmds/std/kill.lpc:19 refuses outright with 这里不准战斗
 # (cmds/std/fight.lpc:10 says 这里禁止战斗), so a 妖怪 standing in one
@@ -502,7 +535,16 @@ def step(api, direction):
 # Since every random exit lands in zhulin0-5, and zhulin0 is one of them,
 # wandering reaches the exit room in a handful of moves. So: try the known
 # ways out, otherwise shuffle and try again.
-MAZE_EXITS = ("south", "north", "enter")
+# Ordered by what the room files actually do. Every random exit in the grove
+# is built as "zhulin" + random(6), so ALL of them land in zhulin0-5 -- and
+# zhulin0's `south` is the only door to 小路 (road4). The other ways out are
+# zhulin15 north -> 池塘边 and zhulin16/17 enter -> 罗汉塔.
+#
+# south first because it is the door; then the diagonals, which in zhulin1-5
+# are all random-pool exits and so re-roll the room; north and enter last.
+# Several compass-room `south` edges are hardwired back inside (zhulin10->7,
+# 12->6, 13->10, 14->8), which costs a move but never traps.
+MAZE_EXITS = ("south", "southwest", "southeast", "north", "enter")
 
 # The three ways OUT of 紫竹林, and the room next door that leads back in:
 #   zhulin0  south -> road4 小路      (road4 north)
@@ -637,7 +679,30 @@ def escape_maze(api, maze_name="紫竹林", max_moves=80):
 
 
 def avoided(rooms, path):
-    return rooms.get(path, {}).get("short") in AVOID_ROOMS
+    if rooms.get(path, {}).get("short") in AVOID_ROOMS:
+        return True
+    resident = DANGER.get(path)
+    return bool(resident) and _MY_EXP[0] < resident * DANGER_MARGIN
+
+
+def assess_danger(api):
+    """Refresh which lethal rooms this character may enter. Once per job.
+
+    The threshold rises with the character, so nothing is conceded
+    permanently: 袁天罡 caps his quests at (daoxing+combat_exp)/2 = 50,000, so
+    his questers stay out of almost all of these, while a 李靖 quester with
+    millions of 武学 walks in freely and the restriction lifts by itself.
+    """
+    if not DANGER and DANGER_FILE.exists():
+        DANGER.update(json.loads(DANGER_FILE.read_text(encoding="utf-8")))
+
+    _MY_EXP[0] = api.status().get("wuxue", 0)
+    if not DANGER:
+        return 0
+    shut = sum(1 for e in DANGER.values() if _MY_EXP[0] < e * DANGER_MARGIN)
+    api.log(f"武学 {_MY_EXP[0]}：{len(DANGER)} 间有主动攻击的房间里，"
+            f"{shut} 间暂时绕开（打不过就别进）。")
+    return shut
 
 
 def note_step_failure(api, blocked, pos, direction, text):
@@ -947,6 +1012,15 @@ def relocalise(api, rooms, dirs=None, max_probes=14):
         if not escape_cage(api):
             return None
         title, exits, _ = look(api)
+    if title in MAZE_ROOMS:
+        # A maze cannot be localised: 紫竹林's 18 rooms share one name and
+        # build their exits with random(6) at create() time, so probing just
+        # walks in circles -- which is what walking home from the grove did,
+        # looping 「紫竹林」有 10 间同名房间，往 east 走一步确认是哪一间 until
+        # the walker ran out of retries. Get out first, then localise.
+        if not escape_maze(api, title):
+            return None
+        title, exits, _ = look(api)
     if title in AVOID_ROOMS:
         title = escape_maze(api, title)
         if not title:
@@ -1088,6 +1162,20 @@ def rest_until_healed(api, rooms, pos, blocked, retreat=True, name=None):
             if re.search(REWARD_RE, news.string):
                 api.log("休息的时候它自己追上来送死了，任务完成。")
                 return "killed", pos
+
+            # The mud prints the death line BEFORE the reward line, and the
+            # death line carries the monster's NAME:
+            #     黑狮怪惨叫一声，死了。
+            #     你得到了三百二十五点武学经验和一百二十四点潜能！
+            # So a name match is not evidence it is alive. Reading only the
+            # first matching line made the bot retreat from a corpse and
+            # discard the reward behind it, then hunt the corpse for the
+            # rest of the quest.
+            if name and re.search(DEAD_RE, news.string):
+                api.wait_line(REWARD_RE, timeout=REWARD_GRACE)
+                api.log(f"{name} 追过来送死了，任务完成。")
+                return "killed", pos
+
             if gave_ground < REST_RETREATS:
                 gave_ground += 1
                 api.log(f"{name} 追过来了，再退一间房再歇（第 {gave_ground} 次）。")
@@ -1791,6 +1879,28 @@ def sleep_into_dream(api, rooms):
     return True
 
 
+# The dive into 龙宫 (d/changan/eastseashore.lpc:127-130) opens for a 避水咒
+# with unit 张 OR for family 龙宫 / 东海龙宫. cmds/usr/title.lpc:14 prints
+# 你目前的头衔及门派 followed by the rank and short(1), which carries the
+# sect, so one `title` answers whether we are a disciple. Cached: it cannot
+# change mid-session without a 拜师.
+DRAGON_FAMILIES = ("龙宫", "东海龙宫")
+_TITLE_CACHE = {}
+
+
+def player_title(api):
+    """The player's title line, which names their 门派. Read once."""
+    if "title" not in _TITLE_CACHE:
+        api.drain()
+        api.send("title", quiet=True)
+        _TITLE_CACHE["title"] = read_reply(api)
+    return _TITLE_CACHE["title"]
+
+
+def is_dragon_disciple(api):
+    return any(f in player_title(api) for f in DRAGON_FAMILIES)
+
+
 # Gate command -> how to earn it. Returning True means the route through
 # that transition is open for THIS job.
 GATE_PREP = {
@@ -2007,6 +2117,14 @@ def run(api):
                 for w in wanted:
                     if api.stopped():
                         return
+                    # 龙宫 by request: treat non-disciples as hard-gated
+                    # rather than running the 避水咒 errand. The mudlib does
+                    # allow a 避水咒 (eastseashore.lpc:127-130), so this
+                    # gives up jobs that are winnable -- deliberate.
+                    if w == "dive" and not is_dragon_disciple(api):
+                        api.log("不是龙宫弟子，龙宫这条路按硬关卡处理"
+                                "（和吴刚的桂树一样），这趟不去了。")
+                        break
                     if GATE_PREP[w](api, rooms, set()):
                         passes.add(w)
                     else:
@@ -2033,6 +2151,7 @@ def run(api):
         # the player doesn't ride, 你想骑什么 comes back and that's that.
         if RIDE_ID and (RIDE["want"] or jobs == 1):
             ride_mount(api)
+        assess_danger(api)
 
         started = time.time()
         killed = False
