@@ -42,29 +42,45 @@ SCAN_ROOT = "d"
 # verbatim like any direction, so these slot straight into the graph.
 # `note` records the prerequisite so a failure is explicable rather than
 # mysterious -- a blocked one just gets marked impassable at runtime.
+#
+# The third field says whether the prerequisite is a REAL gate, i.e. one
+# an ordinary character may simply not be able to pass (an item, a sect
+# membership, an NPC's permission). Those edges stay in the graph but a
+# reachability check can exclude them, which is how the mieyao walker
+# decides a job is hopeless before spending 30 minutes on it. Costs that
+# anyone can pay (swim's 20 kee) are NOT gates.
 SPECIAL_EXITS = {
     # d/changan/eastseashore.lpc:119-144 do_dive() -- needs a 避水咒
     # (bishui zhou, unit 张) or 龙宫/东海龙宫 membership.
     "d/changan/eastseashore": {
-        "dive": ("d/sea/under1", "需要避水咒或龙宫弟子身份"),
+        "dive": ("d/sea/under1", "需要避水咒或龙宫弟子身份", True),
     },
     # d/changan/southseashore.lpc:29-45 do_swim() -- no prerequisite,
     # just costs 20 kee and 20 sen.
     "d/changan/southseashore": {
-        "swim": ("d/nanhai/island", "消耗 20 气血、20 精神"),
+        "swim": ("d/nanhai/island", "消耗 20 气血、20 精神", False),
     },
     # cmds/std/sleep.lpc:186-192 -- sleeping while carrying a 黄粱枕
     # (from 卢生) drops you into the dream realm. Any sleep_room works;
     # 南城客栈客房 is the closest one to 长安, but reaching it needs
     # rent_paid (give >=300 to 店小二, d/city/npc/xiaoer.lpc:139-145).
     "d/city/sleep": {
-        "sleep": ("d/ourhome/honglou/kat", "需带黄粱枕，且已付店钱"),
+        "sleep": ("d/ourhome/honglou/kat", "需带黄粱枕，且已付店钱", True),
+    },
+    # d/moon/ontop2.lpc:53-79 do_climb() -- the ONLY way into the inner
+    # 月宫 pocket (听雨楼, 湖边, 广寒宫正殿, 噙芳阁, 小路, 卧房): they hang
+    # off 月门, which hangs off the 桂树, which is not an exit. Without
+    # this edge the walker maps those rooms but can never route to them.
+    "d/moon/ontop2": {
+        "climb tree": ("d/moon/tree1",
+                       "需 dodge>=40 或 moondance>=80，且吴刚不在场"
+                       "（非月宫弟子会被他拦下）", True),
     },
     # d/ourhome/honglou/npc/fairygirl.lpc:40-47 send_back() -- the way
     # out of the dream. Returns you to dream_place, or 泾水亭 if unset.
     "d/ourhome/honglou/fairyplace": {
         "ask girl about 回去": ("d/changan/pinqiting",
-                                "警幻仙姑送你出梦境（回到入梦处）"),
+                                "警幻仙姑送你出梦境（回到入梦处）", False),
     },
 }
 
@@ -181,12 +197,14 @@ def main():
         if src not in rooms:
             print(f"  ! special exit source missing from map: {src}")
             continue
-        for cmd, (dest, note) in moves.items():
+        for cmd, (dest, note, gated) in moves.items():
             if dest not in rooms:
                 print(f"  ! special exit target missing: {dest}")
                 continue
             rooms[src]["exits"][cmd] = dest
             rooms[src].setdefault("special", {})[cmd] = note
+            if gated:
+                rooms[src].setdefault("gated", {})[cmd] = note
             specials += 1
     print(f"spliced {specials} special exit(s)")
 

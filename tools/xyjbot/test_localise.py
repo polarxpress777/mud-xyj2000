@@ -121,13 +121,13 @@ print("\nE. bfs() distinguishes 'already at a goal' from 'no route'")
 # room that was itself unsearched, bfs returned [], `if not path` read
 # that as unreachable, and the walker reset and wandered back out.
 goals = {p for p, r in ROOMS.items() if r["area"] == "d/kaifeng"}
-here = bot.bfs(ROOMS, ["d/kaifeng"], "d/kaifeng/east1", goals, set())
+here = bot.bfs(ROOMS, bot.area_paths(ROOMS, ["d/kaifeng"]), "d/kaifeng/east1", goals, set())
 fails += not check("standing in a goal -> []", here, [])
-away = bot.bfs(ROOMS, ["d/kaifeng"], "d/kaifeng/east1",
+away = bot.bfs(ROOMS, bot.area_paths(ROOMS, ["d/kaifeng"]), "d/kaifeng/east1",
                {"d/kaifeng/east3"}, set())
 fails += not check("goal elsewhere -> a path", bool(away) and away[-1][1],
                    "d/kaifeng/east3")
-none = bot.bfs(ROOMS, ["d/kaifeng"], "d/kaifeng/east1", {"d/city/kezhan"}, set())
+none = bot.bfs(ROOMS, bot.area_paths(ROOMS, ["d/kaifeng"]), "d/kaifeng/east1", {"d/city/kezhan"}, set())
 fails += not check("goal outside the area -> None", none, None)
 fails += not check("[] and None are distinguishable", (here is None, none is None),
                    (False, True))

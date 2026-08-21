@@ -93,6 +93,10 @@ class FakeAPI:
                 return ["你存的钱不够取。"]
             self.balance -= amt; self.money += amt
             return ["你从银号里取出十两银子。"]
+        if cmd == "look":
+            # A dead end, so break_off() has nowhere to run and the test
+            # stays about resting rather than about retreating.
+            return ["石室 - d/x/cell", "四壁都是石头。", "这里明显的出口是 无。"]
         if cmd == "drop jiudai":
             self.jiudai = 0
             return ["Ok."]
@@ -143,7 +147,10 @@ fails += not check("max drunk from one top-up", bot.MAX_SIPS * 5 < limit, True)
 
 print("8. rest_until_healed bails instead of spinning when 气血 is frozen")
 a = FakeAPI(water=0, food=0); a.kee = 136
-fails += not check("returns False", bot.rest_until_healed(a), False)
+CELL = {"d/x/cell": {"short": "石室", "area": "d/x", "flags": {}, "exits": {}}}
+st, where = bot.rest_until_healed(a, CELL, "d/x/cell", set())
+fails += not check("gives up", st, "")
+fails += not check("keeps the position", where, "d/x/cell")
 fails += not check("polls bounded", len([l for l in a.logs if "休息中" in l]) <= bot.REST_STALL_LIMIT, True)
 print("     last log:", a.logs[-1])
 

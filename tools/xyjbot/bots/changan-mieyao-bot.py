@@ -9,18 +9,38 @@
 #   1. ask 袁天罡 for a job; parse the target's name/id and the AREA
 #      (d/city/npc/yuantiangang.lpc -> MISC_D->find_place returns an
 #      area label like 长安城, not a room)
-#   2. WALK that area room by room, looking for the target. Uses
+#   2. CHECK the target is reachable on foot before setting off. Two
+#      gates are errands rather than walls and get run on the spot:
+#      龙宫 wants a 避水咒 (酒袋 -> 袁守诚 -> tear book) and 红楼一梦 a
+#      黄粱枕 (kill 卢生, pay the innkeeper, sleep). Anything genuinely
+#      shut -- climb tree at 玉女峰顶, say -- means the job is given up
+#      on the spot, and the bot keeps asking 袁天罡 until his 30-minute
+#      timer hands out a new one, rather than burning the half hour
+#      walking into a dead end. He offers no way to cancel a job early
+#      (yuantiangang.lpc:126-134 just repeats the assignment), so
+#      waiting it out IS the abandon.
+#   3. WALK that area room by room, looking for the target. Uses
 #      rooms.json, built by build_map.py from the mudlib's own exits.
-#   3. kill it when found, watching combat status the whole time
-#   4. if hurt past RETREAT_AT, break off, run away, rest to full, then
-#      resume the search where it left off
-#   5. walk itself back to 天监台, then top up 食物/饮水 if either has
+#   4. kill it when found, watching combat status the whole time. If it
+#      runs (one 妖怪 in ten gets env/wimpy 40 and bolts at 40% 气血,
+#      every round), go.lpc:85 names the exit it took -- follow it there
+#      and re-engage, rather than re-searching the area
+#   5. if hurt past RETREAT_AT, break off by WALKING out (there is no
+#      `flee` command in this mudlib), rest to full, then walk back into
+#      the room the monster is still standing in. The character's own
+#      env/wimpy can do the same thing behind our back -- char.lpc:96
+#      walks you out through a random exit -- and that is handled the
+#      same way, minus the retreat we no longer need to make
+#   6. collect the horse if something took us off it (sleep does, and so
+#      does any room the mount can't follow us into), walk back to
+#      天监台, then top up 食物/饮水 if either has
 #      dropped under half -- drink jiudai / eat gou rou from inventory,
 #      restocking from 店小二 in 南城客栈 (via 相记钱庄 if out of cash)
-#   6. take the next job (waiting out 袁天罡's 5-10 minute post-success
+#      (see RIDE_ID for the horse; set it to "" if you never ride)
+#   7. take the next job (waiting out 袁天罡's 5-10 minute post-success
 #      cooldown if he's still thanking you)
 #
-# Why step 5 exists: 饮水 at 0 doesn't slow 气血 regen, it stops it
+# Why step 6 exists: 饮水 at 0 doesn't slow 气血 regen, it stops it
 # (feature/damage.lpc:465), so a thirsty bot rests forever at whatever
 # percentage it fled with.
 #
@@ -30,6 +50,7 @@
 # monsters, teleports, blocked exits all cause that).
 
 import json
+import random
 import re
 import time
 from collections import deque
@@ -51,6 +72,49 @@ AVOID_ROOMS = set()
 # these get swept by probing instead of pathing.
 MAZE_ROOMS = {"紫竹林"}
 
+# Rooms that are safe to walk through but not to stand in. 石栈道
+# (d/westway/shizhan.lpc:27-48) arms a 25-second call_out every time a
+# player walks in and then drops EVERYONE in the room through a trapdoor
+# into 铁笼中 -- a room with no exits at all until the bars are bent, at
+# 30 气血 per attempt and 3000 accumulated force to open (tielong.lpc:55).
+# A skill-less 灭妖 character cannot pay that, so a fight there is not
+# worth having: handled like a peace room, wait for the target to wander
+# out and take it in the next room. The fuse is re-armed on entry, so
+# stepping out and back in costs nothing.
+TRAP_ROOMS = {"石栈道"}
+TRAP_WAIT = 12         # seconds to watch it, well inside the 25s fuse
+
+CAGE_ROOM = "铁笼中"     # where the trapdoor lands you
+CAGE_BREAKS = 8        # `break` attempts before asking for help
+CAGE_MIN_KEE = 40      # % 气血 to keep in reserve while bending bars
+
+# Rooms that belong to a hunt even though they sit in another directory.
+#
+# 袁天罡 names an AREA, and MISC_D->find_place() derives that from the
+# spawn room's DIRECTORY (adm/daemons/find.map:56 -- d/westway 长安城西),
+# so the map's own area labels say where a 妖怪 STARTED. They don't say
+# where it is now: yg/yaoguai.lpc sets chat_msg to random_move, so it
+# drifts, and the road west runs straight on past the directory boundary
+# at 云梯冈 into 五庄观's 山路 and 林荫小道. Searching strictly by
+# directory means walking to the edge and turning round while the target
+# stands two rooms further on.
+AREA_EXTRA = {
+    "长安城西": (
+        "d/qujing/wuzhuang/shanlu1",     # 山路 -- 云梯冈 north
+        "d/qujing/wuzhuang/shanlu2",     # 山路
+        "d/qujing/wuzhuang/linyin1",     # 林荫小道
+        "d/qujing/wuzhuang/linyin2",     # 林荫小道
+    ),
+}
+
+
+def area_paths(rooms, dirs, place=None):
+    """Every room the search treats as part of `place`."""
+    inside = {p for p, r in rooms.items() if r["area"] in dirs}
+    inside.update(x for x in AREA_EXTRA.get(place, ()) if x in rooms)
+    return inside
+
+
 # 天监台 -- where 袁天罡 stands. The bot walks back here after every job.
 YUAN_ROOM = "d/city/tianjiantai"
 
@@ -59,6 +123,13 @@ YUAN_ROOM = "d/city/tianjiantai"
 # highest skill, so leaving them to accumulate makes the grind harder
 # with every quest. Set False to keep whatever you pick up.
 ABANDON_SKILLS_AFTER_KILL = True
+
+# ...but only while the character is still a blank slate: if ANY skill has
+# passed this level, leave the lot alone. yaoguai.lpc:321 sets the monster
+# to max_skill * (quest_level + 18) / 20, so 1 and 2 both round down to a
+# level-1 monster -- wiping those costs nothing, while wiping a skill you
+# actually trained (dodge 40 for the 桂树, say) throws away real work.
+WIPE_MAX_LEVEL = 2
 
 # --- food and water -----------------------------------------------------
 # 饮水 gates 气血 regen outright: feature/damage.lpc:465 returns from
@@ -93,7 +164,22 @@ MAX_SIPS = 5
 MAX_BITES = 8          # 红烧狗肉 is 2 bites x 100 食物; a cap, not a target
 
 QUEST_SECS = 1800      # yuantiangang.lpc:127 -- 30 min per job
-STEP_PAUSE = 0.6       # seconds between movement commands
+# Pacing. The server itself chains a "n#12" batch with call_out(..., 0)
+# between instant commands (xyj2000f feature/alias.lpc:170-175), so the
+# only real ceiling is the anti-flood guard in process_input(): more than
+# 100 commands inside 5 seconds gets "你一次输入太多命令了" and the input
+# dropped. One step costs a send plus however long the room takes to
+# arrive, so 0.15s of padding lands around 3 commands/second -- an order
+# of magnitude under the guard, and roughly a #N batch's cadence.
+STEP_PAUSE = 0.15      # seconds between movement commands
+
+# How long to keep reading after the 出口是 line before calling the room
+# complete. The mud writes a room in one burst -- title, description,
+# exits, then contents -- so this only has to outlast network jitter, but
+# it must not be skipped: the contents list is where the target monster
+# is named. Ends early as soon as ROOM_IDLE passes with nothing new.
+ROOM_GRACE = 0.5
+ROOM_IDLE = 0.25
 
 # Walking to a named room (天监台, 南城客栈, 相记钱庄). The longest
 # legitimate route home on the map is 90 steps (d/qujing/jindou/shanlu6),
@@ -136,9 +222,137 @@ DONE_COOLDOWN = "妖魔已经除尽了"
 # aggressive NPCs (马盗 and friends) do this mid-fight and will happily
 # finish off a character built to fight only floor-level 妖怪.
 INTRUDER_RE = r"看起来(.+?)想杀死你|(.+?)对着你喝道"
+# go.lpc:85 announces a fleeing fighter to the room it LEAVES, naming the
+# direction in Chinese: 白马精往上落荒而逃了。 That is free intelligence --
+# it says which exit to take, so a chase costs one step instead of an
+# area-wide re-search with the monster free to keep moving.
+FLEE_RE = r"往([^\s，。！,]{1,12}?)落荒而逃了"
+
+# The character's OWN env/wimpy pulling us out of a fight. std/char.lpc:96
+# -102 calls GO_CMD->do_flee() from heart_beat whenever 气血 or 精神 drops
+# to the `wimpy` percentage, and go.lpc:132-147 announces it with
+# 看来该找机会逃跑了 before walking us out through a RANDOM exit. The bot
+# never asked for that move, so it kept swinging at a monster in another
+# room and its idea of where it stood was a room out of date.
+#
+# The flee can also fizzle -- go.lpc:141 refuses while 定身, and :145
+# rolls dodge/10 + kar against 10 -- in which case we're still in the
+# fight and nothing has changed.
+WIMPY_RE = "看来该找机会逃跑了"
+WIMPY_FAIL_RE = "你逃跑失败|可你被定住了"
+WIMPY_SETTLE = 2.0     # seconds to see which of the two it was
+WIMPY_LIMIT = 6        # per job, before we tell the player to lower it
+
+# A monster that followed us out of the room and restarted the fight can
+# also DIE there, on heart_beat, without the bot ever sending another
+# `kill`. yg/yaoguai.lpc:134 tell_object()s the reward straight to the
+# owner, so that line arrives wherever we are -- and it is unique to the
+# 灭妖 monsters (nothing else in the mudlib prints 点武学经验和), which
+# makes it a reliable "your target is dead" signal even when we weren't
+# the ones swinging at the time.
+REST_RETREATS = 3      # extra rooms to give ground before just resting
+
+# Peace rooms. cmds/std/kill.lpc:19 refuses outright with 这里不准战斗
+# (cmds/std/fight.lpc:10 says 这里禁止战斗), so a 妖怪 standing in one
+# cannot be attacked at all -- 北观礼台 in 开封 is where this turned up.
+# It doesn't stay, though: the monster's init() call_outs check_room()
+# two seconds after anyone walks in, and check_room() random_move()s it
+# out of any no_fight / no_magic room (yaoguai.lpc:604-611). So the move
+# is to stand there, watch which way it goes, and follow it out -- and if
+# it somehow sits tight, step out and back in, because walking in is what
+# arms that call_out in the first place.
+# 饮马峪's 马盗 (d/westway/yinma.lpc:31-45) refuses `northwest` to anyone
+# who isn't 五庄观 and hasn't paid -- and that one exit is the ONLY road
+# to 马道, 酒泉郊外, 石栈道, 嘉峪关, 烽火台 and 云梯冈, half of 长安城西.
+# Read as an ordinary shut exit it cost the bot every job whose target
+# spawned out west. 200 文 buys two passes (npc/madao.lpc:48-53 sets
+# has_paid=2; valid_leave spends one per departure), and he attacks 25
+# seconds after you walk in if you don't pay, so paying at once is also
+# the safe move.
+TOLL_RE = ("不给钱我要杀人啦|要钱还是要命|往哪儿跑！给钱"
+           "|快给钱|拿钱来买命|你到底给不给钱")
+TOLL_OK = "闪身让道|怪笑"
+TOLL_SILVER = 2
+TOLL_TARGET = "ma dao"
+
+NOFIGHT_RE = "这里不准战斗|这里禁止战斗"
+NOFIGHT_WAIT = 20      # seconds to give it to wander back out
+NOFIGHT_TRIES = 5      # nudges before leaving it and searching elsewhere
+
+# An ordinary departure, go.lpc:88 -- 野马怪往西离开。 Same shape as the
+# combat one (FLEE_RE) and just as useful: it names the exit taken.
+LEAVE_RE = r"往([^\s，。！,]{1,12}?)(?:离开|飞去|落荒而逃)"
+
+# go.lpc:7-28 default_dirs, inverted. It is one-to-many: northup and
+# northdown both print 北边 (likewise the other three), so the room's own
+# exit list has to break the tie. An exit whose name is NOT in that table
+# is printed verbatim, which is already the direction to walk.
+CN_DIR = {
+    "北": ["north"], "南": ["south"], "东": ["east"], "西": ["west"],
+    "北边": ["northup", "northdown"], "南边": ["southup", "southdown"],
+    "东边": ["eastup", "eastdown"], "西边": ["westup", "westdown"],
+    "东北": ["northeast"], "西北": ["northwest"],
+    "东南": ["southeast"], "西南": ["southwest"],
+    "上": ["up"], "下": ["down"], "外": ["out"], "里": ["enter"],
+    "左": ["left"], "右": ["right"],
+}
+# Breaking off a fight. There is NO `flee` command in this mudlib --
+# cmds/std holds no flee.lpc and the only caller of GO_CMD->do_flee is
+# std/char.lpc:96-102's env/wimpy check, so the "flee" this bot used to
+# send was silently discarded and "retreating" meant standing still while
+# the monster kept swinging. Breaking contact is an ordinary move:
+# go.lpc:83-85 just prints 落荒而逃 instead of 离开 when you're fighting,
+# and a successful move calls remove_all_enemy() (go.lpc:105). The move
+# competes with our own attack rounds -- valid_move.h refuses with
+# 你的动作还没有完成 while is_busy() -- so each exit gets a few tries.
+BREAK_OFF_TRIES = 4
+BREAK_OFF_WAIT = 1.5
+
+# Chasing a monster that ran. yaoguai.lpc:483 gives one mob in ten
+# env/wimpy 40, and char.lpc flees it at 40% 气血 EVERY round, so those
+# fights are a running battle: two or three hits, it bolts, you follow.
+# Each re-engagement lands real damage and it regenerates slowly, so the
+# chase does converge -- but bound it anyway.
+CHASE_MAX = 40
+
+# A room whose .lpc doesn't compile. `go` dumps 编译时段错误 … followed by
+# *No program in object '/d/moon/bedroom'! and leaves you standing where
+# you were -- /d/moon/bedroom.lpc closed its @LONG text block on the same
+# line as the text, so the driver ran off the end of the file. That is a
+# permanent map defect rather than a gate that might open later, so it is
+# remembered for the whole session instead of per job.
+BROKEN_RE = r"编译时段错误|No program in object"
+BROKEN_EXITS = set()
+
+# --- riding --------------------------------------------------------------
+# mount.lpc:56 confirms with 稳稳地骑在<马>上, and from then on go.lpc:118
+# prints 你骑着<马>走了过来 on EVERY move -- so the mount state can be read
+# off each arrival for free, no polling. Being on the horse is worth
+# keeping: mount.lpc:59 adds the mount's ride/dodge to apply/dodge, and
+# dodge is most of what keeps a skill-less 灭妖 character alive.
+#
+# Three things separate you from it: `sleep` (sleep.lpc:79 clears ridee
+# before the dream, so 红楼一梦 is entered on foot), a room the horse
+# can't follow you into (go.lpc:76 你的座骑走动不了), and dismounting.
+RIDE_ID = "horse"        # `mount horse`; set to "" to never ride
+RIDE_ARRIVE = "你骑着"    # go.lpc:118, printed to us on every mounted move
+RIDE_OK = "稳稳地"        # mount.lpc:56, the successful mount
+
+# Where the horse is and whether we're on it. Module-level because
+# step_full() has to be able to get off a horse that can't follow.
+RIDE = {"want": False, "on": False, "name": "", "left_at": None}
+
 INTRUDER_WAIT = 45     # seconds to sit one room away before peeking back
 INTRUDER_TRIES = 6     # how many times to peek before giving up on the job
 COOLDOWN_WAIT = 60     # seconds between re-asks while he's still thanking you
+GIVEUP_POLL = 120      # seconds between re-asks after giving up on a job
+
+# Gated transitions THIS character can always make, by command name
+# (build_map.py's SPECIAL_EXITS marks which are gates). `dive` and `sleep`
+# need no entry here -- GATE_PREP below earns those passes on demand --
+# but add "climb tree" if you join 月宫, since 吴刚 then waves you up the
+# 桂树 and the inner 月宫 stops being a write-off.
+USABLE_GATES = set()
 
 
 # ---------------------------------------------------------------- map --
@@ -183,9 +397,9 @@ def read_room(api, timeout=4):
             # Room CONTENTS are printed after the exits line, so stopping
             # here loses exactly what we care about (the target monster,
             # or an intruder we're waiting out). Keep reading briefly.
-            grace = time.time() + 1.2
+            grace = time.time() + ROOM_GRACE
             while time.time() < grace:
-                extra = api.wait_line(r".+", timeout=0.4)
+                extra = api.wait_line(r".+", timeout=ROOM_IDLE)
                 if not extra:
                     break
                 lines.append(extra.string)
@@ -208,9 +422,9 @@ def look(api, timeout=6):
     return read_room(api, timeout)
 
 
-def step(api, direction):
-    """Move one room. Returns (title, text); title is '' if we didn't
-    move (blocked exit, door, sect check, encumbrance).
+def step_full(api, direction):
+    """Move one room. Returns (title, exits, text); title is '' if we
+    didn't move (blocked exit, door, sect check, encumbrance).
 
     Closed doors are opened and the move retried: std/room.lpc:199-216
     refuses with 你必须先把<门名>打开！, and cmds/std/open.lpc:18 accepts
@@ -221,7 +435,7 @@ def step(api, direction):
     """
     api.drain()
     api.send(direction, quiet=True)
-    title, _, text = read_room(api)
+    title, exits, text = read_room(api)
 
     if not title and "必须先把" in text and "打开" in text:
         api.log(f"{direction} 有扇门关着，先开门。")
@@ -230,8 +444,42 @@ def step(api, direction):
         api.wait_line(r"打开|你要打开什么", timeout=4)
         api.drain()
         api.send(direction, quiet=True)
-        title, _, text = read_room(api)
+        title, exits, text = read_room(api)
 
+    if not title and re.search(TOLL_RE, text):
+        api.log(f"马盗拦路收买路钱，先给他 {TOLL_SILVER} 两银子。")
+        api.drain()
+        api.send(f"give {TOLL_SILVER} silver to {TOLL_TARGET}", quiet=True)
+        reply = read_reply(api)
+        if re.search(TOLL_OK, reply):
+            api.drain()
+            api.send(direction, quiet=True)
+            title, exits, text = read_room(api)
+        else:
+            api.log(f"钱没给成（{reply.strip().splitlines()[-1] if reply.strip() else '他没反应'}）。"
+                    f"身上带够 {TOLL_SILVER} 两银子才走得了西边那半个长安城西。")
+
+    if not title and "座骑" in text:
+        # go.lpc:76 -- the mount can't go where we're going, and go.lpc
+        # refuses the WHOLE move rather than leaving it behind. Get off
+        # and walk. Without this the walker reads a perfectly good exit
+        # as permanently shut and routes around it (or gives up on the
+        # area) for as long as we stay in the saddle.
+        api.log("坐骑过不去，先下马再走。")
+        api.drain()
+        api.send(f"dismount {RIDE_ID}", quiet=True)
+        read_reply(api)
+        RIDE["on"] = False
+        api.drain()
+        api.send(direction, quiet=True)
+        title, exits, text = read_room(api)
+
+    return title, exits, text
+
+
+def step(api, direction):
+    """step_full() without the exit list -- what most callers want."""
+    title, _, text = step_full(api, direction)
     return title, text
 
 
@@ -249,43 +497,94 @@ def step(api, direction):
 # ways out, otherwise shuffle and try again.
 MAZE_EXITS = ("south", "north", "enter")
 
+# The three ways OUT of 紫竹林, and the room next door that leads back in:
+#   zhulin0  south -> road4 小路      (road4 north)
+#   zhulin15 north -> pool 池塘边     (pool south)
+#   zhulin16/17 enter -> 罗汉塔       (luohanw1 out)
+# A sweep that takes any of them the moment it sees one barely searches
+# the grove at all -- zhulin0 is where most of the random exits land, so
+# the old sweep usually walked straight out on move one or two.
+MAZE_REENTRY = {"小路": "north", "池塘边": "south", "罗汉塔": "out"}
 
-def sweep_maze(api, maze_name, name, mid, max_moves=80):
+# Exit signatures that identify a room with a way out. zhulin0 is the only
+# room in the grove whose exits are exactly these three (zhulin1-5 have
+# four diagonals, zhulin6-15 have the four compass points), so `south`
+# there can be recognised and skipped while sweeping. Rooms with `enter`
+# (zhulin16/17) are just as recognisable.
+MAZE_DOOR_SIG = frozenset({"northeast", "northwest", "south"})
+
+# 18 rooms, all identical to look at, and the monster wanders while you
+# search. A random walk needs well over one move per room to cover them,
+# and every step is cheap now (STEP_PAUSE), so budget generously.
+MAZE_SWEEP_MOVES = 200
+MAZE_REENTRIES = 12       # times to walk back in after falling out
+
+
+def maze_choices(exits):
+    """Directions to try from a maze room, ways out last.
+
+    Keeps the grove's own loops in play and leaves `south`-out-of-zhulin0
+    and `enter`-to-罗汉塔 as a last resort, so a sweep spends its budget
+    inside instead of escaping on the first move.
+    """
+    inner, outer = [], []
+    for d in exits:
+        if d == "enter" or (d == "south" and set(exits) == MAZE_DOOR_SIG):
+            outer.append(d)
+        else:
+            inner.append(d)
+    random.shuffle(inner)
+    return inner + outer
+
+
+def sweep_maze(api, maze_name, name, mid, max_moves=MAZE_SWEEP_MOVES):
     """Wander a randomised maze looking for the quest target.
 
     Returns "found" if the target turned up (caller should fight it),
-    "clear" if the maze was swept without finding it, or "" if we got
+    "clear" if the budget ran out without finding it, or "" if we got
     stuck. Either way the caller should re-localise afterwards -- we have
     no reliable position inside.
+
+    Falling out of the grove is not the end of the sweep: 紫竹林 has three
+    exits and every internal exit is random, so leaving is easy and
+    accidental. As long as budget remains we walk back in and carry on.
     """
-    api.log(f"{maze_name}是随机迷宫，改用地毯式搜索找 {name}。")
+    api.log(f"{maze_name}是随机迷宫（{max_moves} 步预算），改用地毯式搜索找 {name}。")
+    title, exits, text = look(api)
+    reentries = 0
+
     for _ in range(max_moves):
         if api.stopped():
             return ""
-        title, exits, text = look(api)
         if name in text or mid in text.lower():
             api.log(f"在{maze_name}里发现 {name}！")
             return "found"
-        if title and title != maze_name:
-            return "clear"          # wandered out on our own
+
+        if title != maze_name:
+            back = MAZE_REENTRY.get(title)
+            if not back or reentries >= MAZE_REENTRIES:
+                return "clear"
+            reentries += 1
+            api.log(f"走出到「{title}」了，从 {back} 拐回{maze_name}接着找"
+                    f"（第 {reentries} 次）。")
+            title, exits, text = step_full(api, back)
+            api.sleep(STEP_PAUSE)
+            if not title:
+                return "clear"
+            continue
+
         moved = False
-        for d in list(MAZE_EXITS) + list(exits):
-            if d not in exits:
-                continue
-            got, gtext = step(api, d)
+        for d in maze_choices(exits):
+            got, gexits, gtext = step_full(api, d)
             api.sleep(STEP_PAUSE)
             if not got:
                 continue
-            moved = True
-            if name in gtext or mid in gtext.lower():
-                api.log(f"在{maze_name}里发现 {name}！")
-                return "found"
-            if got != maze_name:
-                return "clear"      # stepped out of the maze
+            title, exits, text, moved = got, gexits, gtext, True
             break
         if not moved:
             return ""
-    api.log(f"{maze_name}搜完了没找到 {name}，先出去。")
+
+    api.log(f"{maze_name}走了 {max_moves} 步没找到 {name}，先出去。")
     return "clear"
 
 
@@ -334,6 +633,118 @@ def avoided(rooms, path):
     return rooms.get(path, {}).get("short") in AVOID_ROOMS
 
 
+def note_step_failure(api, blocked, pos, direction, text):
+    """Remember an exit we could not take. Returns True if the room
+    behind it is broken rather than merely shut.
+
+    A compile error is forever (until someone edits the mudlib), so it
+    goes in BROKEN_EXITS and every later job starts out avoiding it. A
+    door or a sect check only blocks this trip.
+    """
+    if pos is None:
+        return False
+    blocked.add((pos, direction))
+    if not re.search(BROKEN_RE, text):
+        api.log(f"{direction} 走不通，绕路。")
+        return False
+    if (pos, direction) not in BROKEN_EXITS:
+        BROKEN_EXITS.add((pos, direction))
+        api.log(f"{pos} 的 {direction} 后面那间房间编译不过"
+                "（mudlib 里的语法错误，不是走不过去），以后都绕开。")
+    return True
+
+
+# --------------------------------------------------------------- ride --
+def ride_note(api, text, was_at):
+    """Read the mount state off a room we just walked into.
+
+    go.lpc:118 tells the rider 你骑着<马>走了过来 on every mounted move,
+    so its ABSENCE from an arrival is the signal that the horse stayed
+    behind -- whether we got off deliberately (step_full), were put off
+    (sleep), or it simply couldn't follow.
+    """
+    if not RIDE["want"]:
+        return
+    if RIDE_ARRIVE in text:
+        RIDE["on"] = True
+        RIDE["left_at"] = None
+    elif RIDE["on"]:
+        ride_lost(api, was_at)
+
+
+def ride_lost(api, where, label=None):
+    """Note that we're on foot and where the horse is standing."""
+    if not RIDE["want"]:
+        return
+    already_off = not RIDE["on"] and RIDE["left_at"]
+    RIDE["on"] = False
+    if already_off:
+        return
+    RIDE["left_at"] = where
+    api.log(f"{RIDE['name'] or '坐骑'}留在了{label or where or '刚才那间房'}，"
+            "先记下，回头去牵。")
+
+
+def ride_mount(api):
+    """Get on the mount standing in this room. Returns True if we end up
+    on it -- including 'we already were', which is how a missed
+    你骑着… line self-corrects."""
+    if not RIDE_ID:
+        return False
+    api.drain()
+    api.send(f"mount {RIDE_ID}", quiet=True)
+    reply = read_reply(api)
+
+    if RIDE_OK in reply or ("你已经" in reply and "上了" in reply):
+        was_on = RIDE["on"]
+        RIDE["want"] = RIDE["on"] = True
+        RIDE["left_at"] = None
+        m = re.search(r"[骑坐乘]在(.+?)上", reply)
+        if m:
+            RIDE["name"] = m.group(1)
+        if not was_on and RIDE_OK in reply:
+            api.log(f"上马了（{RIDE['name'] or RIDE_ID}）。")
+        return True
+
+    RIDE["on"] = False
+    return False
+
+
+def ride_recover(api, rooms, blocked):
+    """Go back for a horse we had to leave behind. Returns True if we
+    are back on it."""
+    where = RIDE["left_at"]
+    if not RIDE["want"] or RIDE["on"] or where not in rooms:
+        return False
+    label = rooms[where]["short"]
+    api.log(f"{RIDE['name'] or '坐骑'}还留在{label}，先去牵回来。")
+    if not walk_to(api, rooms, blocked, where, label):
+        api.log(f"没走到{label}，坐骑先放着吧。")
+        return False
+    if ride_mount(api):
+        return True
+    api.log(f"{label}里没找到坐骑，可能被别人牵走了。")
+    RIDE["left_at"] = None
+    return False
+
+
+def flee_dirs(word, exits):
+    """Exits a 往<word>落荒而逃了 line could mean, best first.
+
+    `exits` is what this room actually offers (map exits, or the names
+    `look` printed). When it is known it settles 北边's northup/northdown
+    ambiguity and rejects a word that names a runtime-built exit the
+    static map never saw -- better to fall back to the ordinary search
+    than to walk off in a direction we cannot account for.
+    """
+    cands = list(CN_DIR.get(word, []))
+    if not cands and re.fullmatch(r"[a-z][a-z ]*", word):
+        cands = [word]          # an exit go.lpc had no Chinese name for
+    if exits:
+        return [d for d in cands if d in exits]
+    return cands
+
+
 def travel(rooms, start, goals, blocked=frozenset()):
     """Shortest path across the WHOLE map, ignoring area boundaries.
 
@@ -357,6 +768,51 @@ def travel(rooms, start, goals, blocked=frozenset()):
                 return step
             q.append((nxt, step))
     return None
+
+
+def reachable_from(rooms, start, gated_ok=False, passes=()):
+    """Every room you can WALK to from `start`.
+
+    By default this refuses the GATED transitions build_map splices in --
+    `dive` (需避水咒), `sleep` (需黄粱枕), `climb tree` (吴刚 only lets
+    月宫弟子 past) -- because a room behind one of those is not reachable
+    "normally" for this character. Transitions that merely cost something
+    everyone has, like `swim`'s 20 气血, are ordinary exits here; they are
+    recorded in "special" but not in "gated", so 普陀山 stays searchable.
+    """
+    seen, q = {start}, deque([start])
+    while q:
+        cur = q.popleft()
+        gates = rooms.get(cur, {}).get("gated", {})
+        for d, nxt in rooms.get(cur, {}).get("exits", {}).items():
+            if nxt not in rooms or nxt in seen or avoided(rooms, nxt):
+                continue
+            if not gated_ok and d in gates and d not in USABLE_GATES \
+                    and d not in passes:
+                continue
+            seen.add(nxt)
+            q.append(nxt)
+    return seen
+
+
+def route_gates(rooms, start, goals, passes=()):
+    """Which gated transitions a route to `goals` would have to use.
+
+    Returns a list of "<command>（<prerequisite>）" strings, [] if a
+    perfectly ordinary route exists, or None if there is no route at all.
+    """
+    if start in goals:
+        return []
+    path = travel(rooms, start, goals)
+    if path is None:
+        return None
+    gates, cur = [], start
+    for d, nxt in path:
+        note = rooms.get(cur, {}).get("gated", {}).get(d)
+        if note and d not in USABLE_GATES and d not in passes:
+            gates.append(f"{d}（{note}）")
+        cur = nxt
+    return gates
 
 
 def candidates(rooms, dirs, title, exits):
@@ -415,6 +871,42 @@ def probe_dir(rooms, cands, tried=()):
     return best
 
 
+def escape_cage(api, tries=CAGE_BREAKS):
+    """Get out of 铁笼中, where 石栈道's trapdoor drops anyone who lingers.
+
+    The cage declares no exits (tielong.lpc:12); `out` only appears once
+    `break` has accumulated 3000 of force_factor*5+str, at 30 气血 a go.
+    A weak character can't buy its way out, so this tries a bounded
+    number of times, keeps 气血 in reserve, and otherwise says plainly
+    that it needs a hand -- which beats looping 走不到未搜索的房间 for the
+    rest of the quest, which is what a map with no exits produces.
+    """
+    api.log("掉进铁笼里了（石栈道的机关），试着扳开栏杆。")
+    for _ in range(tries):
+        if api.stopped():
+            return False
+        st = api.status()
+        if st["max_kee"] and st["kee"] * 100 // st["max_kee"] < CAGE_MIN_KEE:
+            api.log(f"气血只剩 {st['kee']}/{st['max_kee']} 了，再扳要出人命。")
+            break
+        api.drain()
+        api.send("break", quiet=True)
+        r = api.wait_line("钻出去了|已经打开了|铁栏杆", timeout=4)
+        if r and ("钻出去" in r.string or "已经打开" in r.string):
+            break
+
+    api.drain()
+    api.send("out", quiet=True)
+    title, _, _ = read_room(api)
+    if title and title != CAGE_ROOM:
+        api.log(f"钻出铁笼了，现在在「{title}」。")
+        return True
+    api.log("扳不开铁笼 —— 这个角色力气不够（每扳一次还要掉 30 点气血）。"
+            "请手动过来搭把手（/d/westway/tielong，一起 break），"
+            "或者先 /stop 我。")
+    return False
+
+
 def relocalise(api, rooms, dirs=None, max_probes=14):
     """Work out which room we're actually in, probing when the title is
     ambiguous. Returns the room we are standing in AFTER any probing (we
@@ -441,6 +933,10 @@ def relocalise(api, rooms, dirs=None, max_probes=14):
     indistinguishable room is the old hang wearing a different hat.
     """
     title, exits, _ = look(api)
+    if title == CAGE_ROOM:
+        if not escape_cage(api):
+            return None
+        title, exits, _ = look(api)
     if title in AVOID_ROOMS:
         title = escape_maze(api, title)
         if not title:
@@ -507,11 +1003,14 @@ def relocalise(api, rooms, dirs=None, max_probes=14):
     return cands[0] if cands else None
 
 
-def bfs(rooms, dirs, start, goals, blocked=frozenset()):
+def bfs(rooms, inside, start, goals, blocked=frozenset()):
     """Shortest path start -> nearest goal, as [(dir, room), ...].
 
-    `blocked` holds (room, direction) pairs already found impassable, so
-    the walker stops re-routing through a gate it cannot pass.
+    `inside` is the set of rooms the sweep may walk through (see
+    area_paths) -- the search stays in its area rather than wandering
+    off across the map. `blocked` holds (room, direction) pairs already
+    found impassable, so the walker stops re-routing through a gate it
+    cannot pass.
     """
     if start in goals:
         return []
@@ -521,7 +1020,7 @@ def bfs(rooms, dirs, start, goals, blocked=frozenset()):
         for d, nxt in rooms.get(cur, {}).get("exits", {}).items():
             if (cur, d) in blocked:
                 continue
-            if nxt in seen or nxt not in rooms or rooms[nxt]["area"] not in dirs:
+            if nxt in seen or nxt not in rooms or nxt not in inside:
                 continue
             if avoided(rooms, nxt):
                 continue
@@ -534,8 +1033,14 @@ def bfs(rooms, dirs, start, goals, blocked=frozenset()):
 
 
 # ------------------------------------------------------------- combat --
-def rest_until_healed(api):
+def rest_until_healed(api, rooms, pos, blocked, retreat=True, name=None):
     """Break off, run somewhere quiet, and wait for 气血 to come back.
+
+    Returns (ok, pos). The retreat is a real move now, so the room we
+    ran to is the map neighbour we chose -- there is no need to throw
+    the position away and re-localise (which costs a `look` plus up to
+    fourteen probing steps in a corridor of identically-named rooms,
+    all while the monster wanders further off).
 
     Gives up instead of waiting forever. 气血 regen is not merely slowed
     by thirst but switched off (feature/damage.lpc:465 returns from
@@ -544,18 +1049,46 @@ def rest_until_healed(api):
     printing 休息中… at a fixed 50% until the bot was killed by hand.
     So: drink first if we're carrying anything, and bail out if 气血
     stops climbing.
-    """
-    api.log("受伤了，撤退。")
-    for _ in range(3):
-        api.send("flee")
-        api.sleep(1.5)
 
-    stalled, last_kee = 0, -1
+    retreat=False means we are already out of the fight -- the
+    character's own env/wimpy walked us out -- so there is nothing to
+    break off from and `pos` is whatever the caller still knows
+    (usually nothing).
+
+    Returns (status, pos), where status is "ok" (healed, carry on),
+    "killed" (the target followed us, the fight restarted by itself and
+    it lost -- the job is DONE) or "" (give up). Resting is not a quiet
+    place: the aggressive types follow, so this watches for both.
+    """
+    if retreat:
+        api.log("受伤了，撤退。")
+        pos = break_off(api, rooms, pos, blocked)
+    else:
+        api.log("已经脱离战斗，就地休息。")
+
+    stalled, last_kee, gave_ground = 0, -1, 0
     while not api.stopped():
+        # Did the fight come with us? The monster's own die() reports the
+        # reward to us wherever we are (yg/yaoguai.lpc:134), so a kill
+        # that happened while we sat here still counts -- without this
+        # the bot spent the rest of the half hour hunting a corpse.
+        news = api.wait_line(f"{REWARD_RE}|{re.escape(name)}" if name
+                             else REWARD_RE, timeout=0.2)
+        if news:
+            if re.search(REWARD_RE, news.string):
+                api.log("休息的时候它自己追上来送死了，任务完成。")
+                return "killed", pos
+            if gave_ground < REST_RETREATS:
+                gave_ground += 1
+                api.log(f"{name} 追过来了，再退一间房再歇（第 {gave_ground} 次）。")
+                pos = break_off(api, rooms, pos, blocked)
+                continue
+            api.log(f"{name} 一直跟着，退不掉了，就地硬歇着。")
+
         st = api.status()
         if st["max_kee"] and st["kee"] * 100 // st["max_kee"] >= HP_RESUME:
             api.log("气血已恢复，继续找。")
-            return True
+            return "ok", pos
 
         if pct(st["water"], st["max_water"]) < SUSTENANCE_AT:
             water, _ = drink_up(api)
@@ -568,12 +1101,12 @@ def rest_until_healed(api):
                     f"（食物 {pct(st['food'], st['max_food'])}%、"
                     f"饮水 {pct(st['water'], st['max_water'])}%）。"
                     "饮水见底时气血根本不会恢复，别再干等了。")
-            return False
+            return "", pos
 
         api.log(f"休息中… 气血 {st['kee']}/{st['max_kee']}，"
                 f"{REST_POLL} 秒后再看。")
         api.sleep(REST_POLL)
-    return False
+    return "", pos
 
 
 def abandon_all_skills(api):
@@ -586,6 +1119,10 @@ def abandon_all_skills(api):
     with 基本棍法. Wiping them after each kill keeps
     query_skills() empty, so copy_status() takes its `else max_level = 1`
     branch and monsters stay at the floor.
+
+    Only runs while every skill is still at or below WIPE_MAX_LEVEL: past
+    that the character has real training worth keeping, and throwing it
+    away is a bigger loss than the difficulty it costs.
 
     cmds/std/abandon.lpc asks y/n for any skill at level >= 10, so the
     prompt has to be answered or the session hangs waiting on input_to().
@@ -602,10 +1139,24 @@ def abandon_all_skills(api):
             continue
         lines.append(m.string)
 
-    # "  基本棍法 (stick)   - 初学乍练    1/    0"
-    ids = re.findall(r"\(([a-z][a-z0-9_-]*)\)", "\n".join(lines))
-    ids = [s for s in dict.fromkeys(ids)]        # de-dupe, keep order
+    # cmds/usr/skills.lpc:52-59 prints one line per skill:
+    #   "  基本棍法 (stick)                  - 初学乍练      1/    0"
+    # i.e. id in parens, then level/学习进度 at the end of the line.
+    levels = {}
+    for line in lines:
+        m = re.search(r"\(([a-z][a-z0-9_-]*)\).*?(\d+)\s*/\s*(\d+)\s*$", line)
+        if m:
+            levels.setdefault(m.group(1), int(m.group(2)))
+    ids = list(levels)
     if not ids:
+        return 0
+
+    top = max(levels.values())
+    if top > WIPE_MAX_LEVEL:
+        highest = ", ".join(f"{k} {v}" for k, v in
+                            sorted(levels.items(), key=lambda kv: -kv[1])[:3])
+        api.log(f"最高技能已经 {top} 级（{highest}），超过 {WIPE_MAX_LEVEL}，"
+                "不动它们。")
         return 0
 
     dropped = 0
@@ -648,6 +1199,76 @@ def retreat_one_room(api, rooms, pos, blocked):
                          if bt == pos), None)
             return dest, back
     return None, None
+
+
+def break_off(api, rooms, pos, blocked):
+    """Walk out of a fight. Returns the room we end up in, or None if we
+    moved somewhere the map didn't predict; `pos` unchanged means every
+    exit refused us and we are still standing in the fight.
+
+    See BREAK_OFF_TRIES for why this is a `go` and not a `flee`.
+    """
+    exits = {}
+    if pos in rooms:
+        usable = {d: t for d, t in rooms[pos]["exits"].items()
+                  if t in rooms and not avoided(rooms, t)}
+        # Exits known to be shut go last, not away: `blocked` also holds
+        # exits that merely refused us once (a closed door, a swing we
+        # hadn't finished), and being cornered in a fight is exactly when
+        # a second try is worth making.
+        exits = ({d: t for d, t in usable.items() if (pos, d) not in blocked}
+                 or usable)
+    if not exits:
+        # No idea where we are -- take what `look` says the room has and
+        # accept that the destination will need re-localising.
+        _, seen, _ = look(api)
+        exits = dict.fromkeys(seen)
+
+    for d, dest in exits.items():
+        for _ in range(BREAK_OFF_TRIES):
+            if api.stopped():
+                return None
+            arrived, text = step(api, d)
+            if arrived:
+                api.log(f"往 {d} 脱离战斗。")
+                ride_note(api, text, pos)
+                return dest if dest and arrived == rooms[dest]["short"] else None
+            if "动作还没有完成" not in text:
+                break            # a real wall; try a different exit
+            api.sleep(BREAK_OFF_WAIT)   # mid-swing, ask again in a moment
+    api.log("四面都出不去，逃不掉，只能原地硬撑。")
+    return pos
+
+
+def chase(api, rooms, pos, blocked, name, mid, word):
+    """Follow a monster that just ran off. Returns (pos, found).
+
+    One hop: go.lpc told us which exit it took, and that is the only
+    thing we know for certain. If it isn't there it has moved on under
+    its own steam (yg/yaoguai.lpc's chat_msg calls random_move), and the
+    ordinary area search resumes -- but from HERE, one room from the
+    monster, instead of from wherever a re-localisation left us.
+    """
+    exits = rooms[pos]["exits"] if pos in rooms else None
+    if exits is None:
+        _, seen, _ = look(api)
+        exits = dict.fromkeys(seen)
+
+    for d in flee_dirs(word, exits):
+        if (pos, d) in blocked:
+            continue
+        arrived, text = step(api, d)
+        api.sleep(STEP_PAUSE)
+        if not arrived:
+            note_step_failure(api, blocked, pos, d, text)
+            continue
+        ride_note(api, text, pos)
+        dest = exits.get(d)
+        here = dest if dest in rooms and arrived == rooms[dest]["short"] else None
+        return here, (name in text or mid in text.lower())
+
+    api.log(f"「{word}」这个方向地图上没有，改回正常搜索。")
+    return pos, False
 
 
 def wait_out_intruder(api, rooms, danger_pos, intruder, blocked):
@@ -729,11 +1350,13 @@ def walk_to(api, rooms, blocked, dest, label):
             continue
 
         direction, nxt = leg[0]
-        arrived, _ = step(api, direction)
+        here_before = pos
+        arrived, text = step(api, direction)
         api.sleep(STEP_PAUSE)
         steps += 1
 
         if arrived == rooms[nxt]["short"]:
+            ride_note(api, text, here_before)
             pos = nxt
         elif not arrived:
             # Confirm where we actually are before blaming the exit.
@@ -743,8 +1366,7 @@ def walk_to(api, rooms, blocked, dest, label):
             # really shut, until no route home survives at all.
             here = relocalise(api, rooms)
             if here is not None and direction in rooms[here]["exits"]:
-                blocked.add((here, direction))
-                api.log(f"{direction} 走不通，绕路。")
+                note_step_failure(api, blocked, here, direction, text)
             pos = here
             if pos is None:
                 lost += 1
@@ -967,15 +1589,243 @@ def keep_fed(api, rooms, blocked):
     return walk_back_to_yuan(api, rooms, blocked)
 
 
+# ---------------------------------------------------------- gate passes --
+# Two of the ten spawn areas sit behind a prerequisite rather than a wall,
+# and both prerequisites are things a character can simply go and get. So
+# instead of writing those jobs off, the bot earns the pass and goes.
+#
+#   龙宫 (d/sea)  -- 避水咒. 袁守诚 (d/city/caotang.lpc, 袁氏草堂) trades
+#       〖无字天书〗 for a 桂花酒袋 (npc/shouchen.lpc:174-181), and tearing
+#       the book open yields the 咒 (d/obj/book/nowords.lpc:41-47). The 咒
+#       is NOT consumed by do_dive() -- it only checks present() -- so one
+#       lasts forever.
+#   红楼一梦 (d/ourhome/honglou) -- 黄粱枕, carried by 卢生 in 泾水之滨
+#       (d/changan/wside3). Sleep in any sleep_room holding it and
+#       wakeup1() (cmds/std/sleep.lpc:184-195) drops you into the dream.
+#       The pillow IS destroyed on the way in, so this is redone per job.
+CAOTANG_ROOM = "d/city/caotang"      # 袁氏草堂 -- 袁守诚
+LUSHENG_ROOM = "d/changan/wside3"    # 泾水之滨 -- 卢生, 100 exp, peaceful
+SLEEP_ROOM = "d/city/sleep"          # 客店睡房, east of 南城客栈
+RENT_SILVER = 3                      # xiaoer.lpc:139 wants >= 300 文
+DREAM_ROOM = "d/ourhome/honglou/kat"   # 荡悠悠三更梦 -- where you wake up
+SLEEP_WAIT = 75                      # sleep.lpc:86 -- call_out up to 10+45s
+
+
+def carrying(api, keyword):
+    """Is `keyword` in our inventory right now?"""
+    api.drain()
+    api.send("i", quiet=True)
+    return keyword in read_reply(api)
+
+
+def buy_one_jiudai(api, rooms, blocked):
+    """A 桂花酒袋 in hand, with a bank trip if we're short."""
+    if not walk_to(api, rooms, blocked, KEZHAN_ROOM, "南城客栈"):
+        return False
+    result = buy_from_xiaoer(api, "jiudai", "桂花酒袋")
+    if result == "broke":
+        if not withdraw_at_bank(api, rooms, blocked):
+            return False
+        if not walk_to(api, rooms, blocked, KEZHAN_ROOM, "南城客栈"):
+            return False
+        result = buy_from_xiaoer(api, "jiudai", "桂花酒袋")
+    return result == "ok"
+
+
+def get_bishuizhou(api, rooms, blocked):
+    """Earn the 避水咒 that opens the dive into 龙宫."""
+    if carrying(api, "避水咒"):
+        return True
+    api.log("要下东海得有避水咒，先去办：买桂花酒袋 -> 送袁守诚 -> 撕天书。")
+
+    if not carrying(api, "无字天书"):
+        if not buy_one_jiudai(api, rooms, blocked):
+            api.log("买不到桂花酒袋，拿不到避水咒。")
+            return False
+        if not walk_to(api, rooms, blocked, CAOTANG_ROOM, "袁氏草堂"):
+            return False
+        api.drain()
+        api.send("give jiudai to yuan", quiet=True)
+        reply = read_reply(api)
+        if "无字天书" not in reply and not carrying(api, "无字天书"):
+            api.log(f"袁守诚没收酒袋：{reply.strip().splitlines()[-1] if reply.strip() else '没有回应'}")
+            return False
+        api.log("袁守诚收了酒袋，回赠〖无字天书〗。")
+
+    api.drain()
+    api.send("tear book", quiet=True)
+    read_reply(api)
+    if carrying(api, "避水咒"):
+        api.log("撕开天书，拿到避水咒了。")
+        return True
+    api.log("撕天书没拿到避水咒。")
+    return False
+
+
+def get_pillow(api, rooms, blocked):
+    """Take a 黄粱枕 off 卢生 -- the way into 红楼一梦."""
+    if carrying(api, "黄粱枕"):
+        return True
+    api.log("要进红楼一梦得有黄粱枕，先去泾水之滨找卢生。")
+    if not walk_to(api, rooms, blocked, LUSHENG_ROOM, "泾水之滨"):
+        return False
+
+    api.drain()
+    api.send("kill lu sheng")
+    deadline = time.time() + FIGHT_TIMEOUT
+    dead = False
+    while time.time() < deadline and not api.stopped():
+        m = api.wait_line(f"{DEAD_RE}|{RETREAT_RE}|这里没有这个人", timeout=5)
+        if not m:
+            continue
+        if "这里没有这个人" in m.string:
+            api.log("卢生不在（可能刚被人杀过），等下一轮再试。")
+            return False
+        if re.search(DEAD_RE, m.string):
+            dead = True
+            break
+        if re.search(RETREAT_RE, m.string) and "你" in m.string and "卢生" not in m.string:
+            api.log("打卢生居然打不过，撤。")
+            return False
+    if not dead:
+        return False
+
+    api.drain()
+    api.send("get pillow from corpse", quiet=True)
+    read_reply(api)
+    if carrying(api, "黄粱枕"):
+        api.log("拿到黄粱枕了。")
+        return True
+    api.log("尸体上没摸到黄粱枕。")
+    return False
+
+
+def enter_dream(api, rooms, blocked):
+    """Pillow in hand, rent paid, asleep -- and wake up in 红楼一梦.
+
+    Unlike the 避水咒 this is the journey itself, not just a pass: the
+    dream is entered by waking (sleep.lpc:184-195), so the walker can
+    never do it as a plain step -- 10 to 55 seconds pass with the player
+    disabled, far longer than a room read waits.
+    """
+    if not get_pillow(api, rooms, blocked):
+        return False
+    if not walk_to(api, rooms, blocked, KEZHAN_ROOM, "南城客栈"):
+        return False
+
+    # 店小二 wants >= 300 文 before he'll let anyone past into the 睡房.
+    api.drain()
+    api.send(f"give {RENT_SILVER} silver to {VENDOR}", quiet=True)
+    reply = read_reply(api)
+    if "客官请上房歇息" not in reply:
+        if "你身上没有这样东西" in reply or "你没有那么多" in reply:
+            if not withdraw_at_bank(api, rooms, blocked):
+                return False
+            if not walk_to(api, rooms, blocked, KEZHAN_ROOM, "南城客栈"):
+                return False
+            api.drain()
+            api.send(f"give {RENT_SILVER} silver to {VENDOR}", quiet=True)
+            reply = read_reply(api)
+        if "客官请上房歇息" not in reply:
+            api.log("店钱没给成，进不了睡房。")
+            return False
+    api.log(f"付了 {RENT_SILVER} 两店钱。")
+
+    arrived, _ = step(api, "east")
+    api.sleep(STEP_PAUSE)
+    if arrived != rooms[SLEEP_ROOM]["short"]:
+        api.log("进不了客店睡房。")
+        return False
+
+    return sleep_into_dream(api, rooms)
+
+
+def sleep_into_dream(api, rooms):
+    """Sleep in the 客店睡房 with the 黄粱枕 and wake up in 红楼一梦.
+
+    Returns True once we are standing in the dream.
+    """
+    api.drain()
+    api.send("sleep", quiet=True)
+
+    # sleep.lpc:64-77 answers 你往被中一钻…你就进入了梦乡, then
+    # disable_player()s us for random(45-con)+10 seconds before wakeup1()
+    # runs. The pillow's own 进入了梦的世界 line NEVER reaches the player:
+    # pillow.lpc:26 tell_object()s it to the room object, not to us. This
+    # code waited for exactly that string, so every attempt at 红楼一梦
+    # ended in "睡下去就没下文了" and the job was thrown away.
+    #
+    # What we actually see is the dream room itself -- wakeup1()
+    # (sleep.lpc:195) moves us into d/ourhome/honglou/kat and its
+    # description is printed on arrival. If the pillow somehow didn't
+    # fire we get 你一觉醒来 and are still in the 睡房 instead.
+    dream = rooms[DREAM_ROOM]["short"] if DREAM_ROOM in rooms else "荡悠悠三更梦"
+    m = api.wait_line(f"{re.escape(dream)}|一觉醒来|进入了梦的世界"
+                      "|这里不是睡觉的地方|你刚睡过一觉|你正忙着呢"
+                      "|战斗中不能睡觉|精神太差|气血不足",
+                      timeout=SLEEP_WAIT)
+    if not m:
+        api.log("睡下去就没下文了，放弃这一轮。")
+        return False
+    if dream not in m.string and "进入了梦的世界" not in m.string:
+        api.log(f"没能入梦：{m.string.strip()}")
+        return False
+    read_reply(api, timeout=2.0)
+
+    # sleep.lpc:79-83 takes you off the horse before the dream, and the
+    # horse stays in the 睡房 -- 红楼一梦 is entered on foot whatever you
+    # rode in on. Remember where it is so it can be collected afterwards.
+    ride_lost(api, SLEEP_ROOM,
+              rooms[SLEEP_ROOM]["short"] if SLEEP_ROOM in rooms else None)
+    api.log(f"入梦了，人已经在红楼一梦（{dream}）里。")
+    return True
+
+
+# Gate command -> how to earn it. Returning True means the route through
+# that transition is open for THIS job.
+GATE_PREP = {
+    "dive": get_bishuizhou,
+    "sleep": enter_dream,
+}
+
+
+def wait_for_exit(api, name, timeout):
+    """Watch for `name` walking out of the room we're both in.
+
+    Returns the Chinese direction from go.lpc:88, or None if it stayed.
+    """
+    m = api.wait_line(f"{re.escape(name)}.{{0,16}}?{LEAVE_RE}", timeout=timeout)
+    return m.group(1) if m else None
+
+
+def wimpy_fizzled(api):
+    """After 看来该找机会逃跑了, did the flee actually fail?
+
+    Returns True if we're still standing in the fight. The two failure
+    lines (go.lpc:142, :146) are printed immediately; a successful flee
+    prints the new room instead, so a short listen tells them apart.
+    """
+    deadline = time.time() + WIMPY_SETTLE
+    while time.time() < deadline:
+        m = api.wait_line(f"{WIMPY_FAIL_RE}|.+", timeout=WIMPY_SETTLE)
+        if not m:
+            break
+        if re.search(WIMPY_FAIL_RE, m.string):
+            return True
+    return False
+
+
 def fight_target(api, mid, name):
     """Attack, watching for the retreat triggers. Returns 'killed',
-    'hurt' or 'lost'."""
+    'hurt', 'lost', 'wimpy', 'nofight', 'intruder:<name>' or
+    'fled:<方向>'."""
     api.drain()
     api.send(f"kill {mid}")
     deadline = time.time() + FIGHT_TIMEOUT
     while time.time() < deadline and not api.stopped():
         m = api.wait_line(
-            f"{REWARD_RE}|{RETREAT_RE}|{DEAD_RE}|这里没有这个人|{INTRUDER_RE}",
+            f"{REWARD_RE}|{RETREAT_RE}|{DEAD_RE}|{FLEE_RE}|{WIMPY_RE}"
+            f"|{NOFIGHT_RE}|这里没有这个人|{INTRUDER_RE}",
             timeout=5)
         if not m:
             continue
@@ -992,6 +1842,11 @@ def fight_target(api, mid, name):
             return "killed"
         if "这里没有这个人" in line:
             return "lost"
+        # A peace room: the kill never even started, so there is nothing
+        # to wait out. Without this the loop sat here for the full
+        # FIGHT_TIMEOUT while the monster strolled off.
+        if re.search(NOFIGHT_RE, line):
+            return "nofight"
 
         # Someone other than the quest target started on us.
         bad = re.search(INTRUDER_RE, line)
@@ -999,6 +1854,24 @@ def fight_target(api, mid, name):
             who = (bad.group(1) or bad.group(2) or "").strip()
             if who and name not in who and who not in name:
                 return f"intruder:{who}"
+        # It bolted. Without this the fight loop sat there re-reading an
+        # empty room until FIGHT_TIMEOUT (three minutes) and then called
+        # the monster "lost" -- by which time it was several random_moves
+        # away and the whole area had to be searched again.
+        ran = re.search(FLEE_RE, line)
+        if ran and name and name in line:
+            return "fled:" + ran.group(1)
+
+        # WE ran, on our own env/wimpy. Which exit do_flee() picked is
+        # never told to us -- go.lpc:100 tells the room we LEFT -- so
+        # there is no direction to record, only the fact that we are
+        # somewhere else now and out of the fight (go.lpc:105 calls
+        # remove_all_enemy on a successful move).
+        if re.search(WIMPY_RE, line):
+            if wimpy_fizzled(api):
+                continue           # 逃跑失败 / 被定住: still toe to toe
+            return "wimpy"
+
         if re.search(RETREAT_RE, line):
             if name and name in line:
                 continue            # the monster is hurting, press on
@@ -1018,6 +1891,7 @@ def run(api):
         return
     rooms, areas = data["rooms"], data["areas"]
     jobs = 0
+    pending_told = None     # target of the last "还没交差" message
 
     while not api.stopped():
         # ---- get a job ------------------------------------------------
@@ -1047,8 +1921,14 @@ def run(api):
             # on it if it wanders past, rather than re-asking every 10s.
             pend = re.search(r"收服(.+?)吗", m.string)
             who = pend.group(1) if pend else "上一个目标"
-            api.log(f"上一个任务（{who}）还没交差，袁天罡最多再等 30 分钟才会换新的。"
-                    "我先在原地盯着，看到它就动手；你也可以自己去找它。")
+            # Said once per target: this branch is also where a job we
+            # gave up on lands, and it is re-entered every GIVEUP_POLL
+            # seconds until the timer runs out -- fifteen copies of the
+            # same paragraph is not information.
+            if who != pending_told:
+                api.log(f"上一个任务（{who}）还没交差，袁天罡最多再等 30 分钟才会换新的。"
+                        "我先在原地盯着，看到它就动手；你也可以自己去找它。")
+                pending_told = who
             hit = api.wait_line(re.escape(who), timeout=120) if pend else None
             if hit:
                 api.log(f"{who} 出现了，动手！")
@@ -1076,28 +1956,117 @@ def run(api):
                 api.log(f"这是房间名，共 {len(named)} 间同名房间"
                         f"（{dirs}），直接过去找。")
             else:
-                api.log(f"地图里找不到【{place}】，无法自动搜索。"
-                        "请手动过去，我会在看到它时动手。")
+                api.log(f"地图里找不到【{place}】，无法自动搜索。")
                 dirs = []
+
+        # ---- can we even get there? -----------------------------------
+        # Checked BEFORE walking, from 天监台, because the alternative is
+        # what actually happened at 湖边 (d/moon/lotuspond): the room sits
+        # behind `climb tree` at 玉女峰顶, which 吴刚 refuses to anyone
+        # outside 月宫, so the walker burned the full 30 minutes looping
+        # "从这里走不到未搜索的房间，重新定位" in 崎岖小路. If the target
+        # is only reachable through a gated transition -- or not on the
+        # map at all -- the job is a write-off: sit tight and keep asking
+        # until 袁天罡's 30-minute timer lapses and he issues a new one.
+        # (The abandoned job costs one difficulty level, yuantiangang.lpc
+        # :137-143, which is a fair price for not wasting half an hour.)
+        inside = area_paths(rooms, dirs, place) if dirs else set()
+        if inside and len(inside) > sum(1 for p in rooms
+                                        if rooms[p]["area"] in dirs):
+            api.log(f"（搜索范围含 {len(AREA_EXTRA.get(place, ()))} 间邻区房间，"
+                    "妖怪会走出区界。）")
+
+        if targets:
+            goal_rooms = set(targets)      # he named the room itself
+        elif dirs:
+            goal_rooms = {p for p in inside
+                          if rooms[p]["short"] not in AVOID_ROOMS
+                          and not rooms[p]["flags"].get("no_mieyao")}
+        else:
+            goal_rooms = set()
+
+        passes = set()
+        walkable = reachable_from(rooms, YUAN_ROOM)
+        gates = route_gates(rooms, YUAN_ROOM, goal_rooms) if goal_rooms else None
+
+        # Some gates aren't walls, they're errands: 避水咒 for 龙宫,
+        # 黄粱枕 for 红楼一梦. Run the errand, then re-check.
+        if not (goal_rooms & walkable) and gates:
+            wanted = [g.split("（")[0] for g in gates]
+            if all(w in GATE_PREP for w in wanted):
+                for w in wanted:
+                    if api.stopped():
+                        return
+                    if GATE_PREP[w](api, rooms, set()):
+                        passes.add(w)
+                    else:
+                        break
+                walkable = reachable_from(rooms, YUAN_ROOM, passes=passes)
+                gates = route_gates(rooms, YUAN_ROOM, goal_rooms, passes=passes)
+
+        if not (goal_rooms & walkable):
+            if gates:
+                why = "要" + "、".join(gates)
+            elif gates == []:
+                why = "路上有绕不开的关卡"
+            else:
+                why = "地图上根本没有路"
+            api.log(f"【{place}】从天监台走不过去（{why}），这趟不去了。"
+                    f"每 {GIVEUP_POLL} 秒问一次袁天罡，等这个任务超时后换新的"
+                    "（你也可以自己过去打，我在这边等着）。")
+            api.sleep(GIVEUP_POLL)
+            continue
+
+        # Get on the horse before setting off: it is worth a chunk of
+        # dodge (mount.lpc:59) to a character that deliberately has no
+        # skills. Only asked once unless we know there IS a horse -- if
+        # the player doesn't ride, 你想骑什么 comes back and that's that.
+        if RIDE_ID and (RIDE["want"] or jobs == 1):
+            ride_mount(api)
 
         started = time.time()
         killed = False
         pos = None
         visited = set()
-        blocked = set()
+        blocked = set(BROKEN_EXITS)
         found_here = False
         warned_unreachable = False
+        unreachable = 0
+        chases = 0
+        wimpies = 0
+        peace = 0
 
         # ---- hunt -----------------------------------------------------
         while not api.stopped() and time.time() - started < QUEST_SECS:
             # Is it right here? Either queued output mentions it, or the
-            # last move's room description did.
-            hit = found_here or api.wait_line(
-                f"{re.escape(name)}|{re.escape(mid)}", timeout=1)
-            found_here = False
-            if hit:
-                api.log(f"发现 {name}，动手！")
-                r = fight_target(api, mid, name)
+            # last move's room description did. The reward line is in
+            # there too: the target can die without us ever sending
+            # another `kill` -- it follows us out of the room, the fight
+            # restarts on heart_beat and it loses -- and the bot used to
+            # go on searching for the corpse until the half hour ran out.
+            hit = None
+            if not found_here:
+                hit = api.wait_line(
+                    f"{REWARD_RE}|{re.escape(name)}|{re.escape(mid)}",
+                    timeout=1)
+                if hit and re.search(REWARD_RE, hit.string):
+                    api.log(f"{name} 已经死了（奖励到手了），不用再找。")
+                    killed = True
+                    if ABANDON_SKILLS_AFTER_KILL:
+                        abandon_all_skills(api)
+                    break
+            if found_here or hit:
+                found_here = False
+                if pos and rooms[pos]["short"] in TRAP_ROOMS:
+                    # Standing here is what springs the trapdoor. Use the
+                    # peace-room handling: watch which way it goes and
+                    # take it next door.
+                    api.log(f"{name} 在{rooms[pos]['short']}，这里有机关"
+                            "（待久了会掉进铁笼），不在这儿动手。")
+                    r = "nofight"
+                else:
+                    api.log(f"发现 {name}，动手！")
+                    r = fight_target(api, mid, name)
                 if r == "killed":
                     api.log(f"击杀 {name} 成功！")
                     killed = True
@@ -1105,9 +2074,95 @@ def run(api):
                         abandon_all_skills(api)
                     break
                 if r == "hurt":
-                    if not rest_until_healed(api):
+                    fight_pos = pos
+                    rested, pos = rest_until_healed(api, rooms, pos, blocked,
+                                                    name=name)
+                    if not rested:
                         return
-                    pos = None       # we fled somewhere unknown
+                    if rested == "killed":
+                        killed = True
+                        if ABANDON_SKILLS_AFTER_KILL:
+                            abandon_all_skills(api)
+                        break
+                    # The monster is still standing where we left it
+                    # (only the aggressive types follow), so un-tick that
+                    # room: it becomes the nearest unsearched goal and
+                    # the ordinary walker takes us straight back to
+                    # finish the job, one step away.
+                    visited.discard(fight_pos)
+                    if pos and pos != fight_pos:
+                        visited.add(pos)
+                    continue
+                if r == "nofight":
+                    peace += 1
+                    trap = bool(pos and rooms[pos]["short"] in TRAP_ROOMS)
+                    if not trap:
+                        api.log(f"{name} 站在不准战斗的房间里，打不了。"
+                                "等它自己挪窝，跟出去再打。")
+                    word = wait_for_exit(api, name,
+                                         TRAP_WAIT if trap else NOFIGHT_WAIT)
+                    if word:
+                        api.log(f"{name} 往{word}走了，跟上。")
+                        pos, found_here = chase(api, rooms, pos, blocked,
+                                                name, mid, word)
+                        if pos:
+                            visited.add(pos)
+                        continue
+                    if pos and peace <= NOFIGHT_TRIES:
+                        # check_room()'s call_out is armed by init(),
+                        # which only runs when someone walks IN. Step out
+                        # and let the walker bring us back -- that's the
+                        # nudge that moves it.
+                        api.log("它赖着不动，我先出去，再进来一次。")
+                        visited.discard(pos)
+                        away, _ = retreat_one_room(api, rooms, pos, blocked)
+                        pos = away
+                        continue
+                    api.log(f"{name} 一直待在不能动手的地方，先去别处找，"
+                            "回头再来看。")
+                    if pos:
+                        visited.add(pos)
+                    continue
+                if r == "wimpy":
+                    # Same situation as "hurt", minus the retreat: the
+                    # wimpy check already walked us out, through an exit
+                    # nobody told us about. So rest, forget where we
+                    # think we are, and let the walker route back to the
+                    # room the monster is still in.
+                    fight_pos = pos
+                    wimpies += 1
+                    api.log(f"气血/精神掉到 wimpy 线，自动逃出了战斗"
+                            f"（第 {wimpies} 次），先休息再回去。")
+                    rested, _ = rest_until_healed(api, rooms, None, blocked,
+                                                  retreat=False, name=name)
+                    if not rested:
+                        return
+                    if rested == "killed":
+                        killed = True
+                        if ABANDON_SKILLS_AFTER_KILL:
+                            abandon_all_skills(api)
+                        break
+                    pos = None          # do_flee picked the exit, not us
+                    visited.discard(fight_pos)
+                    if wimpies >= WIMPY_LIMIT:
+                        api.log(f"这一趟已经被 wimpy 拽出战斗 {wimpies} 次了。"
+                                "wimpy 设得比 HP_RESUME("
+                                f"{HP_RESUME}%) 高的话，打一下就跑，"
+                                "永远打不完 —— 用 wimpy <数字> 调低一点。")
+                    continue
+                if r.startswith("fled:"):
+                    word = r.split(":", 1)[1]
+                    chases += 1
+                    if chases > CHASE_MAX:
+                        api.log(f"{name} 已经跑了 {CHASE_MAX} 次，不追了，"
+                                "改为在这一带正常搜索。")
+                        pos = None
+                        continue
+                    api.log(f"{name} 往{word}逃了，追（第 {chases} 次）。")
+                    pos, found_here = chase(api, rooms, pos, blocked,
+                                            name, mid, word)
+                    if pos:
+                        visited.add(pos)
                     continue
                 if r.startswith("intruder:"):
                     intruder = r.split(":", 1)[1]
@@ -1140,9 +2195,8 @@ def run(api):
                 visited.add(pos)
 
             # Not in the target area yet? Walk there first.
-            if rooms[pos]["area"] not in dirs:
-                entry = {p for p, r in rooms.items() if r["area"] in dirs}
-                leg = travel(rooms, pos, entry, blocked)
+            if pos not in inside:
+                leg = travel(rooms, pos, inside, blocked)
                 if not leg:
                     # Some areas (龙宫 via dive, 方寸山, 普陀山, 红楼一梦,
                     # 高老庄) are only reachable through non-exit
@@ -1160,15 +2214,18 @@ def run(api):
                 for d, dest in leg:
                     if api.stopped():
                         return
+                    here_before = pos
                     arrived, seen_text = step(api, d)
                     api.sleep(STEP_PAUSE)
+                    if arrived == rooms[dest]["short"]:
+                        ride_note(api, seen_text, here_before)
                     if name in seen_text or mid in seen_text.lower():
                         found_here = True
                         break
                     if arrived == rooms[dest]["short"]:
                         pos = dest
                     elif not arrived:
-                        blocked.add((pos, d))
+                        note_step_failure(api, blocked, pos, d, seen_text)
                         pos = None
                         break
                     else:
@@ -1194,19 +2251,44 @@ def run(api):
                 # one can never find the target -- and two of them
                 # (禹王林, maze) build their exits at runtime, so the
                 # static map cannot walk back out again.
-                goals = {p for p, r in rooms.items()
-                         if r["area"] in dirs and p not in visited
-                         and r["short"] not in AVOID_ROOMS
-                         and not r["flags"].get("no_mieyao")}
+                goals = {p for p in inside
+                         if p not in visited
+                         and rooms[p]["short"] not in AVOID_ROOMS
+                         and not rooms[p]["flags"].get("no_mieyao")}
             if not goals:
                 api.log(f"【{place}】已经全部走过一遍，重新再找。")
                 visited = {pos}
                 continue
-            path = bfs(rooms, dirs, pos, goals, blocked)
+            path = bfs(rooms, inside, pos, goals, blocked)
+            if path is None and targets:
+                # The named room itself is unreachable from here. That
+                # is not a localisation error and re-localising cannot
+                # fix it: 湖边 (d/moon/lotuspond) and the rest of the
+                # inner 月宫 sit behind `climb tree` at 玉女峰顶, which
+                # 吴刚 refuses to non-月宫 disciples, so BFS to the sole
+                # goal returned None from 崎岖小路 every single round.
+                # Widen to the whole area instead -- the monster wanders
+                # (yaoguai.lpc chat_msg -> random_move), so it may well
+                # come out to somewhere we CAN walk to.
+                api.log(f"走不到【{place}】本身（要爬树/特殊方式进入，"
+                        "或路被拦住了），改为搜索整个区域，等它自己出来。")
+                targets = None
+                continue
             if path is None:
-                api.log("从这里走不到未搜索的房间，重新定位。")
-                pos, visited = None, set()
-                api.sleep(2)
+                # Usually we just mislocalised, so relocalise and retry.
+                # If even the widened area search keeps failing, stop
+                # resetting every 2s -- say so once and watch instead.
+                unreachable += 1
+                if unreachable < 3:
+                    api.log("从这里走不到未搜索的房间，重新定位。")
+                    pos, visited = None, set()
+                    api.sleep(2)
+                    continue
+                if not warned_unreachable:
+                    api.log(f"【{place}】所在区域里剩下的房间从这里都走不到。"
+                            "我在原地盯着，看到它就动手；你也可以手动过去。")
+                    warned_unreachable = True
+                api.sleep(5)
                 continue
             if not path:
                 # bfs() returns [] for "you are already standing in one
@@ -1219,7 +2301,9 @@ def run(api):
                 visited.add(pos)
                 continue
 
+            unreachable = 0          # we can still get somewhere new
             direction, dest = path[0]
+            here_before = pos
             arrived, seen_text = step(api, direction)
             api.sleep(STEP_PAUSE)
 
@@ -1243,16 +2327,23 @@ def run(api):
                     escape_maze(api, arrived)
                 pos = None          # position unknown after a sweep
             elif arrived == rooms[dest]["short"]:
+                ride_note(api, seen_text, here_before)
                 pos = dest
                 visited.add(dest)
+                # The horse we had to leave behind is standing in some
+                # room of this area; if the search walks past it, get
+                # back on rather than making a special trip later.
+                if (RIDE["want"] and not RIDE["on"] and RIDE["name"]
+                        and RIDE["name"] in seen_text):
+                    ride_mount(api)
             elif not arrived:
                 # Never moved: the exit is gated (a door, valid_leave, a
-                # sect check, over-encumbrance). Remember it so BFS stops
-                # routing through it -- this is what desynced the walker
-                # in live testing, where 南城客栈's `east` is blocked
-                # until you've paid the innkeeper.
-                blocked.add((pos, direction))
-                api.log(f"{direction} 走不通，绕路。")
+                # sect check, over-encumbrance) or the room behind it
+                # doesn't compile. Remember it so BFS stops routing
+                # through it -- this is what desynced the walker in live
+                # testing, where 南城客栈's `east` is blocked until
+                # you've paid the innkeeper.
+                note_step_failure(api, blocked, pos, direction, seen_text)
             else:
                 # Moved, but not where the map predicted (wandering
                 # monster shoved us, teleport, one-way exit). Re-localise.
@@ -1262,7 +2353,13 @@ def run(api):
         if not killed:
             api.log("30 分钟到了，任务失败（下次难度降一级）。")
 
-        # ---- walk back to 袁天罡 --------------------------------------
+        # ---- collect the horse, then walk back to 袁天罡 --------------
+        # Done before the return walk, not after: 客店睡房 (where 红楼一梦
+        # takes it off us) is four rooms from 天监台 and on the way, and
+        # 袁天罡's post-success cooldown is running regardless.
+        if not api.stopped():
+            ride_recover(api, rooms, blocked)
+
         if not walk_back_to_yuan(api, rooms, blocked):
             # Couldn't route there (lost, or a gate in the way) -- fall
             # back to waiting for the player to walk back manually.
