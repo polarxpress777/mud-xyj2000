@@ -43,7 +43,15 @@ void create() {
     if (sscanf(buf1[i], "%s %s", dir, name) == 2) {
       name = replace_string(name, " ", "");
       name = replace_string(name, "\r", "");
-      if (strlen(dir) > 2 && strlen(name) > 2) {
+      // strlen(name) > 0, not > 2: this driver's strlen() counts
+      // CHARACTERS, so the original threshold silently discarded every
+      // two-character region name -- 月宫, 龙宫, 天宫, 灵山, 梅山. Verified
+      // at boot: map_count() was 50 against 55 parsable lines, and
+      // find_place() fell through to the room's own short name, which is
+      // why 袁天罡's 灭妖 assignment named 噙芳阁 instead of 月宫 and could
+      // name any of the four 休息室. The guard only ever needed to skip
+      // the nameless lines find.map carries (e.g. "d/wiz ").
+      if (strlen(dir) > 2 && strlen(name) > 0) {
         maps += ([ dir: name ]);
       }
     }
@@ -89,6 +97,38 @@ int random_capture(object me, int chance, int silent) {
 //     name -- walk up the tree instead;
 //   - a clone id on the end (/obj/home#123) sits after the last '/', so
 //     the directory part is unaffected either way.
+// --- introspection, for diagnosing area lookups from in-game ---------------
+// `call` (cmds/wiz/call.lpc:41-46) can only pass ints and quoted strings, so
+// these take a string path rather than an object. They exist because a
+// find_area() miss is otherwise invisible: you see a room name where an area
+// name belonged and cannot tell whether the map failed to load or the key
+// was wrong.
+//
+//   call /adm/daemons/miscd->map_count()
+//   call /adm/daemons/miscd->map_get("d/moon")
+//   call /adm/daemons/miscd->area_of("/d/moon/snow")
+int map_count() { return sizeof(maps); }
+
+string map_get(string key) { return maps[key]; }
+
+string area_of(string filename) {
+  string label;
+  int len;
+
+  if (!stringp(filename) || strlen(filename) < 2) return 0;
+  if (filename[0] != '/') filename = "/" + filename;
+
+  len = strlen(filename) - 1;
+  while (len > 1) {
+    while (len > 1 && filename[len] != '/') len--;
+    if (len < 2) return 0;
+    label = maps[filename[1..(len - 1)]];
+    if (stringp(label) && strlen(label)) return label;
+    len--;
+  }
+  return 0;
+}
+
 string find_area(object where) {
   string filename, label;
   int len;
