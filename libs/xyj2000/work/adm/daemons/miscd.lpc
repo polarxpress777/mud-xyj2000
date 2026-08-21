@@ -23,7 +23,14 @@ void create() {
   maps = ([]);
 
   buf = read_file(filename);
-  if (!buf) return;  //no data available.
+  if (!buf) {
+    // Silent failure here degrades every location the mud reports into a
+    // bare room name -- 休息室, 山路, 大官道 -- which is exactly what
+    // 袁天罡's 灭妖 assignment must never say. Make it visible.
+    log_file("miscd", "find.map 读不到（" + filename + "），"
+      "所有地点都会退化成房间名。\n");
+    return;  //no data available.
+  }
 
   buf1 = explode(buf, "\n");
   size = sizeof(buf1);
@@ -32,11 +39,15 @@ void create() {
   for (i = 0; i < size; i++) {
     if (sscanf(buf1[i], "%s %s", dir, name) == 2) {
       name = replace_string(name, " ", "");
+      name = replace_string(name, "\r", "");
       if (strlen(dir) > 2 && strlen(name) > 2) {
         maps += ([ dir: name ]);
       }
     }
   }
+
+  if (!sizeof(maps))
+    log_file("miscd", "find.map 解析出 0 条地区名（" + filename + "）。\n");
 }
 
 int random_capture(object me, int chance, int silent) {
@@ -61,38 +72,66 @@ int random_capture(object me, int chance, int silent) {
 }
 
 
-string find_place(object where) {
-  string fail, msg, filename, filename1, answer;
+// The AREA an object is in, from find.map -- never the name of a single
+// room. Returns 0 when nothing on the path is named, so callers can
+// decide what to do about it.
+//
+// Three things this handles that the old inline lookup in find_place()
+// did not:
+//   - file_name() may or may not come back with a leading '/' depending
+//     on the driver, so normalise instead of assuming one;
+//   - the lookup was for the room's EXACT directory, so a room in a
+//     subdirectory of a named area (d/moon/quest, d/city/misc,
+//     d/changan/playerhomes) missed and fell through to its own short
+//     name -- walk up the tree instead;
+//   - a clone id on the end (/obj/home#123) sits after the last '/', so
+//     the directory part is unaffected either way.
+string find_area(object where) {
+  string filename, label;
   int len;
+
+  if (!where) return 0;
+
+  filename = file_name(where);
+  if (!stringp(filename) || strlen(filename) < 2) return 0;
+  if (filename[0] != '/') filename = "/" + filename;
+
+  len = strlen(filename) - 1;
+  while (len > 1) {
+    while (len > 1 && filename[len] != '/') len--;
+    if (len < 2) return 0;
+    label = maps[filename[1..(len - 1)]];
+    if (stringp(label) && strlen(label)) return label;
+    len--;
+  }
+  return 0;
+}
+
+string find_place(object where) {
+  string fail, filename, answer;
 
   fail = "";  // default fail message
 
+  if (!where) return fail;
+
   filename = file_name(where);
-  len = strlen(filename);
-  if (len < 2) return fail;
+  if (!stringp(filename) || strlen(filename) < 2) return fail;
+  if (filename[0] != '/') filename = "/" + filename;
 
-  len--;
-  while (filename[len] != '/' && len > 0) {
-    len--;
-  }
-  if (len < 2) return fail;
-
-  filename1 = filename[1..(len - 1)];
-
-  if (sscanf(filename, "/d/changan/bed#%*s") == 1) {
+  if (sscanf(filename, "/d/changan/bed#%*s") == 1)
     //this need check first.
-    answer = "床上";
-  } else if (!undefinedp(maps[filename1])) {
-    answer = maps[filename1];
-  } else if (where->is_character()) {
-    answer = where->query("name") + "身上";
-  } else if (sscanf(filename, "/obj/home#%*s") == 1) {
-    answer = "住家里";
-  } else {
-    answer = undefinedp(where->query("short")) ? where->short() : where->query("short");
-  }
+    return "床上";
 
-  return answer;
+  answer = find_area(where);
+  if (stringp(answer) && strlen(answer)) return answer;
+
+  if (where->is_character())
+    return where->query("name") + "身上";
+
+  if (sscanf(filename, "/obj/home#%*s") == 1)
+    return "住家里";
+
+  return undefinedp(where->query("short")) ? where->short() : where->query("short");
 }
 
 // mon 1/14/00

@@ -35,7 +35,7 @@ string invocation(object who, int level) {
   object me = this_object(), env;
   string *dirs;
   int exp, i, lvl;
-  string where, long;
+  string where, long, place;
 
   // make skills less.
   copy_status(me, who, level - 2);
@@ -62,8 +62,19 @@ string invocation(object who, int level) {
 
   env = environment(me);
   where = me->query("name") + "(" + capitalize(me->query("id")) + ")";
-  if (env)
-    where += "在" + MISC_D->find_place(env);
+  if (env) {
+    // Always name the AREA, never the single room. 休息室 exists in four
+    // places (月宫/普陀山/龙宫/大雪山), 山路 in fifteen and 大官道 in
+    // three -- "近有X在休息室出没" tells the player nothing about where
+    // to go, and sends anyone following it to the wrong end of the map.
+    // find_area() walks up to the nearest directory named in find.map;
+    // find_place() stays as the fallback for the case where nothing on
+    // the path is named at all.
+    place = MISC_D->find_area(env);
+    if (!stringp(place) || !strlen(place))
+      place = MISC_D->find_place(env);
+    where += "在" + place;
+  }
 
   if (query("daoxing") > 10000 ||
     query("combat_exp") > 10000)
