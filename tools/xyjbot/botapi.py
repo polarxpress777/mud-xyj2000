@@ -6,7 +6,7 @@ run(api) function. It runs on its own thread, driven by botproxy, so
 ordinary blocking Python (while loops, if/else, api.sleep(...)) works
 the way you'd write any script -- no async, no callbacks.
 
-Example (bots/qigan-bot.py):
+Example (bots/qigan.py):
 
     def run(api):
         while not api.stopped():

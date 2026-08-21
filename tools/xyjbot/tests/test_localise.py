@@ -11,7 +11,7 @@ from pathlib import Path
 # stayed correct when the tests moved down into tests/.
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
-spec = importlib.util.spec_from_file_location("bot", HERE / "bots/changan-mieyao-bot.py")
+spec = importlib.util.spec_from_file_location("bot", HERE / "bots/changan-mieyao.py")
 bot = importlib.util.module_from_spec(spec); spec.loader.exec_module(bot)
 DATA = json.loads((HERE / "rooms.json").read_text(encoding="utf-8"))
 ROOMS = DATA["rooms"]

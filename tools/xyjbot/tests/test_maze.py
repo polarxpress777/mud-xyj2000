@@ -17,7 +17,7 @@ from pathlib import Path
 # stayed correct when the tests moved down into tests/.
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
-spec = importlib.util.spec_from_file_location("bot", HERE / "bots/changan-mieyao-bot.py")
+spec = importlib.util.spec_from_file_location("bot", HERE / "bots/changan-mieyao.py")
 bot = importlib.util.module_from_spec(spec); spec.loader.exec_module(bot)
 bot.STEP_PAUSE = 0
 
@@ -76,10 +76,10 @@ class GroveSim:
     """Answers look/movement from a freshly rolled grove, with the target
     hidden in one room. `wander` moves it like yaoguai.lpc's random_move."""
 
-    def __init__(self, seed, target="马鹿精", wander=0.0):
+    def __init__(self, seed, target="马鹿精", wander=0.0, start="zhulin0"):
         self.rng = random.Random(seed)
         self.g = build_grove(self.rng)
-        self.at = "zhulin0"
+        self.at = start
         self.target = target
         self.mob = f"zhulin{self.rng.randrange(18)}"
         self.wander = wander
@@ -194,6 +194,62 @@ class HomeSim:
             self.out = True          # zhulin0 south -> road4, the only door
         self.pending = self.room()
 
+
+print("\nthe way out is chosen by looking, then picking -- and picking randomly")
+# The grove's looping exits are "zhulin" + random(6) evaluated in create(),
+# so each room's southwest is FIXED at load. A walk that always prefers the
+# same direction is therefore deterministic, and a deterministic walk in a
+# fixed graph falls into a cycle: observed live as nine identical rooms in a
+# row while the bot looked, stepped southwest, and looked again forever.
+check("zhulin0's door is taken, not gambled",
+      bot.maze_escape_choice({"northeast", "northwest", "south"}), "south")
+check("罗汉塔's enter is taken too",
+      bot.maze_escape_choice({"east", "enter"}), "enter")
+
+# Uniform, NOT southward-only. Restricting to southwest/southeast means
+# northwest and northeast can never be taken, so the walk explores a
+# subgraph -- measured at 42/360 stuck versus 3/360 for uniform.
+diag = {"southeast", "southwest", "northeast", "northwest"}
+picks = {bot.maze_escape_choice(diag) for _ in range(80)}
+check("every exit is reachable by the chooser", picks, diag)
+
+print("\nso escaping terminates from EVERY room, not just from the door")
+# GroveSim starts at zhulin0 by default -- which is the room with the door,
+# so an escape test from there proves nothing. Start from all 18.
+STARTS = [f"zhulin{i}" for i in range(18)]
+failures, worst = 0, 0
+for seed in range(40):
+    for start in STARTS:
+        sim = GroveSim(seed, start=start)
+        if not bot.escape_maze(sim, "紫竹林"):
+            failures += 1
+        worst = max(worst, sim.moves)
+# NOT `== 0`: escaping is a random walk with an unbounded tail, so a strict
+# zero is a coin flip that will eventually fail for no reason -- it did,
+# which is how the budget came to be measured properly (2160 runs: 2 stuck
+# at 150, 0 at 300, max 220 moves). Guard the RATE.
+check("essentially always gets out", failures <= 1, True)
+check("inside the budget", worst <= 300, True)
+print(f"     {40 * len(STARTS)} runs, worst took {worst} moves")
+
+print("\n...and a FIXED preference would not, which is the bug this guards")
+# Replace the chooser with the old fixed-order one and the walk becomes
+# deterministic: same room, same exit, every time. In a graph whose exits
+# were fixed at create() time that is a cycle, and the bot never leaves.
+real = bot.maze_escape_choice
+bot.maze_escape_choice = lambda ex, rng=None: (
+    "south" if set(ex) == bot.MAZE_DOOR_SIG else
+    "enter" if "enter" in ex else
+    next((d for d in ("southwest", "southeast") if d in ex), sorted(ex)[0]))
+stuck = 0
+for seed in range(20):
+    for start in STARTS:
+        sim = GroveSim(seed, start=start)
+        if not bot.escape_maze(sim, "紫竹林"):
+            stuck += 1
+bot.maze_escape_choice = real
+check("the deterministic version does get stuck", stuck > 0, True)
+print(f"     {stuck} of {20 * len(STARTS)} runs never escaped")
 
 print("\nwalking home from the grove escapes it instead of probing forever")
 api = HomeSim()

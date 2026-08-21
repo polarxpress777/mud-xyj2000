@@ -5,7 +5,7 @@ Each bots/<name>.py must define run(api) or run(api, arg). /run <name>
 loads it fresh (so /run again after an edit picks up changes -- no
 separate reload step needed) and drives it on its own daemon thread via
 botapi.BotAPI. /run <name> <rest of line> passes <rest of line> as arg
-to a two-parameter run() -- e.g. /run fight-bot wugang. Bots that only
+to a two-parameter run() -- e.g. /run fight wugang. Bots that only
 take run(api) are called without it; existing single-argument bots
 don't need to change.
 """

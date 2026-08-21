@@ -1,8 +1,8 @@
-# changan-mieyao-bot -- 长安 灭妖 quest runner with auto-walk,
+# changan-mieyao -- 长安 灭妖 quest runner with auto-walk,
 # retreat, and automatic return to 袁天罡.
 #
-# Run in-game with: /run changan-mieyao-bot
-# Stop with:        /stop changan-mieyao-bot
+# Run in-game with: /run changan-mieyao
+# Stop with:        /stop changan-mieyao
 # Stand with 袁天罡 (yuan) in 长安天监台 when you start it.
 #
 # Cycle:
@@ -196,6 +196,19 @@ MAX_SIPS = 5
 MAX_BITES = 8          # 红烧狗肉 is 2 bites x 100 食物; a cap, not a target
 
 QUEST_SECS = 1800      # yuantiangang.lpc:127 -- 30 min per job
+
+# Keep sweeping until it is time to walk home -- do NOT stop after a fixed
+# number of passes. 袁天罡 has no cancel (yuantiangang.lpc:126-134), so his
+# 30-minute timer lapses whether we search or idle, and the target WANDERS
+# (yg/yaoguai.lpc gives it random_move), so every extra pass is a real extra
+# chance at a room that was empty when we walked through it.
+#
+# The one thing that does argue for heading back early: when the timer
+# lapses we have to be standing in front of him to ask for the next job.
+# The longest legitimate route home on the map is 90 steps, which at this
+# pace is well under a minute -- the rest of the reserve is for blocked
+# exits, re-localisation and the sustenance stop.
+HOMEWARD_RESERVE = 180     # seconds kept back for the walk to 天监台
 # Pacing. The server itself chains a "n#12" batch with call_out(..., 0)
 # between instant commands (xyj2000f feature/alias.lpc:170-175), so the
 # only real ceiling is the anti-flood guard in process_input(): more than
@@ -535,16 +548,6 @@ def step(api, direction):
 # Since every random exit lands in zhulin0-5, and zhulin0 is one of them,
 # wandering reaches the exit room in a handful of moves. So: try the known
 # ways out, otherwise shuffle and try again.
-# Ordered by what the room files actually do. Every random exit in the grove
-# is built as "zhulin" + random(6), so ALL of them land in zhulin0-5 -- and
-# zhulin0's `south` is the only door to 小路 (road4). The other ways out are
-# zhulin15 north -> 池塘边 and zhulin16/17 enter -> 罗汉塔.
-#
-# south first because it is the door; then the diagonals, which in zhulin1-5
-# are all random-pool exits and so re-roll the room; north and enter last.
-# Several compass-room `south` edges are hardwired back inside (zhulin10->7,
-# 12->6, 13->10, 14->8), which costs a move but never traps.
-MAZE_EXITS = ("south", "southwest", "southeast", "north", "enter")
 
 # The three ways OUT of 紫竹林, and the room next door that leads back in:
 #   zhulin0  south -> road4 小路      (road4 north)
@@ -637,7 +640,59 @@ def sweep_maze(api, maze_name, name, mid, max_moves=MAZE_SWEEP_MOVES):
     return "clear"
 
 
-def escape_maze(api, maze_name="紫竹林", max_moves=80):
+def maze_escape_choice(exits, rng=random):
+    """Which way to try next when LEAVING a maze. Look first, then choose.
+
+    The grove's looping exits are built as "zhulin" + random(6) inside
+    create(), so each room's southwest lands in a room fixed at load time --
+    it is NOT re-rolled per move. That is why a fixed preference order
+    cannot work: always taking southwest walks the same deterministic path
+    every time, and a deterministic walk in a fixed graph falls into a cycle.
+    Observed live as nine identical rooms in a row, going nowhere.
+
+    So: take a real door when the room shows one, and otherwise choose
+    UNIFORMLY at random over every exit.
+
+      * zhulin0 is the only room whose exits are exactly northeast,
+        northwest and south -- there, south is the door to 小路.
+      * zhulin16/17 are the only ones with `enter` (to 罗汉塔).
+      * everything else: any exit, with equal probability.
+
+    Preferring the southward diagonals was tried and measured worse, which
+    is worth recording because it sounds right: restricting the choice to
+    southwest/southeast means northwest and northeast can NEVER be taken, so
+    the walk explores a subgraph and gets stuck in it. Over 360 simulated
+    escapes from every room of a freshly rolled grove:
+
+        fixed order (the original bug)   242/360 never escaped
+        southward diagonals only          42/360
+        60% southward, 40% any            11/360
+        uniform over all exits             3/360   <- and 0/720 at 150 moves
+
+    Every start CAN reach a door (verified: 0 of 360 are structurally
+    trapped), so a walk that fails is a walk that was not allowed to look
+    everywhere.
+    """
+    ex = set(exits)
+    if ex == MAZE_DOOR_SIG:
+        return "south"
+    if "enter" in ex:
+        return "enter"
+    return rng.choice(sorted(ex)) if ex else ""
+
+
+# 300. A random walk has an unbounded tail, so no budget GUARANTEES escape --
+# what a budget buys is a rate. Measured over 2160 simulated escapes from
+# every room of the grove, across three independent RNG runs:
+#
+#     budget 150   2/2160 stuck    median 7, p99 72, max 129
+#     budget 300   0/2160 stuck    median 7, p99 72, max 220
+#     budget 500   0/2160 stuck    (no better -- the tail is already covered)
+#
+# The median escape is 7 moves, so the budget costs nothing in the ordinary
+# case and only matters for the unlucky tail. Failing gracefully (say so and
+# ask the player) beats giving up at 150 once in five hundred runs.
+def escape_maze(api, maze_name="紫竹林", max_moves=300):
     """Get out of a randomised maze by probing rather than pathing.
 
     Returns the room title we ended up in, or "" if we never got out.
@@ -651,28 +706,17 @@ def escape_maze(api, maze_name="紫竹林", max_moves=80):
             api.log(f"已走出{maze_name}，现在在「{title}」。")
             return title
 
-        # Known ways out first.
-        tried = False
-        for d in MAZE_EXITS:
-            if d not in exits:
-                continue
-            tried = True
-            got, _ = step(api, d)
-            api.sleep(STEP_PAUSE)
-            if got and got != maze_name:
-                api.log(f"从 {d} 走出{maze_name}，现在在「{got}」。")
-                return got
-            if got:
-                break        # moved, still inside -- re-read and retry
-
-        # No known exit here: shuffle deeper. Every looping exit lands in
-        # zhulin0-5, and zhulin0 is the one with the way out.
-        if not tried:
-            for d in exits:
-                got, _ = step(api, d)
-                api.sleep(STEP_PAUSE)
-                if got:
-                    break
+        # Look, THEN choose -- and choose randomly unless this room is
+        # showing an actual door (see maze_escape_choice).
+        d = maze_escape_choice(exits)
+        if not d:
+            api.log(f"{maze_name}这间房间看不到任何出口，重新看一次。")
+            continue
+        got, _ = step(api, d)
+        api.sleep(STEP_PAUSE)
+        if got and got != maze_name:
+            api.log(f"从 {d} 走出{maze_name}，现在在「{got}」。")
+            return got
 
     api.log(f"走了 {max_moves} 步还没出{maze_name}，放弃，请手动走出来。")
     return ""
@@ -2161,12 +2205,14 @@ def run(api):
         found_here = False
         warned_unreachable = False
         unreachable = 0
+        sweeps = 0
         chases = 0
         wimpies = 0
         peace = 0
 
         # ---- hunt -----------------------------------------------------
-        while not api.stopped() and time.time() - started < QUEST_SECS:
+        while (not api.stopped()
+               and time.time() - started < QUEST_SECS - HOMEWARD_RESERVE):
             # Is it right here? Either queued output mentions it, or the
             # last move's room description did. The reward line is in
             # there too: the target can die without us ever sending
@@ -2385,7 +2431,11 @@ def run(api):
                          and rooms[p]["short"] not in AVOID_ROOMS
                          and not rooms[p]["flags"].get("no_mieyao")}
             if not goals:
-                api.log(f"【{place}】已经全部走过一遍，重新再找。")
+                sweeps += 1
+                left = int(QUEST_SECS - HOMEWARD_RESERVE
+                           - (time.time() - started))
+                api.log(f"【{place}】第 {sweeps} 遍搜完了，没找到 {name}，"
+                        f"再搜一遍（还剩 {max(0, left // 60)} 分钟）。")
                 visited = {pos}
                 continue
             path = bfs(rooms, inside, pos, goals, blocked)
@@ -2480,7 +2530,8 @@ def run(api):
                 pos = None
 
         if not killed:
-            api.log("30 分钟到了，任务失败（下次难度降一级）。")
+            api.log(f"搜了 {sweeps} 遍没找到 {name}。趁着最后几分钟先回天监台，"
+                    "到点好接下一个任务（这一趟难度降一级）。")
 
         # ---- collect the horse, then walk back to 袁天罡 --------------
         # Done before the return walk, not after: 客店睡房 (where 红楼一梦

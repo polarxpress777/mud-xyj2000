@@ -1,6 +1,6 @@
-# moon-climb-bot -- climb the 桂树 at 玉女峰顶 (月宫), training dodge.
+# moon-climb -- climb the 桂树 at 玉女峰顶 (月宫), training dodge.
 #
-# Run in-game with: /run moon-climb-bot   (stop with /stop moon-climb-bot)
+# Run in-game with: /run moon-climb   (stop with /stop moon-climb)
 # You must already be standing in 玉女峰顶 (d/moon/ontop2.lpc) -- climb
 # is a room action, so anywhere else the mud just answers 爬什么？.
 #
@@ -32,7 +32,7 @@
 #      climbing, and the room MOVES you into the tree (tree1.lpc) --
 #      further "climb tree" calls from here would just fail with 爬什么？
 #      since you're not in 玉女峰顶 anymore. This is the actual "to max"
-#      finish line, same convention as dazuo-bot/mingsi-bot's 瓶颈 stop.
+#      finish line, same convention as dazuo/mingsi's 瓶颈 stop.
 
 REST_SECS = 60   # wait this long after "你身子发虚" before retrying
 MAX_FAILS = 3    # consecutive non-kee blocks (吴刚, busy, wrong room) before giving up

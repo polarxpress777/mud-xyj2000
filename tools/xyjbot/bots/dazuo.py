@@ -1,6 +1,6 @@
-# dazuo-bot -- dazuo (打坐练功) to the current 内力 ceiling.
+# dazuo -- dazuo (打坐练功) to the current 内力 ceiling.
 #
-# Run in-game with: /run dazuo-bot   (stop with /stop dazuo-bot)
+# Run in-game with: /run dazuo   (stop with /stop dazuo)
 #
 # Loop:
 #   1. dazuo AMOUNT, up to TIMES times in a row

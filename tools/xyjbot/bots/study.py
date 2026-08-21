@@ -1,13 +1,13 @@
-# study-bot -- read a book until the skill hits a level cap.
+# study -- read a book until the skill hits a level cap.
 #
-# Run in-game with: /run study-bot <等级上限>    e.g. /run study-bot 30
-#                   /run study-bot              (no cap: read to the
+# Run in-game with: /run study <等级上限>    e.g. /run study 30
+#                   /run study              (no cap: read to the
 #                                                book's own max_skill)
-# Stop with:        /stop study-bot
+# Stop with:        /stop study
 #
 # You must be holding the book. It uses `study book`; if your book
 # answers to a different id, change BOOK below or pass it as the second
-# word: /run study-bot 30 qian
+# word: /run study 30 qian
 #
 # Cycle:
 #   1. study <book>

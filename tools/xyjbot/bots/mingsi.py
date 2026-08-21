@@ -1,8 +1,8 @@
-# mingsi-bot -- mingsi (冥思练法) to the current 法力 ceiling.
+# mingsi -- mingsi (冥思练法) to the current 法力 ceiling.
 #
-# Run in-game with: /run mingsi-bot   (stop with /stop mingsi-bot)
+# Run in-game with: /run mingsi   (stop with /stop mingsi)
 #
-# Same shape as dazuo-bot, mana side instead of force side:
+# Same shape as dazuo, mana side instead of force side:
 #   1. mingsi AMOUNT, up to TIMES times in a row
 #   2. if the mud answers "你现在神智不清,不能再想入非非了。"
 #      (cmds/std/meditate.lpc:41 -- not enough 精神/sen left to start a

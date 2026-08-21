@@ -93,7 +93,7 @@ def main():
     print(f"[setup] at {title_of(trecv(2.5))!r} -- starting bot\n")
     print("=" * 60)
 
-    tsend("/run changan-mieyao-bot")
+    tsend("/run changan-mieyao")
     end = time.time() + WATCH_SECS
     while time.time() < end:
         chunk = trecv(5)
@@ -102,7 +102,7 @@ def main():
                 if line.strip():
                     print(line)
     print("=" * 60)
-    tsend("/stop changan-mieyao-bot"); trecv(2)
+    tsend("/stop changan-mieyao"); trecv(2)
     tsend("quit"); trecv(1); ts.close()
 
 

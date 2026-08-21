@@ -1,8 +1,8 @@
-# fight-bot -- spar with an NPC to conclusion, rest to full, repeat only
+# fight -- spar with an NPC to conclusion, rest to full, repeat only
 # while it's still teaching you something.
 #
-# Run in-game with: /run fight-bot <npc名称>   (e.g. /run fight-bot wugang)
-# Stop with:         /stop fight-bot
+# Run in-game with: /run fight <npc名称>   (e.g. /run fight wugang)
+# Stop with:         /stop fight
 #
 # Uses `fight` (切磋/比武), not `kill`. Per cmds/std/fight.lpc's own help:
 # 点到为止，只会消耗体力，不会真的受伤 -- stamina only, no real injury, so
@@ -44,7 +44,7 @@ REJECTED = "|".join(REJECT_KEYS)
 
 def run(api, arg):
     if not arg:
-        api.log("用法：/run fight-bot <npc名称>，例如 /run fight-bot wugang")
+        api.log("用法：/run fight <npc名称>，例如 /run fight wugang")
         return
 
     target = arg.strip()
@@ -68,7 +68,7 @@ def run(api, arg):
             if fails >= MAX_FAILS:
                 if "并不想跟你较量" in text:
                     api.log(f"{target} 不接受切磋。改用 kill 才打得起来"
-                             "（把 bots/fight-bot.py 里的 VERB 改成 kill），"
+                             "（把 bots/fight.py 里的 VERB 改成 kill），"
                              "但那是真的会受伤的。停止。")
                 else:
                     api.log(f"连续失败，停止。请确认 {target} 就在这个房间里。")

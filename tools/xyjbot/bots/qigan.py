@@ -1,6 +1,6 @@
-# qigan-bot -- climb the 旗杆 in 傲来国, backing off when HP gets low.
+# qigan -- climb the 旗杆 in 傲来国, backing off when HP gets low.
 #
-# Run in-game with: /run qigan-bot   (stop with /stop qigan-bot)
+# Run in-game with: /run qigan   (stop with /stop qigan)
 #
 # Loop:
 #   1. climb qigan, CLIMBS_PER_ROUND times
