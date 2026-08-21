@@ -28,6 +28,7 @@ bots are just files -- write them in bots/<name>.py with any editor.
 from __future__ import annotations
 
 import re
+import difflib
 import socket
 import threading
 import time
@@ -36,6 +37,11 @@ from pathlib import Path
 from ansi import strip_ansi, strip_iac
 from botmanager import BotManager
 from triggers import load_config
+
+# Idle-kick guard. include/user.h:13 sets IDLE_TIMEOUT to 1200s and
+# std/char.lpc:140 enforces it by force-quitting -- which drops everything
+# you are carrying. 0 disables the keepalive.
+KEEPALIVE_AFTER = 400      # seconds of silence before a bare newline
 
 CONFIG = Path(__file__).with_name("bots.json")
 LISTEN_PORT = 40099
@@ -57,6 +63,7 @@ class Session:
         self.engine = load_config(CONFIG)
         self.pybots = BotManager(self)
         self.alive = True
+        self.last_sent = time.time()
         self.buf = b""          # partial line from the mud
         self.inbuf = b""        # partial line from the player
         self.frag_sent = 0      # bytes of the current partial line already relayed
@@ -73,6 +80,7 @@ class Session:
     def to_mud(self, line: str):
         try:
             self.mud.sendall(line.encode("utf-8") + b"\n")
+            self.last_sent = time.time()
         except OSError:
             self.alive = False
 
@@ -158,7 +166,32 @@ class Session:
             for cmd in self.engine.tick(time.time()):
                 self.note(f"⏱ {cmd}")
                 self.to_mud(cmd)
+            self.keepalive()
             time.sleep(0.5)
+
+    def keepalive(self):
+        """Send a bare newline if nothing has gone to the mud in a while.
+
+        std/char.lpc:140 dumps any player whose driver-side query_idle()
+        passes IDLE_TIMEOUT (include/user.h:13 -- 1200 seconds), and the
+        forced quit DROPS THE WHOLE INVENTORY on the floor. That is a real
+        loss: it cost a 桂花酒袋, 镔铁棍, 牛皮盾 and the rest in one go.
+
+        An empty line is input as far as the driver is concerned, so it
+        resets the idle clock, and the mud prints nothing back for it -- no
+        noise in the player's session. Sent at a third of the timeout so a
+        missed one is harmless.
+
+        This protects the player whether or not a bot is running: sitting at
+        the keyboard reading is exactly as idle as being away.
+
+        It does deliberately defeat the server's idle policy. That is the
+        owner's call to make; set KEEPALIVE_AFTER to 0 to turn it off.
+        """
+        if not KEEPALIVE_AFTER:
+            return
+        if time.time() - self.last_sent >= KEEPALIVE_AFTER:
+            self.to_mud("")
 
     # -- player -> mud --------------------------------------------------
     def pump_player(self):
@@ -176,6 +209,8 @@ class Session:
                 if not self.local_command(line):
                     self.to_mud(line)
         self.alive = False
+
+    LOCAL_COMMANDS = ("help", "auto", "reload", "list", "run", "stop", "bots")
 
     def local_command(self, line: str) -> bool:
         """Handle a /command locally. Returns True if it was consumed."""
@@ -241,7 +276,28 @@ class Session:
                     self.to_mud(a)
                 return True
 
-        self.note(f"没有叫「{name}」的机器人（/bots 可列出）")
+        # Not a command and not a trigger name. Before giving up, work out
+        # what was probably meant: a mistyped verb reads as a bot name here,
+        # so "/ran changan-mieyao" used to answer 没有叫「ran」的机器人 --
+        # which points at the verb while the eye is on the bot name, and
+        # reads as "the bot is gone".
+        arg = cmd[1:].partition(" ")[2].strip()
+        near = difflib.get_close_matches(name, self.LOCAL_COMMANDS, n=1, cutoff=0.6)
+        pybots = self.pybots.available()
+
+        if arg and arg in pybots:
+            # The argument names a real bot, so the intent is unambiguous
+            # whatever the verb was meant to be -- always /run, never the
+            # nearest-looking command (/bot would have suggested /bots).
+            self.note(f"没有 /{name} 这个指令。要启动机器人请打：/run {arg}")
+        elif name in pybots:
+            self.note(f"「{name}」是 Python 机器人，要用：/run {name}")
+        elif near:
+            self.note(f"没有 /{name} 这个指令，你是不是要打 /{near[0]}？"
+                      "（/help 看全部）")
+        else:
+            self.note(f"没有 /{name} 这个指令，也没有叫「{name}」的触发机器人。"
+                      "/help 看指令，/bots 和 /list 列出机器人。")
         return True
 
     def run(self):
