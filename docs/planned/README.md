@@ -2,9 +2,16 @@
 
 Designed, accepted, ready to implement.
 
-Currently empty — the one item that lived here
-(self-contained image + state volumes) is now in
-[`../built/`](../built/). Remaining problems are still in
+Current items:
+
+- **[BOT-EVENT-STREAM.md](BOT-EVENT-STREAM.md)** — the mieyao bot's spine.
+  `wait_line()` destroys every line it isn't waiting for, which is the
+  single shape behind most of the bot's field bugs. Non-destructive
+  stream, world-state object, combat as a tick loop; combat ported first,
+  walker left alone.
+
+The other item that lived here (self-contained image + state volumes) is
+now in [`../built/`](../built/). Remaining problems are still in
 [`../needs-building/`](../needs-building/) awaiting a design.
 
 An item arrives from [`../needs-building/`](../needs-building/) once it
