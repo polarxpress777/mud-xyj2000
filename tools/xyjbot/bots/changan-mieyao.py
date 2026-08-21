@@ -140,6 +140,46 @@ AREA_EXTRA = {
 }
 
 
+# How far to widen the search around the monster's last known room once it
+# (or we) broke off. 袁天罡 names the region it SPAWNED in, but the monster
+# wanders -- yg/yaoguai.lpc's chat_msg is random_move -- and 23 rooms across
+# the ten spawn regions open straight into a different one. 方寸山下
+# (d/lingtai/hill) reaches 高老庄's 土路 in a single step, so a monster that
+# slips over the line is invisible to a region-confined search forever.
+#
+# Only applied AFTER a break in contact, since that is when it has had time
+# to move and when we have a last-known room worth centring on.
+#
+# 5, derived rather than guessed. chat() runs every heartbeat for an NPC
+# (std/char.lpc:109, before the tick gate) and std/char/npc.lpc:125-135 fires
+# a chat_msg on random(100) < chat_chance. The 灭妖 monsters set chat_chance
+# to 3 and their only chat_msg is random_move, so at the driver's default
+# 2-second beat that is 30 beats/min x 3% = about ONE ROOM PER MINUTE.
+#
+# A break in contact is a rest plus the walk back -- 3 to 6 minutes, so 3 to
+# 6 moves, and those are random: net displacement goes as sqrt(n), so six
+# moves usually lands 2-3 rooms away and only reaches 6 down a straight
+# corridor. Radius 5 covers the straight-line worst case for a five-minute
+# break and ~25 moves of real wandering, inside a quest that now lasts 600s.
+ESCAPE_RADIUS = 5
+
+
+def nearby(rooms, center, radius):
+    """Every room within `radius` steps of `center`, ignoring area borders."""
+    if center not in rooms:
+        return set()
+    seen, frontier = {center}, [center]
+    for _ in range(radius):
+        nxt = []
+        for cur in frontier:
+            for _d, n in rooms[cur]["exits"].items():
+                if n in rooms and n not in seen and not avoided(rooms, n):
+                    seen.add(n)
+                    nxt.append(n)
+        frontier = nxt
+    return seen
+
+
 def area_paths(rooms, dirs, place=None):
     """Every room the search treats as part of `place`."""
     inside = {p for p, r in rooms.items() if r["area"] in dirs}
@@ -177,7 +217,12 @@ KEZHAN_ROOM = "d/city/kezhan"    # 南城客栈 -- 店小二 sells 桂花酒袋/
 BANK_ROOM = "d/city/bank"        # 相记钱庄 -- account/withdraw
 VENDOR = "xiaoer"
 
-SUSTENANCE_AT = 50     # % of capacity: below this on 食物 OR 饮水, resupply
+SUSTENANCE_AT = 80     # % of capacity: at or below this on 食物 OR 饮水,
+                       # eat and drink. Was 50, which cut it fine: 饮水 at 0
+                       # does not slow 气血 regen, it STOPS it
+                       # (feature/damage.lpc:465), so the cost of topping up
+                       # early is a sip, and the cost of leaving it is a rest
+                       # that never finishes.
 SUSTENANCE_TO = 90     # % of capacity to top back up to
 
 # /d/moon/obj/jiudai and /d/ourhome/obj/gourou, "value" in 文.
@@ -210,7 +255,12 @@ QUEST_SECS = 600       # yuantiangang.lpc:128 -- an unfinished job blocks
 # The longest legitimate route home on the map is 90 steps, which at this
 # pace is well under a minute -- the rest of the reserve is for blocked
 # exits, re-localisation and the sustenance stop.
-HOMEWARD_RESERVE = 180     # seconds kept back for the walk to 天监台
+HOMEWARD_RESERVE = 120     # seconds kept back for the walk to 天监台.
+                           # Was 180, which was a tenth of the old 1800s job
+                           # and is now a fifth of a 600s one -- too much to
+                           # give up. The longest route home on the map is 90
+                           # steps, well under a minute at this pace; the
+                           # rest absorbs a blocked exit or a re-localisation.
 # Pacing. The server itself chains a "n#12" batch with call_out(..., 0)
 # between instant commands (xyj2000f feature/alias.lpc:170-175), so the
 # only real ceiling is the anti-flood guard in process_input(): more than
@@ -1234,7 +1284,7 @@ def rest_until_healed(api, rooms, pos, blocked, retreat=True, name=None):
             api.log("气血已恢复，继续找。")
             return "ok", pos
 
-        if pct(st["water"], st["max_water"]) < SUSTENANCE_AT:
+        if pct(st["water"], st["max_water"]) <= SUSTENANCE_AT:
             water, _ = drink_up(api)
             api.log(f"渴了，先喝口酒（饮水 {water}%）。")
 
@@ -1717,7 +1767,7 @@ def restock(api, rooms, blocked, need_food, need_drink):
 
 
 def keep_fed(api, rooms, blocked):
-    """Top 食物/饮水 back up if either has fallen below SUSTENANCE_AT.
+    """Top 食物/饮水 back up if either is at or below SUSTENANCE_AT.
 
     Called at 天监台 between quests, because that is the one point in the
     cycle where position is known, nothing is chasing us, and a detour
@@ -1728,26 +1778,26 @@ def keep_fed(api, rooms, blocked):
     if not st["max_food"] or not st["max_water"]:
         api.log("警告：看不懂 hp 的食物/饮水上限，跳过补给。")
         return True
-    if food >= SUSTENANCE_AT and water >= SUSTENANCE_AT:
+    if food > SUSTENANCE_AT and water > SUSTENANCE_AT:
         return True
 
     api.log(f"食物 {food}%、饮水 {water}% —— 先补给。"
             "（饮水见底时气血完全不会恢复。）")
 
     # Inventory first: no walking needed if we're already carrying some.
-    if water < SUSTENANCE_AT:
+    if water <= SUSTENANCE_AT:
         water, _ = drink_up(api)
-    if food < SUSTENANCE_AT:
+    if food <= SUSTENANCE_AT:
         food, _ = eat_up(api)
-    if food >= SUSTENANCE_AT and water >= SUSTENANCE_AT:
+    if food > SUSTENANCE_AT and water > SUSTENANCE_AT:
         api.log(f"补给完毕：食物 {food}%、饮水 {water}%。")
         return True
 
-    restock(api, rooms, blocked, food < SUSTENANCE_AT, water < SUSTENANCE_AT)
+    restock(api, rooms, blocked, food <= SUSTENANCE_AT, water <= SUSTENANCE_AT)
 
     food, water, _ = sustenance(api)
     api.log(f"补给完毕：食物 {food}%、饮水 {water}%。")
-    if food < SUSTENANCE_AT or water < SUSTENANCE_AT:
+    if food <= SUSTENANCE_AT or water <= SUSTENANCE_AT:
         api.log("警告：还是没吃饱喝足，气血恢复可能会很慢甚至停住。")
     return walk_back_to_yuan(api, rooms, blocked)
 
@@ -2111,7 +2161,8 @@ def run(api):
             # seconds until the timer runs out -- fifteen copies of the
             # same paragraph is not information.
             if who != pending_told:
-                api.log(f"上一个任务（{who}）还没交差，袁天罡最多再等 30 分钟才会换新的。"
+                api.log(f"上一个任务（{who}）还没交差，袁天罡最多再等 "
+                        f"{QUEST_SECS // 60} 分钟才会换新的。"
                         "我先在原地盯着，看到它就动手；你也可以自己去找它。")
                 pending_told = who
             hit = api.wait_line(re.escape(who), timeout=120) if pend else None
@@ -2228,6 +2279,8 @@ def run(api):
         unreachable = 0
         sweeps = 0
         chases = 0
+        last_seen = None       # where the target was last actually seen
+        widened = False        # search past the region after a break in contact
         wimpies = 0
         peace = 0
 
@@ -2253,6 +2306,8 @@ def run(api):
                     break
             if found_here or hit:
                 found_here = False
+                if pos:
+                    last_seen = pos
                 if pos and rooms[pos]["short"] in TRAP_ROOMS:
                     # Standing here is what springs the trapdoor. Use the
                     # peace-room handling: watch which way it goes and
@@ -2285,6 +2340,7 @@ def run(api):
                     # room: it becomes the nearest unsearched goal and
                     # the ordinary walker takes us straight back to
                     # finish the job, one step away.
+                    widened = True
                     visited.discard(fight_pos)
                     if pos and pos != fight_pos:
                         visited.add(pos)
@@ -2339,6 +2395,7 @@ def run(api):
                             abandon_all_skills(api)
                         break
                     pos = None          # do_flee picked the exit, not us
+                    widened = True
                     visited.discard(fight_pos)
                     if wimpies >= WIMPY_LIMIT:
                         api.log(f"这一趟已经被 wimpy 拽出战斗 {wimpies} 次了。"
@@ -2357,6 +2414,10 @@ def run(api):
                     api.log(f"{name} 往{word}逃了，追（第 {chases} 次）。")
                     pos, found_here = chase(api, rooms, pos, blocked,
                                             name, mid, word)
+                    if found_here and pos:
+                        last_seen = pos
+                    else:
+                        widened = True
                     if pos:
                         visited.add(pos)
                     continue
@@ -2390,9 +2451,15 @@ def run(api):
                 api.log(f"定位：{rooms[pos]['short']}（{pos}）")
                 visited.add(pos)
 
+            # After a break in contact, search outward from where the thing
+            # actually was, not just inside the region 袁天罡 named.
+            search = inside
+            if widened and last_seen:
+                search = inside | nearby(rooms, last_seen, ESCAPE_RADIUS)
+
             # Not in the target area yet? Walk there first.
-            if pos not in inside:
-                leg = travel(rooms, pos, inside, blocked)
+            if pos not in search:
+                leg = travel(rooms, pos, search, blocked)
                 if not leg:
                     # Some areas (龙宫 via dive, 方寸山, 普陀山, 红楼一梦,
                     # 高老庄) are only reachable through non-exit
@@ -2447,7 +2514,7 @@ def run(api):
                 # one can never find the target -- and two of them
                 # (禹王林, maze) build their exits at runtime, so the
                 # static map cannot walk back out again.
-                goals = {p for p in inside
+                goals = {p for p in search
                          if p not in visited
                          and rooms[p]["short"] not in AVOID_ROOMS
                          and not rooms[p]["flags"].get("no_mieyao")}
@@ -2459,7 +2526,7 @@ def run(api):
                         f"再搜一遍（还剩 {max(0, left // 60)} 分钟）。")
                 visited = {pos}
                 continue
-            path = bfs(rooms, inside, pos, goals, blocked)
+            path = bfs(rooms, search, pos, goals, blocked)
             if path is None and targets:
                 # The named room itself is unreachable from here. That
                 # is not a localisation error and re-localising cannot

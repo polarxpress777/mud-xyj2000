@@ -173,5 +173,24 @@ check("a strong character goes in", bot.avoided(MAZE, "d/sea/maze2"), False)
 bot.assess_danger(weak)
 check("the clearance is not permanent", bot.avoided(MAZE, "d/sea/maze2"), True)
 
+print("\na monster that wanders out of the region is still findable")
+# 袁天罡 names the region the monster SPAWNED in, but it wanders
+# (yg/yaoguai.lpc chat_msg -> random_move) and 23 rooms across the ten
+# spawn regions open straight into another one. 方寸山下 is the clearest:
+#   方寸山下 (d/lingtai/hill) --southeast--> 土路 [d/gao]
+# A search confined to the region can never see it again, so after an
+# escape the bot widens around wherever it last saw the thing.
+near = bot.nearby(ROOMS, "d/lingtai/hill", 3)
+check("the boundary room itself is included", "d/lingtai/hill" in near, True)
+crossed = {p for p in near if ROOMS[p]["area"] != "d/lingtai"}
+check("and it crosses into 高老庄", bool(crossed), True)
+check("reaching 土路", any(ROOMS[p]["short"] == "土路" for p in crossed), True)
+
+check("radius 0 is just the room", bot.nearby(ROOMS, "d/lingtai/hill", 0),
+      {"d/lingtai/hill"})
+check("a bigger radius reaches further",
+      len(bot.nearby(ROOMS, "d/lingtai/hill", 6)) > len(near), True)
+check("an unknown room yields nothing", bot.nearby(ROOMS, "d/nowhere", 5), set())
+
 print("\nALL PASS" if not fails else f"\n{len(fails)} FAILED: {fails}")
 sys.exit(1 if fails else 0)
