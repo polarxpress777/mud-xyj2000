@@ -8789,3 +8789,17 @@ icon and dropping the connection) that reasoning from CSS alone missed
 in an earlier pass. Headless Chromium here does support real
 `requestFullscreen()`, so fullscreen behavior can be visually confirmed
 too, not just structurally checked.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `polarxpress777/mud-xyj2000`, driven with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, used verbatim: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root (neither exists yet; they get created lazily). See `docs/agents/domain.md`.
