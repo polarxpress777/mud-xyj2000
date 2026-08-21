@@ -195,7 +195,9 @@ WITHDRAW_SILVER = 10   # 1000 文 -- five of each, so one trip lasts
 MAX_SIPS = 5
 MAX_BITES = 8          # 红烧狗肉 is 2 bites x 100 食物; a cap, not a target
 
-QUEST_SECS = 1800      # yuantiangang.lpc:127 -- 30 min per job
+QUEST_SECS = 600       # yuantiangang.lpc:128 -- an unfinished job blocks
+                       # 袁天罡 for this long, so it is also how long the
+                       # hunt is worth continuing. Was 1800 (30 min).
 
 # Keep sweeping until it is time to walk home -- do NOT stop after a fixed
 # number of passes. 袁天罡 has no cancel (yuantiangang.lpc:126-134), so his
@@ -1463,7 +1465,8 @@ def walk_to(api, rooms, blocked, dest, label):
     call after a flee or a teleport with no idea where we are.
     """
     api.log(f"前往{label}…")
-    pos, steps, lost = None, 0, 0
+    pos, steps, lost, noroute = None, 0, 0, 0
+    warned_gap = False
     reason = "认不出位置"
 
     while steps < WALK_MAX_STEPS and lost < WALK_MAX_LOST and not api.stopped():
@@ -1485,9 +1488,26 @@ def walk_to(api, rooms, blocked, dest, label):
             # disconnected, so re-localise instead of abandoning the
             # walk -- giving up here is what stranded the bot out in
             # 高老庄 with 天监台 only 27 steps away.
+            # Two very different faults print here, and telling them apart
+            # is what makes a missing map edge findable. If the position was
+            # just re-derived from `look` and there is STILL no route, the
+            # map is wrong -- re-localising cannot help, and saying
+            # 重新定位 sends the reader hunting for a localisation bug.
+            # That is exactly how the one-way 普陀山 swim hid for two
+            # sessions behind the identically-named 小路 rooms.
+            noroute += 1
+            if noroute == 2 and not warned_gap:
+                # Say it ONCE and carry on. Giving up here looked tidy and
+                # cost a walk in testing: at a 40% shove rate a healthy walk
+                # produces transient no-route failures, and the existing
+                # WALK_MAX_LOST bound already ends a hopeless one.
+                warned_gap = True
+                api.log(f"地图上从「{rooms[pos]['short']}」（{pos}）找不到到"
+                        f"{label}的路 —— 如果一直这样，多半是地图缺边"
+                        "（看 build_map.py 的 SPECIAL_EXITS），不是定位错。")
             api.log(f"从「{rooms[pos]['short']}」暂时找不到去{label}的路，"
-                    "重新定位。")
-            reason = "找不到路线（可能有出口过不去）"
+                    "重新定位后再试一次。")
+            reason = "地图上没有路线"
             pos, lost = None, lost + 1
             continue
 
@@ -1499,6 +1519,7 @@ def walk_to(api, rooms, blocked, dest, label):
 
         if arrived == rooms[nxt]["short"]:
             ride_note(api, text, here_before)
+            noroute = 0
             pos = nxt
         elif not arrived:
             # Confirm where we actually are before blaming the exit.

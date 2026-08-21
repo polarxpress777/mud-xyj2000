@@ -86,8 +86,12 @@ int work_me() {
   if ((t = (int)me->query("mieyao/time_start")) &&
     !me->query("mieyao/done")) {
 
+    // 600, not 1800 -- matched to 袁天罡's 灭妖 (d/city/npc/yuantiangang.lpc).
+    // An unfinished job blocked the quest-giver for a full half hour, six
+    // times the wait after a success, on top of the difficulty level a
+    // failure already costs.
     if (t <= time() &&
-      time() < t + 1800) {
+      time() < t + 600) {
       command("heng");
       command(
         "say 老夫不是派你去降服" + me->query("mieyao/name")

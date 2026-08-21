@@ -124,8 +124,12 @@ int work_me() {
   if ((t = (int)me->query("mieyao/time_start1")) &&
     !me->query("mieyao/done1")) {
 
+    // 600, not 1800: an unfinished job used to block 袁天罡 for a full
+    // half hour, six times the 300s he makes you wait after a SUCCESS.
+    // Failing already costs a difficulty level (:137-143); making it also
+    // cost 30 minutes of dead time was the harsher half of the penalty.
     if (t <= time() &&
-      time() < t + 1800) {
+      time() < t + 600) {
       command("heng");
       command(
         "say 在下不是请您去收服" + me->query("mieyao/name1")

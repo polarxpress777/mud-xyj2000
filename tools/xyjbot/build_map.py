@@ -60,6 +60,14 @@ SPECIAL_EXITS = {
     "d/changan/southseashore": {
         "swim": ("d/nanhai/island", "消耗 20 气血、20 精神", False),
     },
+    # d/nanhai/island.lpc:27-41 do_swim() -- the way BACK from 普陀山, and the
+    # ONLY one. Without it the map was one-way: from the island it could
+    # reach 22 rooms, and neither 天监台 nor 南海之滨 was among them, so every
+    # 普陀山 job stranded the walker in the identically-named 小路 chain
+    # re-localising forever. No prerequisite; same 20 kee / 20 sen as going.
+    "d/nanhai/island": {
+        "swim": ("d/changan/southseashore", "消耗 20 气血、20 精神", False),
+    },
     # cmds/std/sleep.lpc:186-192 -- sleeping while carrying a 黄粱枕
     # (from 卢生) drops you into the dream realm. Any sleep_room works;
     # 南城客栈客房 is the closest one to 长安, but reaching it needs
