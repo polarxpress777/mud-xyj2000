@@ -9,6 +9,9 @@ paste/copy freely and it's the same files botproxy.py's /run loads.
 Any real editor works too; this exists for convenience, not because
 the format needs one.
 
+The UI is editor.html next to this file; this module is only the small
+JSON API that reads and writes bots/. Edit the HTML and reload the page.
+
 Stdlib only.
 """
 from __future__ import annotations
@@ -34,132 +37,21 @@ def run(api):
         api.sleep(5)
 '''
 
-PAGE = r"""<!doctype html>
-<html lang="zh"><head><meta charset="utf-8">
-<title>西游记 机器人编辑器</title>
-<style>
- body{font:14px/1.5 -apple-system,"PingFang SC",sans-serif;margin:0;
-      background:#1e1f22;color:#e6e6e6}
- header{background:#2b2d31;padding:12px 20px;font-weight:600;
-        display:flex;align-items:center;gap:10px}
- header .hint{color:#9aa0a6;font-weight:400;font-size:12px}
- main{display:flex;gap:20px;padding:20px;align-items:flex-start}
- .col{background:#2b2d31;border-radius:8px;padding:16px}
- #list{width:220px} #editor{flex:1;min-width:480px}
- h2{font-size:13px;text-transform:uppercase;color:#9aa0a6;margin:0 0 10px}
- .item{padding:8px;border-radius:6px;cursor:pointer;margin-bottom:4px;
-       font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
- .item:hover{background:#3a3d43} .item.sel{background:#3f4d5a}
- label{display:block;margin:10px 0 4px;color:#9aa0a6;font-size:12px}
- input[type=text]{width:100%;box-sizing:border-box;
-   background:#1e1f22;color:#e6e6e6;border:1px solid #4a4d53;
-   border-radius:6px;padding:8px;font:14px/1.4 inherit}
- textarea{width:100%;box-sizing:border-box;background:#161719;color:#d4d4d4;
-   border:1px solid #4a4d53;border-radius:6px;padding:12px;
-   font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
-   min-height:420px;resize:vertical;tab-size:4;white-space:pre;}
- button{background:#4a7dbb;color:#fff;border:0;border-radius:6px;
-   padding:9px 14px;font-weight:600;cursor:pointer;margin-right:8px}
- button.sec{background:#4a4d53} button.del{background:#a3423c}
- .status{margin-top:8px;font-size:12px;color:#9aa0a6}
- .api{margin-top:14px;font-size:12px;color:#9aa0a6;line-height:1.6}
- .api code{background:#1e1f22;padding:1px 5px;border-radius:4px;color:#7ee787}
-</style></head><body>
-<header>西游记 机器人编辑器
-  <span class="hint">bots/*.py — 游戏里打 /run &lt;名称&gt; 启动，/stop &lt;名称&gt; 停止</span></header>
-<main>
- <div class="col" id="list">
-   <h2>机器人</h2><div id="items"></div>
-   <button onclick="newBot()">+ 新建</button>
- </div>
- <div class="col" id="editor">
-   <h2 id="ftitle">选择或新建一个机器人</h2>
-   <label>名称（游戏里用 /run 名称 启动）</label>
-   <input type="text" id="name" disabled>
-   <label>代码</label>
-   <textarea id="code" spellcheck="false" disabled></textarea>
-   <div style="margin-top:14px">
-     <button onclick="save()">储存</button>
-     <button onclick="del()" class="del">删除</button>
-   </div>
-   <div class="status" id="status"></div>
-   <div class="api">
-     可用的 <code>api</code> 方法：<code>api.send(cmd)</code> 送指令 ·
-     <code>api.sleep(sec)</code> 可中断的等待 ·
-     <code>api.hp()</code> 送 hp 并回传 (气血, 上限, 百分比) ·
-     <code>api.wait_line(regex, timeout)</code> 等特定输出 ·
-     <code>api.stopped()</code> 是否该结束（while 条件里要判断这个）·
-     <code>api.log(msg)</code> 显示讯息
-   </div>
- </div>
-</main>
-<script>
-let bots=[], sel=null, dirty=false;
-const $=id=>document.getElementById(id);
+PAGE_FILE = Path(__file__).with_name("editor.html")
 
-async function load(){ bots=(await (await fetch('/api/bots')).json()).bots; render(); }
-function render(){
-  const el=$('items'); el.innerHTML='';
-  bots.forEach(name=>{
-    const d=document.createElement('div');
-    d.className='item'+(sel===name?' sel':'');
-    d.textContent='/'+name;
-    d.onclick=()=>open(name);
-    el.appendChild(d);
-  });
-}
-async function open(name){
-  const r=await fetch('/api/bot?name='+encodeURIComponent(name));
-  if(!r.ok){ $('status').textContent='读取失败'; return; }
-  const data=await r.json();
-  sel=name; dirty=false;
-  $('ftitle').textContent='编辑 /'+name;
-  $('name').value=name; $('name').disabled=true;
-  $('code').value=data.code; $('code').disabled=false;
-  $('status').textContent='';
-  render();
-}
-function newBot(){
-  const name=prompt('机器人名称（英文、数字、- 或 _）：');
-  if(!name) return;
-  if(!/^[A-Za-z0-9_-]+$/.test(name)){ alert('名称只能是英文字母、数字、- 或 _'); return; }
-  if(bots.includes(name)){ open(name); return; }
-  sel=name; dirty=true;
-  $('ftitle').textContent='新建 /'+name;
-  $('name').value=name; $('name').disabled=true;
-  $('code').disabled=false;
-  fetch('/api/template?name='+encodeURIComponent(name)).then(r=>r.json()).then(d=>{
-    $('code').value=d.code;
-  });
-}
-async function save(){
-  if(!sel) return;
-  const code=$('code').value;
-  const r=await fetch('/api/bot',{method:'POST',
-    body:JSON.stringify({name:sel, code})});
-  if(r.ok){
-    $('status').textContent='已储存。游戏里打 /run '+sel+' 试试。';
-    if(!bots.includes(sel)) bots.push(sel);
-    render();
-  } else {
-    $('status').textContent='储存失败：'+(await r.text());
-  }
-}
-async function del(){
-  if(!sel) return;
-  if(!confirm('删除 /'+sel+' ？')) return;
-  await fetch('/api/bot',{method:'DELETE',
-    body:JSON.stringify({name:sel})});
-  bots=bots.filter(n=>n!==sel);
-  sel=null;
-  $('ftitle').textContent='选择或新建一个机器人';
-  $('name').value=''; $('name').disabled=true;
-  $('code').value=''; $('code').disabled=true;
-  render();
-}
-load();
-</script></body></html>
-"""
+
+def page() -> bytes:
+    """The editor UI, read fresh on every request.
+
+    It lives in editor.html rather than in a string here so it can be edited
+    as HTML -- with highlighting, and without escaping -- and so reloading
+    the browser is enough to see a change. Only the API below is Python.
+    """
+    try:
+        return PAGE_FILE.read_bytes()
+    except OSError:
+        return (f"<h1>editor.html is missing</h1><p>Expected it next to "
+                f"{Path(__file__).name}, at {PAGE_FILE}.</p>").encode("utf-8")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -181,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
         qs = dict(p.split("=", 1) for p in urlparse(self.path).query.split("&") if "=" in p)
 
         if path == "/":
-            return self._send(PAGE.encode("utf-8"), "text/html")
+            return self._send(page(), "text/html")
 
         if path == "/api/bots":
             BOTS_DIR.mkdir(exist_ok=True)
