@@ -10,6 +10,13 @@ Current items:
   stream, world-state object, combat as a tick loop; combat ported first,
   walker left alone.
 
+- **[DUAL-ACCESS.md](DUAL-ACCESS.md)** — two front doors onto one game:
+  a browser terminal for casual players (play only, zero install) and the
+  telnet port for power players, who get bots through Mudlet's own trigger
+  editor. Deliberately no in-browser bot editor. Nearly free because
+  Mudlet needs no code and `strip_iac()` already exists; the only new
+  thing is a WebSocket↔telnet bridge.
+
 The other item that lived here (self-contained image + state volumes) is
 now in [`../built/`](../built/). Remaining problems are still in
 [`../needs-building/`](../needs-building/) awaiting a design.
