@@ -38,6 +38,18 @@ GEAR = [
     # with unit 张). Carried, not worn/wielded.
     ("/d/obj/magic/bishuizhou", "bishui zhou", None),
 ]
+
+# Spending money. Equipment does not autoload but money DOES, so unlike the
+# gear above this survives logout and only has to be topped up when the
+# character has run itself dry.
+#
+# It matters more than it looks. With an empty purse the bot logs
+# 钱庄取款失败（存款不足？）, never buys a 酒袋, 饮水 sits at 0, and 气血 then
+# never regenerates -- so every long test ends with the bot correctly
+# refusing to go on, which tells you nothing about the behaviour under test.
+# Deliberately money rather than the 酒袋 itself: buying one at 南城客栈 is
+# the bot's own restock path, and exercising it is the point.
+SILVER = 200
 MACHANG = "d/kaifeng/machang"     # 开封马场
 TIANJIAN = "d/city/tianjiantai"   # 天监台 -- 袁天罡, the 灭妖 quest giver
 
@@ -129,6 +141,13 @@ def main():
     for path, item_id, verb in GEAR:
         wsend(f"clone {path}"); wrecv(1.5)
         wsend(f"give {item_id} to test"); wrecv(1.5)
+
+    # silver.lpc:18 clones with set_amount(1), so the amount has to be set
+    # on the clone before handing it over (cmds/wiz/call.lpc:21 gives the
+    # syntax: call <obj>-><func>( <args> )).
+    wsend("clone /obj/money/silver"); wrecv(1.5)
+    wsend(f"call silver->set_amount({SILVER})"); wrecv(1.5)
+    wsend("give silver to test"); wrecv(1.5)
     trecv(1.5)
     for _, item_id, verb in GEAR:
         if not verb:                  # carried only (e.g. 避水咒)
