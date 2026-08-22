@@ -252,11 +252,23 @@ check("the deterministic version does get stuck", stuck > 0, True)
 print(f"     {stuck} of {20 * len(STARTS)} runs never escaped")
 
 print("\nwalking home from the grove escapes it instead of probing forever")
+# maze_escape_choice() picks UNIFORMLY at random on purpose -- a fixed
+# preference order walks a cycle in the grove's fixed graph, which is the bug
+# the section above guards. In HomeSim every direction except south leaves you
+# where you were, so each probe is an independent 1-in-4 and the number of
+# probes is pure luck: measured over 300 seeds it runs 4 / 8 / 24 / 48
+# (min / median / p95 / max). The old assertion `api.sent.count("east") < 3`
+# was asserting luck, and failed about 1 run in 5 with nothing wrong.
+#
+# What is NOT luck, and is what the test actually means: the walk stops the
+# moment the door works. Assert that instead -- it holds for every seed.
 api = HomeSim()
 pos = bot.relocalise(api, HOME_ROOMS)
+moves = [c for c in api.sent if c != "look"]
 check("localised outside the grove", pos, "d/nanhai/road4")
-check("by taking the door south", "south" in api.sent, True)
-check("not by probing east ten times", api.sent.count("east") < 3, True)
+check("by taking the door south", "south" in moves, True)
+check("tried the door once, not repeatedly", moves.count("south"), 1)
+check("and stopped as soon as it worked", moves[-1], "south")
 
 print(f"budget is MAZE_SWEEP_MOVES = {bot.MAZE_SWEEP_MOVES}, "
       f"re-entries {bot.MAZE_REENTRIES}")
