@@ -2,9 +2,12 @@
 """BotManager -- loads and runs the .py scripts in bots/.
 
 Each bots/<name>.py must define run(api) or run(api, arg). /run <name>
-loads it fresh (so /run again after an edit picks up changes -- no
-separate reload step needed) and drives it on its own daemon thread via
-botapi.BotAPI. /run <name> <rest of line> passes <rest of line> as arg
+loads it fresh -- along with botapi and any shared helper beside this
+file, such as mudmap -- so /run after an edit picks up the change with no
+separate reload step. Helpers matter: a bot's `import mudmap` is served
+from sys.modules, so re-executing only the bot file would leave it running
+whatever was on disk when botproxy started. It then drives the bot on its
+own daemon thread via botapi.BotAPI. /run <name> <rest of line> passes <rest of line> as arg
 to a two-parameter run() -- e.g. /run fight wugang. Bots that only
 take run(api) are called without it; existing single-argument bots
 don't need to change.
@@ -15,13 +18,42 @@ import importlib
 import importlib.util
 import inspect
 import re
+import sys
 import threading
 from pathlib import Path
 
 import botapi
 
 BOTS_DIR = Path(__file__).with_name("bots")
+LOCAL_DIR = Path(__file__).resolve().parent
 NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+# The proxy's OWN machinery. These are load-bearing for the connection --
+# triggers holds parsed config, ansi is in the relay path, botmanager is
+# this file -- so reloading them mid-session risks dropping the very game
+# session the reload exists to preserve. botapi is here because start()
+# already reloads it separately, on purpose (see the comment there).
+PROXY_MODULES = {"botproxy", "botmanager", "botapi", "triggers", "ansi",
+                 "botui", "boteditor", "ai", "xyjbot"}
+
+
+def is_helper(name, mod):
+    """Is this a shared module a bot might import, and thus worth reloading?
+
+    A bot's `import mudmap` is served from sys.modules, so re-executing the
+    bot file rebinds the SAME module object -- which is why a fixed and
+    tested mudmap.py kept crashing the fangcun bot with the old code. Any
+    module sitting beside this file is fair game; the proxy's own are not.
+    """
+    if name in PROXY_MODULES or name.startswith("xyjbot_bot_"):
+        return False
+    path = getattr(mod, "__file__", None)
+    if not path:
+        return False
+    try:
+        return Path(path).resolve().parent == Path(LOCAL_DIR).resolve()
+    except (OSError, ValueError):
+        return False
 
 
 class BotManager:
@@ -41,6 +73,21 @@ class BotManager:
         path = BOTS_DIR / f"{name}.py"
         if not path.exists():
             return None
+        # Reload shared helpers BEFORE executing the bot, so the bot's own
+        # imports bind current code whichever form they take -- `import
+        # mudmap` and `from mudmap import route` alike. Doing it afterwards
+        # would leave from-imports holding the old function objects.
+        # Transitive by construction: every local module in sys.modules is
+        # reloaded, not just the ones this bot names.
+        for mod_name, mod in list(sys.modules.items()):
+            if not is_helper(mod_name, mod):
+                continue
+            try:
+                importlib.reload(mod)
+            except Exception as e:
+                self.session.note(f"{mod_name}.py 有错误，无法载入：{e}")
+                return None
+
         # A fresh module_from_spec each time -- so /run after an edit
         # picks up the new code without a separate /reload step.
         spec = importlib.util.spec_from_file_location(f"xyjbot_bot_{name}", path)
@@ -54,7 +101,10 @@ class BotManager:
             return
         mod = self._load(name)
         if mod is None:
-            self.session.note(f"找不到 bots/{name}.py。")
+            # _load explains a broken helper itself; only the missing-file
+            # case is left for us to report.
+            if not (BOTS_DIR / f"{name}.py").exists():
+                self.session.note(f"找不到 bots/{name}.py。")
             return
         if not hasattr(mod, "run"):
             self.session.note(f"bots/{name}.py 里没有 run(api) 函数。")
