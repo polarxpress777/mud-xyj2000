@@ -47,6 +47,13 @@ def is_helper(name, mod):
     """
     if name in PROXY_MODULES or name.startswith("xyjbot_bot_"):
         return False
+    # A module with no spec cannot be reloaded -- importlib refuses with
+    # "spec not found for the module". The one that matters is botproxy
+    # itself: run as a script it is registered under the name __main__, not
+    # botproxy, so the name list above never sees it. Checking the spec
+    # catches that and anything else lacking one, which a name list can't.
+    if getattr(mod, "__spec__", None) is None:
+        return False
     path = getattr(mod, "__file__", None)
     if not path:
         return False

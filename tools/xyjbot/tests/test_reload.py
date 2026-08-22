@@ -96,5 +96,25 @@ fails += not check("botmanager is not a reload target",
 fails += not check("botapi is not either (start() reloads it separately)",
                    botmanager.is_helper("botapi", sys.modules["botapi"]), False)
 
+print("\nD. the script the proxy was STARTED as is not a reload target")
+# The regression: botproxy.py run as a script is registered in sys.modules
+# under the name "__main__", not "botproxy", so a name-based exclusion list
+# misses it -- and reload() refuses a module with no spec:
+#     __main__.py 有错误，无法载入: spec not found for the module '__main__'
+# which broke every /run. A module with no __spec__ cannot be reloaded at
+# all, so that, not the name, is the honest test.
+import types
+script = types.ModuleType("__main__")
+script.__file__ = str(Path(botmanager.LOCAL_DIR) / "botproxy.py")
+script.__spec__ = None
+fails += not check("__main__ is skipped", botmanager.is_helper("__main__", script),
+                   False)
+
+specless = types.ModuleType("whatever")
+specless.__file__ = str(Path(botmanager.LOCAL_DIR) / "whatever.py")
+specless.__spec__ = None
+fails += not check("so is anything else without a spec",
+                   botmanager.is_helper("whatever", specless), False)
+
 print("\n" + ("ALL PASS" if not fails else f"{fails} FAILURE(S)"))
 sys.exit(1 if fails else 0)
