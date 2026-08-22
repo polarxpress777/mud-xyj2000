@@ -125,5 +125,64 @@ check("localisable without raising",
       mudmap.candidates(loaded, "厢房", {"east"}),
       ["d/lingtai/inside3", "d/lingtai/inside5", "d/qujing/chechi/xiang2"])
 
+print("\nbeing too tired to learn is recognised, so the bot goes to sleep")
+# learn.lpc:143 gates on `me->query("sen") > sen_cost`; failing that, :176
+# writes this line and nothing is learned. It is the ONLY authoritative
+# signal -- sen_cost varies per skill, so a percentage floor cannot stand in
+# for it: you can be too tired at 45% 精神, well above SEN_FLOOR.
+#
+# The old test was `"精神" in reply and ("不够" in reply or "太差" in reply)`.
+# The only 不够 lines learn.lpc prints are 实战经验不够 and 道行不够, neither
+# of which contains 精神 -- so "tired" was unreachable and the character
+# never slept.
+TIRED = "你今天太累了，结果什么也没有学到。"
+api = FakeAPI({"learn": ["你向云静请教有关「法术」的疑问。", TIRED]})
+check("too tired -> tired", fs.learn_once(api, "spells", "yun jing"), "tired")
+
+api = FakeAPI({"learn": ["你向云静请教有关「法术」的疑问。",
+                         "你听了云静的指导，似乎有些心得。"]})
+check("a normal batch is still ok", fs.learn_once(api, "spells", "yun jing"), "ok")
+
+api = FakeAPI({"learn": ["这项技能你恐怕必须找别人学了。"]})
+check("teacher lacking the skill still skips",
+      fs.learn_once(api, "spells", "yun jing"), "cant")
+
+api = FakeAPI({"learn": ["你的潜能已经发挥到极限了。"]})
+check("no potential is still terminal",
+      fs.learn_once(api, "spells", "yun jing"), "spent")
+
+print("\na skill gated by 道行/实战经验 is skipped, not ground forever")
+# learn.lpc:144-146 (martial, vs combat_exp) and :147-149 (magic, vs daoxing):
+# a skill needs my_skill**3/10 <= the relevant stat. Fail either and the mud prints this, teaches nothing --
+# and STILL charges 精神 at :181. Read as success, it burns the whole session
+# on one skill it cannot move.
+api = FakeAPI({"learn": ["你向云静请教有关「法术」的疑问。",
+                         "也许是道行不够，你对云静的回答总是无法领会。"]})
+check("道行 too low -> locked", fs.learn_once(api, "spells", "yun jing"), "locked")
+
+api = FakeAPI({"learn": ["你向云静请教有关「基本剑法」的疑问。",
+                         "也许是实战经验不够，你对云静的回答总是无法领会。"]})
+check("实战经验 too low -> locked", fs.learn_once(api, "sword", "yun jing"), "locked")
+
+# ...and 'locked' must not be confused with the two that STOP the bot.
+check("not the same as blocked/spent",
+      {"locked"} & {"blocked", "spent"}, set())
+
+print("\na refused sleep is not reported as a completed one")
+# rest() waited on 一觉醒来|进入了梦乡|这里不是睡觉的地方|你刚睡过一觉 and then
+# returned True whatever came back -- so a REFUSAL logged 睡醒了 and the bot
+# went straight back to a teacher it was still too tired to learn from.
+# sleep.lpc:15-37 has five distinct refusals, and they don't mean the same
+# thing: two clear on their own, three don't.
+for line, want in [
+        ("不一会儿，你就进入了梦乡。", "slept"),
+        ("你一觉醒来，精力充沛地活动了一下筋骨。", "awake"),   # :197 -- NOT "slept"
+        ("你正忙着呢！", "busy"),              # :22 -- learn.lpc:177 start_busy
+        ("你刚睡过一觉, 先活动活动吧。 ", "toosoon"),   # :28 -- 90s cooldown
+        ("这里不是睡觉的地方。", "nowhere"),      # :19
+        ("你现在精神太差，一睡倒恐怕就再也醒不过来了。", "weak")]:  # :33
+    api = FakeAPI({"sleep": [line]})
+    check(f"{want}", fs.do_sleep(api), want)
+
 print("\nALL PASS" if not fails else f"\n{len(fails)} FAILED: {fails}")
 sys.exit(1 if fails else 0)

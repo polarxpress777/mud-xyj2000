@@ -33,7 +33,12 @@ SLEEP_ROOM = "d/lingtai/sleep"        # 卧室 -- the only sleep_room in 方寸�
 KITCHEN = "d/lingtai/inside4"         # 厨房 -- 万丰, a 青葫芦, and `yao`
 
 LEARN_BATCH = 5        # repetitions per `learn`; small keeps the rotation even
-SEN_FLOOR = 30         # % of 精神 below which learning stalls -- go sleep
+# A backstop, not the trigger. The real signal is TIRED below, straight from
+# the game; this only catches the case where we are clearly low but the mud
+# hasn't refused us yet, so we sleep on our own terms instead of wasting a
+# batch. It cannot replace TIRED: the game's threshold is an absolute
+# per-skill sen_cost, not a percentage.
+SEN_FLOOR = 30         # % of 精神 below which we go and sleep pre-emptively
 FOOD_FLOOR = 40        # % of 食物/饮水 below which we top up in the 厨房
 
 # cmds/usr/skills.lpc:52-59 -- "  基本功夫 (unarmed)  - 初学乍练   12/  144"
@@ -44,6 +49,19 @@ CANT_TEACH = "这项技能你恐怕必须找别人学了"     # teacher lacks it
 NO_POTENTIAL = "你的潜能已经发挥到极限了"       # terminal: sleep won't help
 NOT_APPRENTICE = "您太客气了|这怎么敢当|指点"    # not their apprentice
 TOO_HARD = "依你目前的能力"                    # can't learn this yet
+# The authoritative "out of 精神" signal. learn.lpc:143 gates learning on
+# me->query("sen") > sen_cost and, failing that, :176 writes exactly this and
+# teaches nothing. It is the only reliable test: sen_cost varies per skill, so
+# a percentage floor cannot stand in for it -- you can be too tired at 45%
+# 精神, well above SEN_FLOOR.
+TIRED = "你今天太累了"
+# Gated on the character's own numbers, not on the teacher. learn.lpc:144-146
+# refuses a MARTIAL skill until my_skill**3/10 <= combat_exp and :147-149 a
+# MAGIC one until it is <= daoxing -- then charges 精神 at :181 and teaches nothing. So this
+# is not "stop", it is "this one is out of reach for now": drop it and keep the
+# round-robin going on the skills that still move. 道行 comes from 打坐/读书 and
+# 实战经验 from fighting; neither is something this bot can earn.
+LOCKED = "道行不够|实战经验不够"
 
 
 def teacher_family(name):
@@ -116,7 +134,12 @@ def status_pct(api):
 
 
 def learn_once(api, skill, teacher):
-    """One `learn` batch. Returns 'ok', 'cant', 'spent', 'blocked' or 'tired'."""
+    """One `learn` batch.
+
+    Returns 'ok', 'cant', 'locked', 'spent', 'blocked' or 'tired'.
+    'cant' and 'locked' both mean "skip this skill and carry on"; 'spent'
+    and 'blocked' stop the bot; 'tired' means go and sleep.
+    """
     api.drain()
     api.send(f"learn {skill} from {teacher} for {LEARN_BATCH}", quiet=True)
     reply = read_block(api, 6.0)
@@ -126,8 +149,10 @@ def learn_once(api, skill, teacher):
         return "spent"
     if re.search(NOT_APPRENTICE, reply) or TOO_HARD in reply:
         return "blocked"
-    if "精神" in reply and ("不够" in reply or "太差" in reply):
+    if TIRED in reply:
         return "tired"
+    if re.search(LOCKED, reply):
+        return "locked"
     return "ok"
 
 
@@ -185,17 +210,82 @@ def refill(api, rooms):
     return True
 
 
-def rest(api, rooms):
-    """卧室 is the only sleep_room in 方寸山. Sleeping restores 精神."""
-    if not go(api, rooms, SLEEP_ROOM, "卧室"):
-        return False
+# What one `sleep` can come back as. sleep.lpc:15-37 refuses for five
+# different reasons and they do NOT mean the same thing -- 'busy' and
+# 'toosoon' clear by themselves, the rest don't. The old code waited on a
+# pattern that mixed refusals in with success and then reported 睡醒了
+# regardless, which sent the bot back to a teacher it was still too tired
+# to learn from.
+SLEEP_RESULTS = (
+    ("slept", "进入了梦乡"),                    # :66/:72 -- the sleep TOOK
+    # :197 is the WAKING line and must not count as the command succeeding:
+    # rest() waits for it afterwards, and matching it here would consume it
+    # and leave that wait to time out for a full 90 seconds.
+    ("awake", "一觉醒来"),
+    ("nowhere", "这里不是睡觉的地方"),          # :19 not a sleep_room
+    ("busy", "你正忙着呢"),                    # :22 -- learn.lpc:177 start_busy(1)
+    ("fighting", "战斗中不能睡觉"),             # :25
+    ("toosoon", "你刚睡过一觉"),                # :28 -- 90-second cooldown
+    ("weak", "精神太差|气血不足"),              # :33/:37 sen or kee at zero
+)
+SLEEP_RETRY = ("busy", "toosoon")   # clear on their own; the others don't
+# sleep.lpc:28 refuses for 90s after the last sleep, and that is the longest
+# of the two retryable waits, so the retries have to outlast it: 3 waits of
+# 35s = 105s. (30s would total exactly 90 and depend on round-trip latency to
+# clear the boundary -- a coin flip, not a margin.)
+SLEEP_TRIES = 4     # 3 retries + the first attempt
+SLEEP_WAIT = 35
+
+
+def do_sleep(api):
+    """Send one `sleep` and say what actually happened.
+
+    Returns one of SLEEP_RESULTS' names, or 'unknown' if the mud said
+    nothing we recognise -- never a bare True, because "it refused" and
+    "it worked" used to be indistinguishable to the caller.
+    """
     api.drain()
     api.send("sleep", quiet=True)
-    api.wait_line("一觉醒来|进入了梦乡|这里不是睡觉的地方|你刚睡过一觉", timeout=90)
-    read_block(api, 3.0)
-    sen, _, _ = status_pct(api)
-    api.log(f"睡醒了，精神 {sen}%。")
-    return True
+    reply = read_block(api, 4.0)
+    for name, pattern in SLEEP_RESULTS:
+        if re.search(pattern, reply):
+            return name
+    return "unknown"
+
+
+def rest(api, rooms):
+    """卧室 is the only sleep_room in 方寸山. Sleeping restores 精神.
+
+    Returns True only if we actually slept.
+    """
+    if not go(api, rooms, SLEEP_ROOM, "卧室"):
+        return False
+
+    for attempt in range(SLEEP_TRIES):
+        result = do_sleep(api)
+        if result == "awake":
+            # Already awake -- the waking line arrived with the reply, so
+            # there is nothing left to wait for.
+            read_block(api, 1.0)
+            sen, _, _ = status_pct(api)
+            api.log(f"睡醒了，精神 {sen}%。")
+            return True
+        if result == "slept":
+            api.wait_line("一觉醒来", timeout=90)
+            read_block(api, 3.0)
+            sen, _, _ = status_pct(api)
+            api.log(f"睡醒了，精神 {sen}%。")
+            return True
+        if result in SLEEP_RETRY and attempt < SLEEP_TRIES - 1:
+            # learn.lpc:177 calls start_busy(1) on the very message that
+            # sent us here, and sleep.lpc:28 refuses for 90s after the last
+            # one. Both pass; waiting is the whole fix.
+            api.log(f"还睡不着（{result}），等一下再试。")
+            api.sleep(SLEEP_WAIT)
+            continue
+        api.log(f"睡不成（{result}）。停。")
+        return False
+    return False
 
 
 def run(api, arg=None):
@@ -230,6 +320,14 @@ def run(api, arg=None):
         if result == "cant":
             unteachable.add(skill)
             api.log(f"{teacher} 教不了 {skill}，跳过。")
+            continue
+        if result == "locked":
+            # Not the teacher's doing and not fixable by sleeping: the
+            # character's 道行/实战经验 is too low for this skill's level.
+            # Skip it and keep cycling the ones that still move.
+            unteachable.add(skill)
+            api.log(f"{skill} 卡在道行/实战经验上了（学不动还照扣精神），"
+                    "先跳过，练别的。")
             continue
         if result == "spent":
             api.log("潜能用完了。睡觉不会恢复潜能（只恢复精神法力），"
