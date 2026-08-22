@@ -102,6 +102,19 @@ SHORT_RE = re.compile(r'set\(\s*"short"\s*,\s*"([^"]+)"')
 ROOM_INHERIT_RE = re.compile(r"\binherit\s+(?:ROOM|BANK|HOCKSHOP|CLASS_GUILD)\s*;")
 EXITS_RE = re.compile(r'set\(\s*"exits"\s*,\s*\(\[(.*?)\]\)\s*\)', re.S)
 EXIT_ENTRY_RE = re.compile(r'"(\w+)"\s*:\s*(__DIR__\s*)?"([^"]+)"')
+# A handful of rooms build the target from a local constant instead of a
+# literal, e.g. d/westway/jiayu.lpc:25-29
+#
+#     dir = "/d/qujing/";
+#     "west": dir + "baoxiang/yelu8",
+#
+# EXIT_ENTRY_RE cannot see those, and a room missing even ONE exit cannot
+# localise: candidates() (mudmap.py:177) rejects any room whose declared
+# exits don't cover what the player can see. 嘉峪关 therefore never matched
+# itself and the bot could not walk home from it. Only two rooms in the
+# whole mudlib do this, but both are real edges.
+VAR_EXIT_RE = re.compile(r'"(\w+)"\s*:\s*(\w+)\s*\+\s*"([^"]+)"')
+CONST_RE = re.compile(r'\b(\w+)\s*=\s*"([^"]*)"\s*;')
 # Commented-out exits are common (kezhan.lpc has //"north" : "bobing")
 # and would otherwise land in the map as real exits the game won't honour.
 FLAG_RE = re.compile(r'set\(\s*"(sleep_room|no_fight|no_magic|no_mieyao)"\s*,\s*(\d+)')
@@ -165,6 +178,27 @@ def resolve(target: str, src_rel: str, used_dir_macro: bool) -> str:
     return posixpath.normpath(joined).lstrip("/")
 
 
+def parse_exits(txt, rel):
+    """{direction: room path} for one comment-stripped room source.
+
+    `txt` is the whole file, not just the exits block: a target built from a
+    constant needs that constant's assignment, which lives outside it.
+    """
+    m = EXITS_RE.search(txt)
+    if not m:
+        return {}
+    body = m.group(1)
+    exits = {}
+    for dirn, dirmacro, target in EXIT_ENTRY_RE.findall(body):
+        exits[dirn] = resolve(target, rel, bool(dirmacro))
+
+    consts = dict(CONST_RE.findall(txt))
+    for dirn, var, tail in VAR_EXIT_RE.findall(body):
+        if var in consts:
+            exits[dirn] = resolve(consts[var] + tail, rel, False)
+    return exits
+
+
 def main():
     area_names = load_area_names()
     rooms = {}
@@ -176,11 +210,7 @@ def main():
                 continue
             rel = str(f.relative_to(MUDLIB))[:-4]        # strip .lpc
             short = SHORT_RE.search(txt)
-            exits = {}
-            m = EXITS_RE.search(txt)
-            if m:
-                for dirn, dirmacro, target in EXIT_ENTRY_RE.findall(m.group(1)):
-                    exits[dirn] = resolve(target, rel, bool(dirmacro))
+            exits = parse_exits(txt, rel)
             # Area = the spawn dir this room belongs to (longest match),
             # else its own directory, so find.map lookups still work.
             area = str(Path(rel).parent)
