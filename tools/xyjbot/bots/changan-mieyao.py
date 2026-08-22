@@ -333,9 +333,9 @@ DONE_COOLDOWN = "妖魔已经除尽了"
 # finish off a character built to fight only floor-level 妖怪.
 INTRUDER_RE = r"看起来(.+?)想杀死你|(.+?)对着你喝道"
 # go.lpc:85 announces a fleeing fighter to the room it LEAVES, naming the
-# direction in Chinese: 白马精往上落荒而逃了。 That is free intelligence --
-# it says which exit to take, so a chase costs one step instead of an
-# area-wide re-search with the monster free to keep moving.
+# direction in Chinese: 白马精往上落荒而逃了。 We no longer walk that
+# direction -- `follow` moves us with it -- but the line still tells us the
+# target MOVED rather than died, which is when to check we came along.
 FLEE_RE = r"往([^\s，。！,]{1,12}?)落荒而逃了"
 
 # The character's OWN env/wimpy pulling us out of a fight. std/char.lpc:96
@@ -394,19 +394,10 @@ NOFIGHT_TRIES = 5      # nudges before leaving it and searching elsewhere
 # combat one (FLEE_RE) and just as useful: it names the exit taken.
 LEAVE_RE = r"往([^\s，。！,]{1,12}?)(?:离开|飞去|落荒而逃)"
 
-# go.lpc:7-28 default_dirs, inverted. It is one-to-many: northup and
-# northdown both print 北边 (likewise the other three), so the room's own
-# exit list has to break the tie. An exit whose name is NOT in that table
-# is printed verbatim, which is already the direction to walk.
-CN_DIR = {
-    "北": ["north"], "南": ["south"], "东": ["east"], "西": ["west"],
-    "北边": ["northup", "northdown"], "南边": ["southup", "southdown"],
-    "东边": ["eastup", "eastdown"], "西边": ["westup", "westdown"],
-    "东北": ["northeast"], "西北": ["northwest"],
-    "东南": ["southeast"], "西南": ["southwest"],
-    "上": ["up"], "下": ["down"], "外": ["out"], "里": ["enter"],
-    "左": ["left"], "右": ["right"],
-}
+# Note we never translate that word into a direction any more. go.lpc:7-28's
+# default_dirs is one-to-many -- northup and northdown both print 北边 -- so
+# acting on it meant guessing. `follow` moves us with the target instead, and
+# the word is kept only to say in the log what happened.
 # Breaking off a fight. There is NO `flee` command in this mudlib --
 # cmds/std holds no flee.lpc and the only caller of GO_CMD->do_flee is
 # std/char.lpc:96-102's env/wimpy check, so the "flee" this bot used to
@@ -419,12 +410,10 @@ CN_DIR = {
 BREAK_OFF_TRIES = 4
 BREAK_OFF_WAIT = 1.5
 
-# Chasing a monster that ran. yaoguai.lpc:483 gives one mob in ten
-# env/wimpy 40, and char.lpc flees it at 40% 气血 EVERY round, so those
-# fights are a running battle: two or three hits, it bolts, you follow.
-# Each re-engagement lands real damage and it regenerates slowly, so the
-# chase does converge -- but bound it anyway.
-CHASE_MAX = 40
+# yaoguai.lpc:483 gives one mob in ten env/wimpy 40, and char.lpc flees it at
+# 40% 气血 EVERY round, so those fights are a running battle: two or three
+# hits, it bolts, you go with it. We no longer chase it down by parsing the
+# direction -- `follow` keeps us with it (see follow_safe below).
 
 # A room whose .lpc doesn't compile. `go` dumps 编译时段错误 … followed by
 # *No program in object '/d/moon/bedroom'! and leaves you standing where
@@ -499,9 +488,18 @@ GIVEUP_POLL = 120      # seconds between re-asks after giving up on a job
 
 # Gated transitions THIS character can always make, by command name
 # (build_map.py's SPECIAL_EXITS marks which are gates). `dive` and `sleep`
-# need no entry here -- GATE_PREP below earns those passes on demand --
-# but add "climb tree" if you join 月宫, since 吴刚 then waves you up the
-# 桂树 and the inner 月宫 stops being a write-off.
+# need no entry here -- GATE_PREP below earns those passes on demand.
+#
+# "climb tree" is NOT enough to add just because you joined 月宫, even though
+# that is the obvious reading. ontop2.lpc:64-70 gates it TWICE: 吴刚 turns
+# away non-disciples, and then dodge >= 40 or moondance >= 80 is required of
+# everyone, disciple or not. Add it only when BOTH hold -- otherwise the
+# walker routes through a gate it cannot pass and the walk fails every time.
+#
+# Note the second half fights this bot's own design: ABANDON_SKILLS_AFTER_KILL
+# wipes skills after every kill to keep monsters at the floor, and
+# abandon_all_skills() stops running once any skill passes WIPE_MAX_LEVEL (2).
+# A character with dodge 40 has given that up permanently, in every region.
 USABLE_GATES = set()
 
 
@@ -963,23 +961,6 @@ def ride_recover(api, rooms, blocked):
     api.log(f"{label}里没找到坐骑，可能被别人牵走了。")
     RIDE["left_at"] = None
     return False
-
-
-def flee_dirs(word, exits):
-    """Exits a 往<word>落荒而逃了 line could mean, best first.
-
-    `exits` is what this room actually offers (map exits, or the names
-    `look` printed). When it is known it settles 北边's northup/northdown
-    ambiguity and rejects a word that names a runtime-built exit the
-    static map never saw -- better to fall back to the ordinary search
-    than to walk off in a direction we cannot account for.
-    """
-    cands = list(CN_DIR.get(word, []))
-    if not cands and re.fullmatch(r"[a-z][a-z ]*", word):
-        cands = [word]          # an exit go.lpc had no Chinese name for
-    if exits:
-        return [d for d in cands if d in exits]
-    return cands
 
 
 def travel(rooms, start, goals, blocked=frozenset()):
@@ -1498,37 +1479,6 @@ def break_off(api, rooms, pos, blocked):
             api.sleep(BREAK_OFF_WAIT)   # mid-swing, ask again in a moment
     api.log("四面都出不去，逃不掉，只能原地硬撑。")
     return pos
-
-
-def chase(api, rooms, pos, blocked, name, mid, word):
-    """Follow a monster that just ran off. Returns (pos, found).
-
-    One hop: go.lpc told us which exit it took, and that is the only
-    thing we know for certain. If it isn't there it has moved on under
-    its own steam (yg/yaoguai.lpc's chat_msg calls random_move), and the
-    ordinary area search resumes -- but from HERE, one room from the
-    monster, instead of from wherever a re-localisation left us.
-    """
-    exits = rooms[pos]["exits"] if pos in rooms else None
-    if exits is None:
-        _, seen, _ = look(api)
-        exits = dict.fromkeys(seen)
-
-    for d in flee_dirs(word, exits):
-        if (pos, d) in blocked:
-            continue
-        arrived, text = step(api, d)
-        api.sleep(STEP_PAUSE)
-        if not arrived:
-            note_step_failure(api, blocked, pos, d, text)
-            continue
-        ride_note(api, text, pos)
-        dest = exits.get(d)
-        here = dest if dest in rooms and arrived == rooms[dest]["short"] else None
-        return here, (name in text or mid in text.lower())
-
-    api.log(f"「{word}」这个方向地图上没有，改回正常搜索。")
-    return pos, False
 
 
 def wait_out_intruder(api, rooms, danger_pos, intruder, blocked):
@@ -2236,6 +2186,92 @@ def identify_target(api, name):
     return monster_id(text, name)
 
 
+# --------------------------------------------------------------- follow --
+# Staying with the target is the mud's job, not ours. npc.lpc:151 wanders via
+# command("go " + dir) and go.lpc's do_flee flees via main(me, dir, 0); both
+# run through go.lpc, which calls all_inventory(env)->follow_me(me, arg)
+# (team.lpc:29). So `follow <id>` moves us WITH it, with no window for it to
+# move again while we parse a direction and send one -- which is the race that
+# made the bot chase a monster that had already moved on.
+#
+# It also deletes the 北边 problem: 往北边逃了 could mean northup or northdown
+# and the old chase had to guess.
+#
+# ASSUMPTION, worth a test (see test_follow.py): team.lpc:36 follows
+# immediately only when random(target's move skill) <= ours, otherwise a
+# call_out defers it by a second -- and a deferred follow can be left a room
+# behind, because follow_me only reaches characters in the leader's room. A
+# skill-less 灭妖 character has move 0 on both sides, so random(0) > 0 is false
+# and we get the immediate path. Train 轻功 and that stops being true.
+FOLLOW_ACCEPTED = "你决定开始跟随"      # follow.lpc:30 on success
+
+# Whether we are currently set to follow the quest target. Module-level for
+# the same reason RIDE is: it is a property of the CHARACTER, not of one call
+# frame, and threading it through hunt() as a local meant every exception path
+# (Exhausted, in particular) leaked a leader that then puppeted the bot
+# through the walk home and into the next job.
+FOLLOW = {"on": False}
+
+
+def stop_following(api):
+    """Drop the leader if we have one. Safe to call when we have none.
+
+    Called from five places -- kill, hurt, wimpy, intruder, and go_home --
+    and open-coding it is how the wimpy branch came to rest while still being
+    followed, the exact hazard its neighbours guard against.
+    """
+    if FOLLOW["on"]:
+        api.send("follow none", quiet=True)
+        FOLLOW["on"] = False
+
+
+def follow_safe(rooms, pos):
+    """Is it safe to be dragged out of `pos` by whatever the target does?
+
+    A monster can only move to a neighbour, so following is safe for the next
+    hop exactly when NO exit of this room leads somewhere we refuse to go.
+    Checking before we are moved is the whole point: an aggressive resident
+    auto_fights on entry (feature/attack.lpc:244), so arriving and reacting
+    means taking hits first.
+
+    Fails closed. An unknown position is not evidence of safety.
+    """
+    room = rooms.get(pos) if pos else None
+    if not room:
+        return False
+    for dest in room["exits"].values():
+        if dest not in rooms:
+            continue
+        if avoided(rooms, dest) or rooms[dest]["short"] in TRAP_ROOMS:
+            return False
+    return True
+
+
+def follow_state(api, rooms, pos, mid):
+    """Hold the leader exactly while it is safe to. Sends nothing otherwise.
+
+    Called after every arrival and on every sighting. Arming and disarming are
+    one decision seen from two sides, so they live together -- splitting them
+    is how you end up still following into a room you refused to walk into.
+
+    It reconciles state; it does not take a step (hence not `follow_step`).
+    """
+    want = follow_safe(rooms, pos)
+    if want and not FOLLOW["on"] and mid:
+        # Believe the mud, not the send: follow.lpc:22 refuses with
+        # 这里没有 X。 when the target bolted between our sighting and this
+        # command. Recording "following" on a refusal makes the bot skip
+        # widening the search for a monster it has already lost.
+        api.drain()
+        api.send(f"follow {mid}", quiet=True)
+        FOLLOW["on"] = FOLLOW_ACCEPTED in read_reply(api, 2.0)
+    elif FOLLOW["on"] and not want:
+        # Before the next hop, not after: an aggressive resident auto_fights
+        # on entry, so being dragged in and reacting is already too late.
+        api.log("前面有打不过的房间，先不跟着它了。")
+        stop_following(api)
+
+
 def pounce(api, name):
     """Attack a monster we've just spotted but were never given an id for.
 
@@ -2351,6 +2387,9 @@ def go_home(api, rooms, blocked):
     The horse first, not after: 客店睡房 (where 红楼一梦 takes it off us) is
     four rooms from 天监台 and on the way.
     """
+    # Nothing beyond this point wants a leader: the walk home, the resupply
+    # and the next job all assume WE decide where we go.
+    stop_following(api)
     if not api.stopped():
         ride_recover(api, rooms, blocked)
 
@@ -2391,7 +2430,6 @@ def hunt(api, rooms, job, deadline, blocked):
     warned_unreachable = False
     unreachable = 0
     sweeps = 0
-    chases = 0
     last_seen = None       # where the target was last actually seen
     widened = False        # search past the region after a break in contact
     wimpies = 0
@@ -2420,6 +2458,11 @@ def hunt(api, rooms, job, deadline, blocked):
             found_here = False
             if pos:
                 last_seen = pos
+            # Arm on every sighting, not just the ones we fight from: in a
+            # trap or peace room we do NOT swing, and following it out is
+            # then the only way to stay with it. follow_state refuses by
+            # itself if a neighbour is somewhere we would not walk.
+            follow_state(api, rooms, pos, mid)
             if pos and rooms[pos]["short"] in TRAP_ROOMS:
                 # Standing here is what springs the trapdoor. Use the
                 # peace-room handling: watch which way it goes and
@@ -2432,11 +2475,15 @@ def hunt(api, rooms, job, deadline, blocked):
                 r = fight_target(api, mid, name)
             if r == "killed":
                 api.log(f"击杀 {name} 成功！")
+                stop_following(api)
                 killed = True
                 if ABANDON_SKILLS_AFTER_KILL:
                     abandon_all_skills(api)
                 break
             if r == "hurt":
+                # Resting means retreating and coming back. Still following,
+                # the target can drag us out of the rest and back into it.
+                stop_following(api)
                 fight_pos = pos
                 rested, pos = rest_until_healed(api, rooms, pos, blocked,
                                                 name=name)
@@ -2467,10 +2514,7 @@ def hunt(api, rooms, job, deadline, blocked):
                                      TRAP_WAIT if trap else NOFIGHT_WAIT)
                 if word:
                     api.log(f"{name} 往{word}走了，跟上。")
-                    pos, found_here = chase(api, rooms, pos, blocked,
-                                            name, mid, word)
-                    if pos:
-                        visited.add(pos)
+                    pos = None      # following brought us along; re-localise
                     continue
                 if pos and peace <= NOFIGHT_TRIES:
                     # check_room()'s call_out is armed by init(),
@@ -2493,6 +2537,9 @@ def hunt(api, rooms, job, deadline, blocked):
                 # nobody told us about. So rest, forget where we
                 # think we are, and let the walker route back to the
                 # room the monster is still in.
+                # Same hazard as the `hurt` branch: resting while followed
+                # lets the target pull us back out of the rest.
+                stop_following(api)
                 fight_pos = pos
                 wimpies += 1
                 api.log(f"气血/精神掉到 wimpy 线，自动逃出了战斗"
@@ -2516,25 +2563,38 @@ def hunt(api, rooms, job, deadline, blocked):
                             "永远打不完 —— 用 wimpy <数字> 调低一点。")
                 continue
             if r.startswith("fled:"):
+                # The direction is INFORMATION, not an instruction. go.lpc's
+                # do_flee runs through main(), so follow_me (team.lpc:29) has
+                # already moved us if we are following -- reading the word and
+                # walking it ourselves is the race that made the bot chase a
+                # monster which had moved on again.
                 word = r.split(":", 1)[1]
-                chases += 1
-                if chases > CHASE_MAX:
-                    api.log(f"{name} 已经跑了 {CHASE_MAX} 次，不追了，"
-                            "改为在这一带正常搜索。")
+                if not FOLLOW["on"]:
+                    api.log(f"{name} 往{word}逃了，没跟着它，改为在这一带搜索。")
+                    widened = True
                     pos = None
                     continue
-                api.log(f"{name} 往{word}逃了，追（第 {chases} 次）。")
-                pos, found_here = chase(api, rooms, pos, blocked,
-                                        name, mid, word)
-                if found_here and pos:
-                    last_seen = pos
+                # Following SHOULD have brought us along, but team.lpc:36 can
+                # defer the hop by a second and a second flee in that window
+                # leaves us a room behind, silently. Absence is the only
+                # signal that covers every way of losing it, so look and see.
+                api.log(f"{name} 往{word}逃了，我跟着它。")
+                api.drain()
+                api.send("look", quiet=True)
+                _t, _e, text = read_room(api)
+                if name in text or mid in text.lower():
+                    found_here = True   # still with it; fight on next pass
                 else:
+                    api.log(f"没跟上 {name}，改为在这一带搜索。")
+                    stop_following(api)
                     widened = True
-                if pos:
-                    visited.add(pos)
+                pos = None
                 continue
             if r.startswith("intruder:"):
                 intruder = r.split(":", 1)[1]
+                # Stop being followed BEFORE retreating. Otherwise the target
+                # can drag us straight back into the room we just left.
+                stop_following(api)
                 # We need our position to retreat and find the way
                 # back to this room afterwards.
                 if pos is None:
@@ -2561,6 +2621,16 @@ def hunt(api, rooms, job, deadline, blocked):
                 api.sleep(10)
                 continue
             api.log(f"定位：{rooms[pos]['short']}（{pos}）")
+            # Re-check the invariant on every arrival, not just at the start:
+            # being followed is only safe while no neighbour of THIS room is
+            # somewhere we refuse to walk into. Also drops the leader when we
+            # could not identify the room at all -- follow_safe fails closed.
+            # Guarded so this can only ever DISARM: arming needs the target in
+            # the room, which is true at a sighting and not after a plain
+            # sweep step, and an unguarded call would send a `follow` the mud
+            # refuses on every single arrival.
+            if FOLLOW["on"]:
+                follow_state(api, rooms, pos, mid)
             visited.add(pos)
 
         # After a break in contact, search outward from where the thing
@@ -2727,6 +2797,9 @@ def hunt(api, rooms, job, deadline, blocked):
             # monster shoved us, teleport, one-way exit). Re-localise.
             api.log(f"到了「{arrived}」，和地图不符，重新定位。")
             pos = None
+
+    # Never leave the character following something on the way out: the walk
+    # home, the resupply and the next job all assume WE decide where we go.
 
     if not killed:
         api.log(f"搜了 {sweeps} 遍没找到 {name}。回天监台，"

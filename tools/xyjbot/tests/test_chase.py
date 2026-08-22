@@ -10,6 +10,11 @@ Two things the mud tells us for free that the bot used to throw away:
     and never need to re-localise. (There is no `flee` command in this
     mudlib at all -- cmds/std has no flee.lpc.)
 
+Chasing a runner by parsing that direction is GONE -- see test_follow.py.
+The bot now sets the mud's own `follow`, which moves it with the target and
+removes the race the chase always lost. What is still tested here is the
+reporting (a runner is reported rather than waited out) and break_off.
+
 Run with: python3 test_chase.py
 """
 import importlib.util, re, sys
@@ -112,20 +117,6 @@ class FakeAPI:
         return [c for c in self.sent if c not in ("look",)]
 
 
-print("往<方向>落荒而逃了 resolves to an exit")
-check("北 -> north", bot.flee_dirs("北", {"north": 1, "south": 1}), ["north"])
-check("上 -> up", bot.flee_dirs("上", {"up": 1}), ["up"])
-check("北边 picks the exit this room actually has",
-      bot.flee_dirs("北边", {"northdown": 1, "east": 1}), ["northdown"])
-check("北边 with both stays ambiguous, both tried",
-      bot.flee_dirs("北边", {"northup": 1, "northdown": 1}),
-      ["northup", "northdown"])
-check("a direction this room hasn't got is dropped",
-      bot.flee_dirs("北", {"east": 1, "west": 1}), [])
-check("an exit go.lpc had no Chinese name for is used verbatim",
-      bot.flee_dirs("xiaolu", {"xiaolu": 1}), ["xiaolu"])
-check("nonsense is not a direction", bot.flee_dirs("一阵青烟", {"north": 1}), [])
-
 print("\nthe fight loop reports a runner instead of waiting out FIGHT_TIMEOUT")
 api = FakeAPI("d/city/mid", fight=["白马精往上落荒而逃了。"])
 check("direction carried out", bot.fight_target(api, "baima jing", "白马精"),
@@ -180,33 +171,16 @@ check("fight.lpc:10 refusal", bot.fight_target(api, "yema guai", "野马怪"),
 print("\n...and we watch which way it strolls off")
 api = FakeAPI("d/city/mid")
 api.pending = ["伺官(Si guan)", "野马怪往西离开。"]
+# The direction is still READ -- it says in the log what happened, and it is
+# how we know the target moved rather than died. It is no longer TRANSLATED
+# into a step: `follow` moves us. 西 is unambiguous, but 北边 is not (northup
+# and northdown both print it), which is why acting on it was a guess.
 check("direction read", bot.wait_for_exit(api, "野马怪", 1), "西")
-check("which is an exit we can take", bot.flee_dirs("西", {"west": 1, "up": 1}),
-      ["west"])
 
 api = FakeAPI("d/city/mid")
 api.pending = ["伺官往东离开。"]
 check("someone else leaving is not our monster",
       bot.wait_for_exit(api, "野马怪", 1), None)
-
-print("\nchase follows it one room and finds it there")
-api = FakeAPI("d/city/mid", monster_at="d/city/loft")
-pos, found = bot.chase(api, ROOMS, "d/city/mid", set(), "白马精", "baima jing", "上")
-check("walked up", api.moves(), ["up"])
-check("position tracked", pos, "d/city/loft")
-check("spotted it", found, True)
-
-print("\ngone by the time we get there: we still know where we are")
-api = FakeAPI("d/city/mid", monster_at="d/city/east")
-pos, found = bot.chase(api, ROOMS, "d/city/mid", set(), "白马精", "baima jing", "上")
-check("position tracked", pos, "d/city/loft")
-check("not found", found, False)
-
-print("\nan unmappable direction leaves us where we were, no blind walking")
-api = FakeAPI("d/city/mid")
-pos, found = bot.chase(api, ROOMS, "d/city/mid", set(), "白马精", "baima jing", "西南")
-check("no move sent", api.moves(), [])
-check("position kept", pos, "d/city/mid")
 
 print("\nbreaking off is a real move, and retries while mid-swing")
 api = FakeAPI("d/city/mid", busy=2)

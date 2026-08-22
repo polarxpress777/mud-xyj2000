@@ -55,6 +55,11 @@ class MudSim:
         self.pending, self.logs, self.moves = [], [], 0
         self.shove, self.gates = shove, set(gates)
         self.refusals = dict(refusals or {})
+        self.sent = []
+        # Scripted answers for non-movement commands (follow, kill, ...),
+        # keyed by the exact command. Anything not listed falls through to the
+        # movement handling below.
+        self.on_send = {}
         self.tries = {}
         self.rng = rng or random.Random(0)
 
@@ -62,6 +67,10 @@ class MudSim:
     def sleep(self, s): pass
     def drain(self): self.pending = []
     def log(self, m): self.logs.append(m)
+
+    def sent_follow(self):
+        """Just the follow/unfollow commands, in order."""
+        return [c for c in self.sent if c.startswith("follow")]
 
     def said(self, needle):
         return any(needle in m for m in self.logs)
@@ -74,6 +83,9 @@ class MudSim:
                 f"    这里明显的出口是 {' 和 '.join(ex)}。" if ex else "    这里没有明显的出口。"]
 
     def send(self, cmd, quiet=False):
+        self.sent.append(cmd)
+        if cmd in self.on_send:
+            self.pending = list(self.on_send[cmd]); return
         if cmd == "look":
             self.pending = self._render(); return
         if (self.at, cmd) in self.gates:
