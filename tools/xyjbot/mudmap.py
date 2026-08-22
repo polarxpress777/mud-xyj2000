@@ -28,7 +28,15 @@ EXITS_RE = r"这里[^出\n]{0,6}出口是\s*(.+?)。"
 
 
 def load():
-    return json.loads(MAP_FILE.read_text(encoding="utf-8"))
+    """The rooms, keyed by path -- NOT the whole rooms.json document.
+
+    The file has an "areas" table alongside "rooms", and returning both is
+    what killed the fangcun bot on its first map lookup: candidates()
+    iterated the two top-level keys and raised KeyError('short') on the
+    areas dict. Every caller here wants the rooms, so this hands back the
+    rooms. Anything that needs the areas table should read the file.
+    """
+    return json.loads(MAP_FILE.read_text(encoding="utf-8"))["rooms"]
 
 
 def parse_exits(text):

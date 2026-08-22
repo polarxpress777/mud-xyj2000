@@ -108,5 +108,22 @@ check("and says why", api.said("不同门派学不了"), True)
 api = FakeAPI({"title": ["【小道士】 方寸山三星洞第四代弟子"]})
 check("an unknown name is refused too", fs.sect_ok(api, "nobody"), False)
 
+print("\nthe map mudmap.load() hands back is one the walker can use")
+# The live crash: 出错停止: 'short'. fangcun-skill did `rooms = mudmap.load()`
+# and got the whole document -- {"areas": ..., "rooms": ...} -- so candidates()
+# iterated the two TOP-LEVEL keys and hit r["short"] on the areas dict. The bot
+# died on its first map lookup, every run. study.py:127 wrote
+# `mudmap.load()["rooms"]` and worked, which is the tell: a function named
+# load() in a module named mudmap must return the map, not the file.
+sys.path.insert(0, str(HERE))
+import mudmap
+loaded = mudmap.load()
+check("every entry is a room", all("short" in r for r in loaded.values()), True)
+# Three rooms are 厢房 with an east exit; the two whose exits are EXACTLY
+# {east} rank ahead of 车迟's, which merely contains it (west+east).
+check("localisable without raising",
+      mudmap.candidates(loaded, "厢房", {"east"}),
+      ["d/lingtai/inside3", "d/lingtai/inside5", "d/qujing/chechi/xiang2"])
+
 print("\nALL PASS" if not fails else f"\n{len(fails)} FAILED: {fails}")
 sys.exit(1 if fails else 0)

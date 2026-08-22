@@ -124,7 +124,7 @@ def find_sleep_and_return(api, rooms, cap_note=""):
 
 
 def run(api, arg=None):
-    rooms = mudmap.load()["rooms"]
+    rooms = mudmap.load()
 
     cap, book = None, BOOK
     if arg:
