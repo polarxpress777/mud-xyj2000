@@ -31,6 +31,18 @@ LONG);
   set("objects", ([ /* sizeof() == 1 */
     __DIR__ "npc/pablo": 1,
   ]));
+
+  // 新手装备: kept in stock at two apiece so 长安 always has a starter
+  // set on the shelf. std/room/hockshop.lpc::restock() tops these up on
+  // every reset(); anything players sell in on top of it is left alone.
+  set("restock", ([ /* sizeof() == 6 */
+    "/d/qujing/tianzhu/obj/tiekui": 2,   // 铁盔
+    "/d/obj/cloth/zhanpao": 2,           // 战袍
+    "/d/obj/armor/tenjia": 2,            // 藤甲
+    "/d/obj/cloth/shoupipifeng": 2,      // 兽皮披风
+    "/d/qujing/tianzhu/obj/pixue": 2,    // 水牛皮靴
+    "/d/obj/misc/kuang": 2,              // 竹筐
+  ]));
   set("no_clean_up", 1);
 
   setup();

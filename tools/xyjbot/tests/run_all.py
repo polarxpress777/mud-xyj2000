@@ -6,7 +6,7 @@
 
 Each suite is a standalone script that prints its own PASS/FAIL lines and
 exits non-zero on failure, so this only has to run them and tally. Suites
-needing a live server (test_mieyao_live) are skipped unless named.
+needing a live server (see NEEDS_SERVER) are skipped unless named.
 
 Suites are run in separate processes on purpose: several of them mutate
 module-level state in the bot (RIDE, DANGER, BROKEN_EXITS), and sharing an
@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-NEEDS_SERVER = {"test_mieyao_live"}
+NEEDS_SERVER = {"test_mieyao_live", "test_dangpu_live"}
 TIMEOUT = 180
 
 

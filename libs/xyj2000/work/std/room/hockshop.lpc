@@ -14,6 +14,10 @@ object shop_box;
 
 int query_max_items() { return 50; }
 string get_name(string str);
+void restock(object box);
+
+// Guards restock() against the reentrant reset() of AGENTS.md 7.17.
+nosave int restocking_now;
 
 void init() {
   add_action("do_value", "value");
@@ -34,7 +38,79 @@ object findbox() {
 
   shop_box = new(__DIR__ "shopbox");
   shop_box->move(this_object());
+  // A brand new box is a bare shelf. A shop with a "restock" list must
+  // not stand empty until the driver's next reset() -- that is up to
+  // 883s away (config.fluffos:51), and the box is built from scratch
+  // after every reboot, since its stock is set_temp. Seeded with the
+  // box we just made, never by calling findbox() again: that would be
+  // mutual recursion, unbounded the day the move() above fails.
+  restock(shop_box);
   return shop_box;
+}
+
+// Standing stock, for shops that are meant to always have something.
+// The room declares it as set("restock", ([ <item file>: <count> ])) --
+// see d/city/dangpu.lpc. Purely additive: it tops a line up to <count>
+// and never trims one, so goods players sold in above that stay put.
+void restock(object box) {
+  mapping shelf;
+  object ob;
+  string *files, name, id, index;
+  int i, want, have;
+
+  if (!objectp(box) || !mapp(shelf = query("restock"))) return;
+
+  // AGENTS.md 7.17: std/room.lpc's resetting_now guard covers only the
+  // base reset() body, so a driver-reentrant reset() still arrives
+  // here -- and this function clones and moves, which is exactly what
+  // that section warns can cascade during a room's first compile.
+  if (restocking_now) return;
+  restocking_now = 1;
+
+  files = keys(shelf);
+  for (i = 0; i < sizeof(files); i++) {
+    want = shelf[files[i]];
+    if (want < 1) continue;
+
+    // AGENTS.md 7.25: a content file that is merely missing makes new()
+    // return 0, but one that EXISTS and fails to compile makes both
+    // this force-load and the new() below throw, which no objectp()
+    // check can catch. A broken entry has to cost this shop its stock,
+    // not take the room down on the first list() of the boot.
+    if (catch(name = files[i]->query("name"))) continue;
+    if (catch(id = files[i]->query("id"))) continue;
+    if (!stringp(name) || !stringp(id)) continue;
+
+    // The same key do_sell/do_buy use.
+    index = name + "(" + id + ")";
+    have = box->query_temp("numbers/" + index);
+
+    if (objectp(box->query_temp("goods/" + index))) {
+      if (have < want) box->set_temp("numbers/" + index, want);
+      continue;
+    }
+
+    // do_buy clones from base_name() of the object on the shelf, so the
+    // shelf needs a real clone to point at, not the master.
+    if (catch(ob = new(files[i]))) continue;
+    if (!objectp(ob)) continue;
+    if (!ob->move(box)) {
+      destruct(ob);
+      continue;
+    }
+    box->set_temp("goods/" + index, ob);
+    // A line can outlive the object representing it -- do_list has to
+    // cope with exactly that. Its count is still players' goods, so
+    // give the line a new representative without trimming the pile.
+    if (have < want) box->set_temp("numbers/" + index, want);
+  }
+
+  restocking_now = 0;
+}
+
+void reset() {
+  ::reset();
+  restock(findbox());
 }
 
 string value_string(int value) {
