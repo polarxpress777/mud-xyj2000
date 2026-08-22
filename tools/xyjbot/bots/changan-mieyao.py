@@ -150,18 +150,28 @@ AREA_EXTRA = {
 # Only applied AFTER a break in contact, since that is when it has had time
 # to move and when we have a last-known room worth centring on.
 #
-# 5, derived rather than guessed. chat() runs every heartbeat for an NPC
-# (std/char.lpc:109, before the tick gate) and std/char/npc.lpc:125-135 fires
-# a chat_msg on random(100) < chat_chance. The 灭妖 monsters set chat_chance
-# to 3 and their only chat_msg is random_move, so at the driver's default
-# 2-second beat that is 30 beats/min x 3% = about ONE ROOM PER MINUTE.
+# 10, chosen for margin over the derived figure. The mechanics: chat() runs
+# every heartbeat for an NPC (std/char.lpc:109, before the tick gate) and
+# std/char/npc.lpc:125-135 fires a chat_msg on random(100) < chat_chance.
+# The 灭妖 monsters set chat_chance to 3 and their only chat_msg is
+# random_move, so at the driver's default 2-second beat that is
+# 30 beats/min x 3% = about ONE ROOM PER MINUTE.
 #
 # A break in contact is a rest plus the walk back -- 3 to 6 minutes, so 3 to
-# 6 moves, and those are random: net displacement goes as sqrt(n), so six
-# moves usually lands 2-3 rooms away and only reaches 6 down a straight
-# corridor. Radius 5 covers the straight-line worst case for a five-minute
-# break and ~25 moves of real wandering, inside a quest that now lasts 600s.
-ESCAPE_RADIUS = 5
+# 6 moves; and since those are random, net displacement goes as sqrt(n), so
+# six moves usually lands only 2-3 rooms away. 10 therefore covers a long
+# rest that moved in a straight line the whole way, with room to spare.
+#
+# It is not free. Measured extra rooms pulled into a sweep by widening at a
+# border room:
+#
+#     方寸山下      radius 5: +14      radius 10: +30
+#     长安城西门    radius 5:  +6      radius 10: +57
+#     土路          radius 5:  +3      radius 10: +20
+#
+# 长安城 is the one to watch -- +57 on top of 107 is a much slower sweep. If
+# hunts start timing out after an escape there, this is the dial.
+ESCAPE_RADIUS = 10
 
 
 def nearby(rooms, center, radius):
