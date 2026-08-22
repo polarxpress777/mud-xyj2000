@@ -432,6 +432,39 @@ CHASE_MAX = 40
 BROKEN_RE = r"编译时段错误|No program in object"
 BROKEN_EXITS = set()
 
+# Refusals that are about US, not about the exit. cmds/std/valid_move.h
+# gates EVERY move in this mudlib on three character states, and go.lpc:82
+# adds a fourth for the mount:
+#
+#   你的负荷过重，动弹不得。        valid_move.h:6  over_encumbranced()
+#   你的动作还没有完成，不能移动。  valid_move.h:9  is_busy() -- clears in a beat
+#   你现在不能移动！                valid_move.h:15 no_move (定身), up to 60s
+#   你的座骑走动不了。              go.lpc:82 the horse can't follow
+#                                   (handled in step_full)
+#
+# Recording these as a shut exit is what sealed the bot into 林中木屋: the
+# cabin's only non-dead-end exit got crossed off while we were merely busy,
+# travel() then found no route anywhere, and the walk gave up eight times
+# from a room the map could route out of perfectly well.
+SELF_RE = r"负荷过重|动作还没有完成|你现在不能移动|座骑走动不了"
+
+# 负荷过重 is the odd one out: it does not clear on its own and it stops us
+# moving ANYWHERE, so the rest of the quest is spent walking into refusals.
+# Only the player can fix it, so say so -- once, then again next job, since
+# repeating it every failed step for ten minutes is just noise.
+HEAVY_RE = r"负荷过重"
+JOB_WARNED = set()
+
+# Exits that have already had their one second chance this job. Job-scoped
+# for the same reason `blocked` is: both outlive any single walk.
+FORGIVEN = set()
+
+
+def forget_job_warnings():
+    """Re-arm the once-per-job state. Called when a job starts."""
+    JOB_WARNED.clear()
+    FORGIVEN.clear()
+
 # --- riding --------------------------------------------------------------
 # mount.lpc:56 confirms with 稳稳地骑在<马>上, and from then on go.lpc:118
 # prints 你骑着<马>走了过来 on EVERY move -- so the mount state can be read
@@ -573,8 +606,20 @@ def step_full(api, direction):
             api.log(f"钱没给成（{reply.strip().splitlines()[-1] if reply.strip() else '他没反应'}）。"
                     f"身上带够 {TOLL_SILVER} 两银子才走得了西边那半个长安城西。")
 
+    for _ in range(BREAK_OFF_TRIES):
+        if title or "动作还没有完成" not in text:
+            break
+        # valid_move.h refuses while is_busy() -- our own last action, a
+        # combat round most of the time, hasn't finished yet. It clears in
+        # a beat, so this is a pause, not a shut exit. Same numbers as
+        # break_off(), which has always known this about the same message.
+        api.sleep(BREAK_OFF_WAIT)
+        api.drain()
+        api.send(direction, quiet=True)
+        title, exits, text = read_room(api)
+
     if not title and "座骑" in text:
-        # go.lpc:76 -- the mount can't go where we're going, and go.lpc
+        # go.lpc:82 -- the mount can't go where we're going, and go.lpc
         # refuses the WHOLE move rather than leaving it behind. Get off
         # and walk. Without this the walker reads a perfectly good exit
         # as permanently shut and routes around it (or gives up on the
@@ -820,6 +865,14 @@ def note_step_failure(api, blocked, pos, direction, text):
     door or a sect check only blocks this trip.
     """
     if pos is None:
+        return False
+    if re.search(SELF_RE, text):
+        # Our own condition, not the exit's. Blaming the exit here is
+        # permanent for the job and can seal us in a one-exit room.
+        if re.search(HEAVY_RE, text) and "heavy" not in JOB_WARNED:
+            JOB_WARNED.add("heavy")
+            api.log("身上负荷过重，动弹不得 —— 这个我自己解决不了，"
+                    "请卸掉一些东西（drop/put），否则我哪儿也去不了。")
         return False
     blocked.add((pos, direction))
     if not re.search(BROKEN_RE, text):
@@ -1514,6 +1567,60 @@ def wait_out_intruder(api, rooms, danger_pos, intruder, blocked):
     return False
 
 
+def name_exits(rooms, exits):
+    """「林中木屋 的 southwest」... for a set of (room, direction) pairs.
+
+    Both new no-route messages name exits, and a bare room id means nothing
+    to someone reading the bot's log next to the game window.
+    """
+    return "、".join(f"{rooms[where]['short']} 的 {d}"
+                     for where, d in sorted(exits) if where in rooms)
+
+
+def forgive_blocked(api, rooms, pos, dest, blocked, label):
+    """Give crossed-off exits one second chance when they are the reason
+    `dest` is unreachable. Returns True if any were un-crossed.
+
+    An exit is crossed off on the strength of ONE refused move, and the
+    mark lasts the whole job. That is right for a locked door and wrong
+    for everything else -- and when the room has only one usable exit, as
+    林中木屋 does, a single wrong mark seals the bot in with no way to
+    discover its mistake. So: if a route exists once we ignore our own
+    marks, the marks are what is wrong, not the map.
+
+    Only the marks the new route actually needs are forgiven. Forgiving
+    the whole set would spend the one chance of exits the route never
+    touches -- a wrong mark on the far side of the map would be used up
+    without ever being retried, which is worse than useless.
+
+    The chance is once per JOB, not once per walk: `blocked` outlives a
+    single walk_to and a job makes a dozen of them (the horse, the bank,
+    the inn, 天监台), so a walk-local memory would hand a genuinely locked
+    door a fresh chance on every leg. Compile errors are never forgiven --
+    the room behind them does not load, and retrying cannot change that.
+    """
+    soft = {e for e in blocked if e not in BROKEN_EXITS and e not in FORGIVEN}
+    if not soft:
+        return False
+    leg = travel(rooms, pos, {dest}, blocked - soft)
+    if leg is None:
+        return False
+
+    used, cur = set(), pos
+    for d, nxt in leg:
+        if (cur, d) in soft:
+            used.add((cur, d))
+        cur = nxt
+    if not used:
+        return False
+
+    FORGIVEN.update(used)
+    blocked -= used
+    api.log(f"去{label}的路被我自己标成走不通了（{name_exits(rooms, used)}）"
+            "—— 多半是当时身上有状况，不是门真锁着，再试一次。")
+    return True
+
+
 def walk_to(api, rooms, blocked, dest, label):
     """Walk to a specific room, wherever we currently are. Returns True
     on arrival.
@@ -1541,6 +1648,9 @@ def walk_to(api, rooms, blocked, dest, label):
             return True
 
         leg = travel(rooms, pos, {dest}, blocked)
+        if leg is None and forgive_blocked(api, rooms, pos, dest, blocked,
+                                           label):
+            leg = travel(rooms, pos, {dest}, blocked)
         if leg is None:
             # No route from where we THINK we are. After a long walk
             # through identically-named rooms that almost always means
@@ -1562,9 +1672,25 @@ def walk_to(api, rooms, blocked, dest, label):
                 # produces transient no-route failures, and the existing
                 # WALK_MAX_LOST bound already ends a hopeless one.
                 warned_gap = True
-                api.log(f"地图上从「{rooms[pos]['short']}」（{pos}）找不到到"
-                        f"{label}的路 —— 如果一直这样，多半是地图缺边"
-                        "（看 build_map.py 的 SPECIAL_EXITS），不是定位错。")
+                # Two very different faults, and the log has to say WHICH.
+                # Blaming the map while the real cause was our own crossed-off
+                # exits is what sent the reader hunting a nonexistent missing
+                # edge for a session. If anything is crossed off, that is the
+                # first thing to suspect -- it is the only cause we invented
+                # ourselves.
+                # Only OUR marks count here. `blocked` is seeded from
+                # BROKEN_EXITS, which persists across jobs, so gating on
+                # `blocked` would blame our bookkeeping for every real map
+                # gap from the first compile-error exit onwards.
+                mine = blocked - BROKEN_EXITS
+                if mine:
+                    api.log(f"地图上从「{rooms[pos]['short']}」（{pos}）找不到到"
+                            f"{label}的路，而我这趟标了这些出口走不通："
+                            f"{name_exits(rooms, mine)} —— 先怀疑这些，不是地图。")
+                else:
+                    api.log(f"地图上从「{rooms[pos]['short']}」（{pos}）找不到到"
+                            f"{label}的路 —— 如果一直这样，多半是地图缺边"
+                            "（看 build_map.py 的 SPECIAL_EXITS），不是定位错。")
             api.log(f"从「{rooms[pos]['short']}」暂时找不到去{label}的路，"
                     "重新定位后再试一次。")
             reason = "地图上没有路线"
@@ -2284,6 +2410,7 @@ def run(api):
         pos = None
         visited = set()
         blocked = set(BROKEN_EXITS)
+        forget_job_warnings()
         found_here = False
         warned_unreachable = False
         unreachable = 0

@@ -4,67 +4,14 @@ The bot looped forever east of 长安: 长安城东门 -> 大官道 -> 长安城
 Two separate defects combined to cause it, and both are covered here.
 Run with: python3 test_localise.py
 """
-import importlib.util, json, random, re, sys
+import random, sys
 from pathlib import Path
 
-# tools/xyjbot -- every path below is relative to it, so this
-# stayed correct when the tests moved down into tests/.
-HERE = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(HERE))
-spec = importlib.util.spec_from_file_location("bot", HERE / "bots/changan-mieyao.py")
-bot = importlib.util.module_from_spec(spec); spec.loader.exec_module(bot)
-DATA = json.loads((HERE / "rooms.json").read_text(encoding="utf-8"))
-ROOMS = DATA["rooms"]
-
-
-class MudSim:
-    """Answers `look` and movement from the real map, so the bot has to
-    localise from exactly the information the game gives a player.
-
-    `shove` simulates a wandering monster displacing you after a move --
-    the thing that makes a long walk drift -- and `gates` simulates exits
-    that refuse to open (doors, valid_leave, sect checks).
-    """
-    def __init__(self, at, shove=0.0, gates=(), rng=None):
-        self.at = at
-        self.pending, self.logs, self.moves = [], [], 0
-        self.shove, self.gates = shove, set(gates)
-        self.rng = rng or random.Random(0)
-
-    def stopped(self): return False
-    def sleep(self, s): pass
-    def drain(self): self.pending = []
-    def log(self, m): self.logs.append(m)
-
-    def _render(self):
-        r = ROOMS[self.at]
-        ex = list(r["exits"])
-        return [f"{r['short']} - {self.at}",
-                "这里是一段描述文字。",
-                f"    这里明显的出口是 {' 和 '.join(ex)}。" if ex else "    这里没有明显的出口。"]
-
-    def send(self, cmd, quiet=False):
-        if cmd == "look":
-            self.pending = self._render(); return
-        if (self.at, cmd) in self.gates:
-            self.pending = ["有什么东西挡住了去路。"]; return
-        dest = ROOMS[self.at]["exits"].get(cmd)
-        if dest and dest in ROOMS:
-            self.at = dest; self.moves += 1
-            if self.rng.random() < self.shove:
-                nb = [t for t in ROOMS[self.at]["exits"].values() if t in ROOMS]
-                if nb:
-                    self.at = self.rng.choice(nb)
-            self.pending = self._render()
-        else:
-            self.pending = ["你不能往那个方向走。"]
-
-    def wait_line(self, pattern, timeout=10.0):
-        rx = re.compile(pattern)
-        while self.pending:
-            m = rx.search(self.pending.pop(0))
-            if m: return m
-        return None
+# The fake mud server lives next door so the walking suites share one copy
+# of it -- and one copy of the bot module, whose BROKEN_EXITS and RIDE are
+# module-level state.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from mudsim import MudSim, ROOMS, bot
 
 
 def trial(start, dirs=None):
