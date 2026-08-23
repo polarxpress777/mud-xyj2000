@@ -197,5 +197,32 @@ fails += not check("intruder there alone -> we can pass through it",
                    bot.read_peek("  野狗(Ye gou)", "野狗", "山鸡精"),
                    "alone")
 
+print("\nP. standing somewhere lethal is escaped, not tolerated")
+# The follow guard asks "is a NEIGHBOUR dangerous" and refuses to be dragged
+# onward. This is the other half: if we are already standing in a room whose
+# resident can kill us -- dragged in before the guard could disarm, or put
+# there by a trap -- get out. d/gao/room holds a 60,000-exp resident and both
+# its exits lead somewhere safe.
+LETHAL = "d/gao/room"
+assert bot.avoided(ROOMS, LETHAL), "test needs a room this character avoids"
+
+sim = MudSim(LETHAL)
+pos, ok = bot.escape_if_dangerous(sim, ROOMS, LETHAL, set())
+fails += not check("left the lethal room", (ok, pos != LETHAL), (True, True))
+fails += not check("and landed somewhere safe",
+                   bot.avoided(ROOMS, pos) if pos else True, False)
+
+sim = MudSim(SAFE)
+pos, ok = bot.escape_if_dangerous(sim, ROOMS, SAFE, set())
+fails += not check("a safe room is left alone", (pos, ok, sim.moves),
+                   (SAFE, True, 0))
+
+# Every exit shut: nowhere to go, so the caller must abandon rather than
+# stand there being hit -- the same conclusion as the intruder case.
+sim = MudSim(LETHAL)
+blocked = {(LETHAL, d) for d in ROOMS[LETHAL]["exits"]}
+pos, ok = bot.escape_if_dangerous(sim, ROOMS, LETHAL, blocked)
+fails += not check("nowhere safe -> tell the caller to abandon", ok, False)
+
 print("\n" + ("ALL PASS" if not fails else f"{fails} FAILURE(S)"))
 sys.exit(1 if fails else 0)

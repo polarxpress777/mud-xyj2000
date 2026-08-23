@@ -1481,6 +1481,30 @@ def break_off(api, rooms, pos, blocked):
     return pos
 
 
+def escape_if_dangerous(api, rooms, pos, blocked):
+    """Get out if we are STANDING somewhere lethal. Returns (pos, ok).
+
+    follow_safe() asks whether a NEIGHBOUR is dangerous and refuses to be
+    dragged onward; this is the other half. Being dragged in and straight
+    out again is survivable, but staying is not: an aggressive resident
+    auto_fights whoever is in the room (feature/attack.lpc:245), every round,
+    whether or not the bot is paying attention.
+
+    ok=False means there was nowhere safe to step, which is the same
+    conclusion the intruder case reaches -- walk home and drop the quest
+    rather than stand and be hit.
+    """
+    if not pos or not avoided(rooms, pos):
+        return pos, True
+
+    api.log(f"站在「{rooms[pos]['short']}」里会被打死，先挪出去。")
+    away, _ = retreat_one_room(api, rooms, pos, blocked)
+    if not away:
+        api.log("四周没有能站的地方，回天监台，这趟不要了。")
+        return None, False
+    return away, True
+
+
 def peek(api, direction):
     """What is in the room through `direction`, without going there.
 
@@ -2735,6 +2759,15 @@ def hunt(api, rooms, job, deadline, blocked):
                 api.sleep(10)
                 continue
             api.log(f"定位：{rooms[pos]['short']}（{pos}）")
+            # Whatever put us here -- a followed hop, a trap, a shove -- do
+            # not stay in a room whose resident kills us. Checked here and
+            # not only in follow_safe(), because follow_safe asks about the
+            # NEXT room and this asks about THIS one.
+            pos, safe = escape_if_dangerous(api, rooms, pos, blocked)
+            if not safe:
+                break               # go_home() ends the job
+            if pos is None:
+                continue
             # Re-check the invariant on every arrival, not just at the start:
             # being followed is only safe while no neighbour of THIS room is
             # somewhere we refuse to walk into. Also drops the leader when we
