@@ -2112,6 +2112,71 @@ GATE_PREP = {
     "sleep": enter_dream,
 }
 
+# What one attempt at each errand COSTS, in seconds -- fixed overhead only.
+# Walking is deliberately not in here: a step was measured at ~2ms on the
+# server plus STEP_PAUSE, so even the 21-step 东海之滨 leg is about 3 seconds
+# against a 600s quest. Route length is noise; what is not noise is the
+# blackout -- sleep.lpc:85 wakes you after random(45 - con) + 10 seconds, so
+# 10s at best and just under 55s for a con-0 character -- plus the 南城客栈
+# rent stop. 70 is deliberately above that ceiling.
+ERRAND_SECS = {
+    "sleep": 70,
+    "dive": 5,      # get_bishuizhou returns at once when 避水咒 is carried
+}
+ERRAND_UNKNOWN_SECS = 120       # price an unfamiliar errand pessimistically
+
+
+def retry_gates(api, rooms, goal_rooms, gates, deadline):
+    """Have another go at the gate errands. True if the area became reachable.
+
+    Only ERRANDS are retried. A hard gate -- climb tree（吴刚）-- prices as
+    unknown and would otherwise enter this loop, do nothing, and sleep away
+    the quest: nothing about a gate we cannot earn will change, whereas a
+    dead 卢生 respawns.
+    """
+    wanted = [g.split("（")[0] for g in gates or []]
+    if not wanted or not all(w in GATE_PREP for w in wanted):
+        return False
+
+    while not api.stopped():
+        # Subtract the poll we are about to sleep, or we decide on time we
+        # then spend waiting: "70 needed, 80 left" would sleep 120 first.
+        if not errand_retry_ok(wanted, deadline - time.time() - GIVEUP_POLL):
+            return False
+        api.sleep(GIVEUP_POLL)
+        if api.stopped():
+            return False
+        api.log(f"再试一次那道关卡（还剩 "
+                f"{max(0, int(deadline - time.time())) // 60} 分钟）。")
+
+        passes = set()
+        for w in wanted:
+            # Same rule as the first attempt: 龙宫 stays hard-gated for
+            # non-disciples even though the mudlib would take a 避水咒.
+            if w == "dive" and not is_dragon_disciple(api):
+                return False
+            if GATE_PREP[w](api, rooms, set()):
+                passes.add(w)
+        go_home(api, rooms, set(BROKEN_EXITS))
+        if goal_rooms & reachable_from(rooms, YUAN_ROOM, passes=passes):
+            return True
+    return False
+
+
+def errand_retry_ok(wanted, remaining):
+    """Is there time left to have another go at these gate errands?
+
+    An errand fails on WORLD STATE -- 卢生 dead when we arrived, the shop
+    shut -- and world state changes. 卢生 respawns on his room's own clock
+    (driver config `time to reset : 883`), independent of when he died, so
+    inside one 600s quest he may simply come back. Giving up on the first
+    failure threw the whole quest away.
+    """
+    if not wanted:
+        return False
+    need = sum(ERRAND_SECS.get(w, ERRAND_UNKNOWN_SECS) for w in wanted)
+    return remaining > need
+
 
 def wait_for_exit(api, name, timeout):
     """Watch for `name` walking out of the room we're both in.
@@ -2892,6 +2957,7 @@ def run(api):
         # listed there, and otherwise falls back to the ROOM's own short
         # name. So 【长安城】 means "search this whole area" while
         # 【玉女峰】 names specific rooms -- far better, go straight there.
+        started_job = time.time()   # 袁天罡's window opens when he assigns
         dirs = areas.get(place, [])
         targets = None
         if dirs:
@@ -2967,11 +3033,24 @@ def run(api):
                 why = "路上有绕不开的关卡"
             else:
                 why = "地图上根本没有路"
-            api.log(f"【{place}】从天监台走不过去（{why}），这趟不去了。"
-                    f"每 {GIVEUP_POLL} 秒问一次袁天罡，等这个任务超时后换新的"
-                    "（你也可以自己过去打，我在这边等着）。")
-            api.sleep(GIVEUP_POLL)
-            continue
+            api.log(f"【{place}】现在走不过去（{why}）。")
+            # GATE_PREP may have walked us halfway across the map before the
+            # errand failed. Without this the bot stood where it stopped and
+            # asked 袁天罡 for work 264 times in 80 minutes, 11 rooms from
+            # him -- not one wasted quest, a dead bot for the whole session.
+            go_home(api, rooms, set(BROKEN_EXITS))
+
+            # If the gate opens we FALL THROUGH and hunt. Breaking out to the
+            # poll instead would re-ask 袁天罡, land in the still-outstanding
+            # branch with last_job unset, and park -- opening the gate and
+            # never using it.
+            if not retry_gates(api, rooms, goal_rooms, gates,
+                               started_job + QUEST_SECS):
+                api.log(f"这趟不去了。每 {GIVEUP_POLL} 秒问一次袁天罡，"
+                        "等这个任务超时后换新的"
+                        "（你也可以自己过去打，我在这边等着）。")
+                api.sleep(GIVEUP_POLL)
+                continue
 
         # Get on the horse before setting off: it is worth a chunk of
         # dodge (mount.lpc:59) to a character that deliberately has no
@@ -2981,13 +3060,16 @@ def run(api):
             ride_mount(api)
         assess_danger(api)
 
-        started = time.time()
+        # One clock per job, started when 袁天罡 ASSIGNED it -- not now.
+        # Gate errands and the walk out happen between the two, and timing the
+        # hunt from here would let it run past yuantiangang.lpc:131-132's
+        # t+600 window by however long the errand took.
         blocked = set(BROKEN_EXITS)
         forget_job_warnings()
         job = Job(name, mid, place, dirs, inside, targets)
         # Remembered so a "still outstanding" reply can be resumed rather
         # than parked on -- this is the whole point of keeping it.
-        last_job, last_deadline = job, started + QUEST_SECS
+        last_job, last_deadline = job, started_job + QUEST_SECS
         # The FULL budget. The old code stopped a HOMEWARD_RESERVE early to
         # be standing in front of 袁天罡 when the job lapsed -- but
         # yuantiangang.lpc:167-168 issues the next job whenever you ask,
@@ -2998,7 +3080,7 @@ def run(api):
             # The return value is deliberately unused here: hunt() reports
             # its own outcome, and both outcomes lead to the same next step.
             # What run() must NOT miss is Exhausted -- see the class.
-            hunt(api, rooms, job, started + QUEST_SECS, blocked)
+            hunt(api, rooms, job, started_job + QUEST_SECS, blocked)
         except Exhausted:
             api.log("身体撑不住了（喝不上水，气血回不来），停。")
             return

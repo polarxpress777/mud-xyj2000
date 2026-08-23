@@ -174,5 +174,67 @@ try:
 finally:
     bot.rest_until_healed, bot.fight_target = real_rest, real_fight
 
+print("\nJ. a gate errand is retried only while there is time for it")
+# The 90-minute live run died on its first job: 卢生 was already dead, the
+# 黄粱枕 errand failed, and the quest was written off. 卢生 respawns on the
+# room's own clock (driver config: time to reset : 883), independent of when
+# he died -- so within a 600s quest he may well come back.
+#
+# The threshold is the errand's FIXED overhead, not its route: walking was
+# measured at ~2ms/step server-side plus STEP_PAUSE, so even the 21-step dive
+# leg is ~3s against a 600s quest. Route length is noise; sleep.lpc's 10-55s
+# blackout is not.
+fails += not check("sleep errand, plenty of time",
+                   bot.errand_retry_ok(["sleep"], 300), True)
+fails += not check("sleep errand, not enough left",
+                   bot.errand_retry_ok(["sleep"], 30), False)
+fails += not check("dive errand is cheap (the 避水咒 is already carried)",
+                   bot.errand_retry_ok(["dive"], 30), True)
+fails += not check("nothing to retry", bot.errand_retry_ok([], 300), False)
+fails += not check("an unknown gate is priced pessimistically",
+                   bot.errand_retry_ok(["mystery"], 30), False)
+
+print("\nK. giving up on a job never leaves us stranded")
+# What actually happened live: GATE_PREP walked the bot 11 rooms to 泾水之滨,
+# the errand failed, and the branch slept and re-asked WITHOUT walking back.
+# It stood there asking 袁天罡 for work 264 times over 80 minutes. Not one
+# wasted quest -- a dead bot.
+import inspect
+src = inspect.getsource(bot.run)
+give_up = src[src.index("这趟不去了"):]
+fails += not check("walks home before polling again",
+                   "go_home(" in give_up.split("continue")[0], True)
+
+print("\nL. only ERRANDS are retried, and a hard gate is not slept on")
+# climb tree（吴刚）cannot be earned, so retrying it just sleeps away the
+# quest. A dead 卢生 respawns; 吴刚's tree does not open.
+api = FakeAPI()
+got = bot.retry_gates(api, ROOMS, {"d/moon/tree1"},
+                      ["climb tree（需 dodge>=40）"], time.time() + 600)
+fails += not check("hard gate -> no retry", got, False)
+fails += not check("and nothing was sent", api.sent, [])
+
+api = FakeAPI()
+got = bot.retry_gates(api, ROOMS, {"d/ourhome/honglou/kat"}, [], time.time() + 600)
+fails += not check("no gates -> no retry", got, False)
+
+api = FakeAPI()
+got = bot.retry_gates(api, ROOMS, {"d/ourhome/honglou/kat"},
+                      ["sleep（需带黄粱枕）"], time.time() + 20)
+fails += not check("errand but no time -> no retry", got, False)
+fails += not check("and it did not sleep first", api.sent, [])
+
+print("\nM. a retry that succeeds must reach the hunt, not the poll")
+# The whole feature was inert: the loop broke on success straight into
+# `sleep(GIVEUP_POLL); continue`, which re-asked 袁天罡, hit the
+# still-outstanding branch with last_job unset, and parked. The gate opened
+# and the bot never used it.
+import inspect
+src = inspect.getsource(bot.run)
+after = src[src.index("retry_gates("):]
+branch = after[:after.index("# Get on the horse")]
+fails += not check("success falls through rather than continuing",
+                   branch.count("continue"), 1)
+
 print("\n" + ("ALL PASS" if not fails else f"{fails} FAILURE(S)"))
 sys.exit(1 if fails else 0)
