@@ -203,8 +203,18 @@ print("\nthe way out is chosen by looking, then picking -- and picking randomly"
 # row while the bot looked, stepped southwest, and looked again forever.
 check("zhulin0's door is taken, not gambled",
       bot.maze_escape_choice({"northeast", "northwest", "south"}), "south")
-check("罗汉塔's enter is taken too",
-      bot.maze_escape_choice({"east", "enter"}), "enter")
+# `enter` is NOT a way out and must never be chosen when ESCAPING.
+# zhulin16/17's enter leads to 罗汉塔 -- 20 rooms that all share that name,
+# whose only non-罗汉塔 exit is `out`, straight back into the grove.
+# luohanw1 and luohane1 even have identical exit sets {southup, out}, so
+# candidates() can never tell them apart. Taking `enter` swapped one maze for
+# a worse one: live, the bot escaped to 罗汉塔, relocalise probed `out` to
+# disambiguate, landed back in 紫竹林, and ping-ponged until it gave up.
+check("enter is refused -- it goes deeper, not out",
+      bot.maze_escape_choice({"east", "enter"}), "east")
+check("and is never the random pick either",
+      {bot.maze_escape_choice({"east", "west", "enter"}) for _ in range(60)},
+      {"east", "west"})
 
 # Uniform, NOT southward-only. Restricting to southwest/southeast means
 # northwest and northeast can never be taken, so the walk explores a

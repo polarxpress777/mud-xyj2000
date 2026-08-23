@@ -103,6 +103,10 @@ _MY_EXP = [0]              # this character's 武学, refreshed each job
 # (road4 north -> zhulin0, pool south -> zhulin15) but not within, so
 # these get swept by probing instead of pathing.
 MAZE_ROOMS = {"紫竹林"}
+# 紫竹林 and 罗汉塔 form ONE pocket, and leaving the first for the second is
+# not an escape. 罗汉塔's 20 rooms all share that name and its only way out is
+# `out`, back into the grove (MAZE_REENTRY knows this direction already).
+MAZE_POCKET = {"紫竹林", "罗汉塔"}
 
 # Rooms that are safe to walk through but not to stand in. 石栈道
 # (d/westway/shizhan.lpc:27-48) arms a 25-second call_out every time a
@@ -784,8 +788,14 @@ def maze_escape_choice(exits, rng=random):
     ex = set(exits)
     if ex == MAZE_DOOR_SIG:
         return "south"
-    if "enter" in ex:
-        return "enter"
+    # NEVER `enter`. zhulin16/17's enter leads to 罗汉塔, which is not an exit
+    # from the pocket but a deeper part of it: 20 rooms all called 罗汉塔,
+    # whose only non-罗汉塔 exit is `out` back into the grove -- and
+    # luohanw1/luohane1 have identical exit sets {southup, out}, so
+    # candidates() can never separate them. Escaping into it and then probing
+    # to localise walks straight back here, which is the loop that stranded
+    # the bot in 普陀山 and made it ask to be rescued by hand.
+    ex = ex - {"enter"}
     return rng.choice(sorted(ex)) if ex else ""
 
 
@@ -810,9 +820,17 @@ def escape_maze(api, maze_name="紫竹林", max_moves=300):
         if api.stopped():
             return ""
         title, exits, _ = look(api)
-        if title and title != maze_name:
+        if title and title not in MAZE_POCKET:
             api.log(f"已走出{maze_name}，现在在「{title}」。")
             return title
+        if title == "罗汉塔":
+            # A cul-de-sac off the grove. There is exactly one way back and
+            # it is always `out`, so take it rather than wandering 20 rooms
+            # that are indistinguishable from each other.
+            api.log("走进罗汉塔了，这是死胡同，退回竹林再找出口。")
+            step(api, MAZE_REENTRY["罗汉塔"])
+            api.sleep(STEP_PAUSE)
+            continue
 
         # Look, THEN choose -- and choose randomly unless this room is
         # showing an actual door (see maze_escape_choice).
@@ -822,7 +840,7 @@ def escape_maze(api, maze_name="紫竹林", max_moves=300):
             continue
         got, _ = step(api, d)
         api.sleep(STEP_PAUSE)
-        if got and got != maze_name:
+        if got and got not in MAZE_POCKET:
             api.log(f"从 {d} 走出{maze_name}，现在在「{got}」。")
             return got
 
