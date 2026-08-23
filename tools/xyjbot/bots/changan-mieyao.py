@@ -1481,43 +1481,88 @@ def break_off(api, rooms, pos, blocked):
     return pos
 
 
-def wait_out_intruder(api, rooms, danger_pos, intruder, blocked):
-    """Retreat a room, then keep peeking back until the intruder leaves.
+def peek(api, direction):
+    """What is in the room through `direction`, without going there.
 
-    Returns True if the danger room is clear again (safe to resume),
-    False if we gave up or lost our footing.
+    cmds/std/look.lpc:434-448 loads the room behind an exit and runs
+    look_room() on it, so the whole description comes back -- including who
+    is standing in it -- for the price of one command and no movement.
+
+    This is the difference between gathering information and paying for it in
+    血: the old intruder handling walked BACK INTO the attacker's room up to
+    six times to find out whether it had left, taking a hit each entry, with
+    no health check between them.
+
+    (look.lpc:437-442 tells the peeked room someone is peeping, one time in
+    three. Harmless -- it does not start a fight.)
+    """
+    api.drain()
+    api.send(f"look {direction}", quiet=True)
+    return read_reply(api, 3.0)
+
+
+def read_peek(text, intruder, name):
+    """What the peek means: 'clear', 'with-target', or 'alone'.
+
+    Separate from peek() so the decision is testable without a mud, and so
+    the three outcomes are named rather than being nested ifs at the call
+    site.
+    """
+    if intruder not in (text or ""):
+        return "clear"
+    return "with-target" if name and name in text else "alone"
+
+
+def wait_out_intruder(api, rooms, danger_pos, intruder, blocked, name=None):
+    """Something that is not the quest target is hitting us. Get clear of it.
+
+    Returns one of:
+      "clear"   -- the room is ours again, carry on hunting
+      "pass"    -- it is still there but the target is NOT, and we are healthy
+                   enough to walk through rather than wait it out
+      "retry"   -- give up this round, keep hunting elsewhere
+      "abandon" -- nowhere safe to stand; walk home and end the quest
+
+    The old version walked back into the attacker's room up to six times to
+    see whether it had left. It now peeks with `look <dir>` from the safe
+    room next door (look.lpc:434-448), which shows the same thing -- who is
+    in there, target included -- for no damage at all.
     """
     api.log(f"「{intruder}」插进来打我，先退到隔壁避一避。")
     safe_pos, back_dir = retreat_one_room(api, rooms, danger_pos, blocked)
-    if not safe_pos:
-        api.log("四周都走不掉，只能硬着头皮打。")
-        return False
+    if not safe_pos or not back_dir:
+        # No neighbour we are willing to stand in. A one-room hop cannot fix
+        # a local map with no escape, and staying means being hit by
+        # something we never chose to fight -- the likeliest way this
+        # character dies. Leave the region entirely.
+        api.log("四周没有能站的地方，别硬撑了 —— 回天监台，这趟不要了。")
+        return "abandon"
 
     for attempt in range(1, INTRUDER_TRIES + 1):
         if api.stopped():
-            return False
+            return "retry"
         api.sleep(INTRUDER_WAIT)
-        if not back_dir:
-            api.log("找不到回去的路，重新定位。")
-            return False
 
-        arrived, text = step(api, back_dir)
-        api.sleep(STEP_PAUSE)
-        if arrived != rooms[danger_pos]["short"]:
-            api.log("回去的路不对，重新定位。")
-            return False
-
-        if intruder not in text:
+        what = read_peek(peek(api, back_dir), intruder, name)
+        if what == "clear":
             api.log(f"「{intruder}」已经走了，继续任务。")
-            return True
+            return "clear"
+        if what == "with-target":
+            # Fighting our way past a second monster to reach the first is
+            # how a quest turns into a death. The job is not worth it.
+            api.log(f"「{intruder}」和 {name} 待在一起，这趟不打了。")
+            return "retry"
 
-        api.log(f"「{intruder}」还在（第 {attempt} 次查看），再退回去等。")
-        safe_pos, back_dir = retreat_one_room(api, rooms, danger_pos, blocked)
-        if not safe_pos:
-            return False
+        st = api.status()
+        healthy = st["max_kee"] and st["kee"] * 100 // st["max_kee"] >= HP_RESUME
+        if healthy:
+            api.log(f"「{intruder}」还赖着，但 {name or '目标'} 不在那儿，"
+                    "气血也满，直接穿过去。")
+            return "pass"
+        api.log(f"「{intruder}」还在（第 {attempt} 次查看），气血还没满，再等等。")
 
     api.log(f"「{intruder}」赖着不走，放弃这一轮。")
-    return False
+    return "retry"
 
 
 def name_exits(rooms, exits):
@@ -2664,9 +2709,13 @@ def hunt(api, rooms, job, deadline, blocked):
                 # back to this room afterwards.
                 if pos is None:
                     pos = relocalise(api, rooms)
-                if pos and wait_out_intruder(api, rooms, pos,
-                                             intruder, blocked):
-                    continue         # clear again -- have another go
+                if pos:
+                    what = wait_out_intruder(api, rooms, pos, intruder,
+                                             blocked, name)
+                    if what == "abandon":
+                        break        # nowhere safe -- go_home ends the job
+                    if what in ("clear", "pass"):
+                        continue     # ours again, or walk through it
                 pos = None           # lost track, or gave up on it
             continue
 

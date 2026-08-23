@@ -30,6 +30,30 @@ DANGER = json.loads((Path(__file__).resolve().parent.parent / "danger.json")
                     .read_text(encoding="utf-8"))
 
 
+class FakeAPI:
+    """Minimal api for the peek helpers -- no map, no movement."""
+    def __init__(self):
+        self.pending, self.logs, self.sent, self.on_send = [], [], [], {}
+
+    def stopped(self): return False
+    def sleep(self, n): pass
+    def drain(self): self.pending = []
+    def log(self, m): self.logs.append(m)
+
+    def send(self, cmd, quiet=False):
+        self.sent.append(cmd)
+        self.pending = list(self.on_send.get(cmd, []))
+
+    def wait_line(self, pattern, timeout=10.0):
+        import re as _re
+        rx = _re.compile(pattern)
+        while self.pending:
+            m = rx.search(self.pending.pop(0))
+            if m:
+                return m
+        return None
+
+
 def check(label, got, want):
     ok = got == want
     print(f"  {'PASS' if ok else 'FAIL'}  {label}: got {got!r}, want {want!r}")
@@ -146,6 +170,32 @@ try:
     fails += not check("Exhausted leaves nobody followed", bot.FOLLOW["on"], False)
 finally:
     bot.rest_until_healed, bot.fight_target = real_rest, real_fight
+
+print("\nN. peeking costs nothing -- look <dir> instead of walking in")
+# The old wait_out_intruder walked BACK INTO the attacker's room up to six
+# times to see if it had left, taking a hit on each entry. look.lpc:434-448
+# loads the room behind an exit and runs look_room on it, so the full
+# contents -- including whether the quest target is standing there -- come
+# back without moving. That unmonitored damage was the likeliest way the
+# character actually died.
+api = FakeAPI()
+api.on_send["look west"] = ["南城客栈 - ", "    这里明显的出口是 east。",
+                            "  店小二(Xiao er)", "  山鸡精(Shanji jing)"]
+seen = bot.peek(api, "west")
+fails += not check("used look <dir>", "look west" in api.sent, True)
+fails += not check("never stepped", [c for c in api.sent if c == "west"], [])
+fails += not check("saw who is there", "山鸡精" in seen, True)
+
+print("\nO. what the peek decides")
+fails += not check("intruder gone -> resume",
+                   bot.read_peek("南城客栈 - \n  店小二(Xiao er)", "野狗", "山鸡精"),
+                   "clear")
+fails += not check("intruder there with the target -> abandon the quest",
+                   bot.read_peek("  野狗(Ye gou)\n  山鸡精(Shanji jing)", "野狗", "山鸡精"),
+                   "with-target")
+fails += not check("intruder there alone -> we can pass through it",
+                   bot.read_peek("  野狗(Ye gou)", "野狗", "山鸡精"),
+                   "alone")
 
 print("\n" + ("ALL PASS" if not fails else f"{fails} FAILURE(S)"))
 sys.exit(1 if fails else 0)
